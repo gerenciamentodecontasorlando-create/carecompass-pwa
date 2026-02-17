@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { Save, Download, Upload } from "lucide-react";
 
 interface ClinicSettings {
   professionalName: string;
@@ -33,6 +33,48 @@ const SettingsPage = () => {
   const handleSave = () => {
     setSettings(form);
     toast.success("Configurações salvas com sucesso!");
+  };
+
+  const BACKUP_KEYS = ["patients", "appointments", "clinicSettings", "financialEntries", "materials", "odontogramData"];
+
+  const handleExport = () => {
+    const data: Record<string, unknown> = {};
+    BACKUP_KEYS.forEach((key) => {
+      const item = localStorage.getItem(key);
+      if (item) data[key] = JSON.parse(item);
+    });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `clinicapro-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Backup exportado com sucesso!");
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string);
+        let count = 0;
+        BACKUP_KEYS.forEach((key) => {
+          if (data[key]) {
+            localStorage.setItem(key, JSON.stringify(data[key]));
+            count++;
+          }
+        });
+        toast.success(`Backup importado! ${count} módulo(s) restaurado(s). Recarregando...`);
+        setTimeout(() => window.location.reload(), 1500);
+      } catch {
+        toast.error("Arquivo inválido. Selecione um backup JSON válido.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   };
 
   return (
@@ -92,6 +134,31 @@ const SettingsPage = () => {
           <Button onClick={handleSave} className="w-full">
             <Save className="h-4 w-4 mr-2" />Salvar Configurações
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <h2 className="text-lg font-semibold">Backup de Dados</h2>
+          <p className="text-sm text-muted-foreground">
+            Exporte todos os dados do sistema para um arquivo JSON e importe em outro aparelho.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button variant="outline" className="flex-1" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-2" />Exportar Dados
+            </Button>
+            <Button variant="outline" className="flex-1 relative" asChild>
+              <label className="cursor-pointer">
+                <Upload className="h-4 w-4 mr-2" />Importar Dados
+                <input
+                  type="file"
+                  accept=".json"
+                  className="sr-only"
+                  onChange={handleImport}
+                />
+              </label>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
