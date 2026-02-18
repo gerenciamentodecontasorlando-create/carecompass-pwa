@@ -35,7 +35,7 @@ const SettingsPage = () => {
     toast.success("Configurações salvas com sucesso!");
   };
 
-  const BACKUP_KEYS = ["patients", "appointments", "clinicSettings", "financialEntries", "materials", "odontogramData"];
+  const BACKUP_KEYS = ["patients", "appointments", "clinicSettings", "financialEntries", "materials", "odontogramData", "clinicalRecords", "evolutions", "patientFiles"];
 
   const handleExport = () => {
     const data: Record<string, unknown> = {};
