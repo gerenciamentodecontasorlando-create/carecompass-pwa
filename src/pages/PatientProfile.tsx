@@ -458,7 +458,7 @@ const PatientProfile = () => {
             <Card>
               <CardContent className="p-6 space-y-4">
                 <h2 className="text-lg font-semibold">Impressão Individualizada</h2>
-                <p className="text-sm text-muted-foreground">Escolha o que deseja imprimir. Cada impressão sai formatada com cabeçalho e rodapé profissional.</p>
+                <p className="text-sm text-muted-foreground">Cada impressão sai formatada com cabeçalho e rodapé profissional.</p>
                 <div className="grid gap-3">
                   <Button variant="outline" onClick={() => handlePrint("clinical")} className="justify-start">
                     <ClipboardList className="h-4 w-4 mr-2" />Imprimir Ficha Clínica Completa
