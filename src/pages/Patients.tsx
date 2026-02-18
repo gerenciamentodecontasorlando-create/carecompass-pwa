@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ const emptyPatient: Omit<Patient, "id"> = {
 };
 
 const Patients = () => {
+  const navigate = useNavigate();
   const [patients, setPatients] = useLocalStorage<Patient[]>("patients", []);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyPatient);
@@ -127,7 +129,7 @@ const Patients = () => {
       ) : (
         <div className="grid gap-3">
           {filtered.map((p) => (
-            <Card key={p.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleEdit(p)}>
+            <Card key={p.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/pacientes/${p.id}`)}>
               <CardContent className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
