@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, CalendarDays, FileText, FileBadge,
-  Smile, DollarSign, Package, Settings,
+  Smile, DollarSign, Package, Settings, Bot, StickyNote,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -15,6 +15,8 @@ const items = [
   { title: "Receituário", url: "/receituario", icon: FileText },
   { title: "Atestados", url: "/atestados", icon: FileBadge },
   { title: "Odontograma", url: "/odontograma", icon: Smile },
+  { title: "Assistente IA", url: "/assistente-ia", icon: Bot },
+  { title: "Notas", url: "/notas", icon: StickyNote },
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
   { title: "Materiais", url: "/materiais", icon: Package },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
