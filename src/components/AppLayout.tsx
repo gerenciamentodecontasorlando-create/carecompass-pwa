@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Outlet } from "react-router-dom";
+import { JarvisButton } from "@/components/JarvisButton";
 
 export function AppLayout() {
   return (
@@ -16,6 +17,7 @@ export function AppLayout() {
             <Outlet />
           </div>
         </main>
+        <JarvisButton />
       </div>
     </SidebarProvider>
   );
