@@ -4,8 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Save, Download, Upload } from "lucide-react";
+import { Save, Download, Upload, Volume2 } from "lucide-react";
 
 interface ClinicSettings {
   professionalName: string;
@@ -15,6 +17,13 @@ interface ClinicSettings {
   address: string;
   phone: string;
   email: string;
+}
+
+interface JarvisSettings {
+  enabled: boolean;
+  speed: number;
+  pitch: number;
+  volume: number;
 }
 
 const SettingsPage = () => {
@@ -28,10 +37,32 @@ const SettingsPage = () => {
     email: "",
   });
 
+  const [jarvisSettings, setJarvisSettings] = useLocalStorage<JarvisSettings>("jarvisSettings", {
+    enabled: true,
+    speed: 1.0,
+    pitch: 0.9,
+    volume: 1.0,
+  });
+
   const [form, setForm] = useState(settings);
+  const [jarvisForm, setJarvisForm] = useState(jarvisSettings);
+
+  const handleTestVoice = () => {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance("Olá, eu sou o Jarvis, seu assistente virtual.");
+    utterance.lang = "pt-BR";
+    utterance.rate = jarvisForm.speed;
+    utterance.pitch = jarvisForm.pitch;
+    utterance.volume = jarvisForm.volume;
+    const voices = window.speechSynthesis.getVoices();
+    const ptVoice = voices.find((v) => v.lang.startsWith("pt"));
+    if (ptVoice) utterance.voice = ptVoice;
+    window.speechSynthesis.speak(utterance);
+  };
 
   const handleSave = () => {
     setSettings(form);
+    setJarvisSettings(jarvisForm);
     toast.success("Configurações salvas com sucesso!");
   };
 
@@ -134,6 +165,76 @@ const SettingsPage = () => {
           <Button onClick={handleSave} className="w-full">
             <Save className="h-4 w-4 mr-2" />Salvar Configurações
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Assistente Jarvis</h2>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="jarvis-toggle" className="text-sm text-muted-foreground">
+                {jarvisForm.enabled ? "Ativado" : "Desativado"}
+              </Label>
+              <Switch
+                id="jarvis-toggle"
+                checked={jarvisForm.enabled}
+                onCheckedChange={(checked) => setJarvisForm({ ...jarvisForm, enabled: checked })}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-5">
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between">
+                <Label>Velocidade da fala</Label>
+                <span className="text-sm text-muted-foreground">{jarvisForm.speed.toFixed(1)}x</span>
+              </div>
+              <Slider
+                value={[jarvisForm.speed]}
+                onValueChange={([v]) => setJarvisForm({ ...jarvisForm, speed: v })}
+                min={0.5}
+                max={2.0}
+                step={0.1}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between">
+                <Label>Tom da voz (grave ↔ agudo)</Label>
+                <span className="text-sm text-muted-foreground">{jarvisForm.pitch.toFixed(1)}</span>
+              </div>
+              <Slider
+                value={[jarvisForm.pitch]}
+                onValueChange={([v]) => setJarvisForm({ ...jarvisForm, pitch: v })}
+                min={0.3}
+                max={1.5}
+                step={0.1}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between">
+                <Label>Volume</Label>
+                <span className="text-sm text-muted-foreground">{Math.round(jarvisForm.volume * 100)}%</span>
+              </div>
+              <Slider
+                value={[jarvisForm.volume]}
+                onValueChange={([v]) => setJarvisForm({ ...jarvisForm, volume: v })}
+                min={0.1}
+                max={1.0}
+                step={0.05}
+              />
+            </div>
+          </div>
+
+          <Button variant="outline" className="w-full" onClick={handleTestVoice}>
+            <Volume2 className="h-4 w-4 mr-2" />Testar Voz
+          </Button>
+
+          <p className="text-sm text-muted-foreground">
+            Ajuste a voz do Jarvis ao seu gosto. Clique em "Testar Voz" para ouvir antes de salvar.
+          </p>
         </CardContent>
       </Card>
 

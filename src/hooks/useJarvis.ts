@@ -76,11 +76,24 @@ export function useJarvis({ professionalName, onGreetingDone }: UseJarvisOptions
   // Speak text using SpeechSynthesis
   const speak = useCallback((text: string, onEnd?: () => void) => {
     window.speechSynthesis.cancel();
+    
+    // Read jarvis settings from localStorage
+    let speed = 1.0, pitch = 0.9, volume = 1.0;
+    try {
+      const stored = localStorage.getItem("jarvisSettings");
+      if (stored) {
+        const s = JSON.parse(stored);
+        speed = s.speed ?? 1.0;
+        pitch = s.pitch ?? 0.9;
+        volume = s.volume ?? 1.0;
+      }
+    } catch {}
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "pt-BR";
-    utterance.rate = 1.0;
-    utterance.pitch = 0.9; // Slightly deeper for masculine tone
-    utterance.volume = 1;
+    utterance.rate = speed;
+    utterance.pitch = pitch;
+    utterance.volume = volume;
     
     const voice = getMaleVoice();
     if (voice) utterance.voice = voice;
