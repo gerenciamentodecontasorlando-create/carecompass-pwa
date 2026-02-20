@@ -25,6 +25,8 @@ export function JarvisButton() {
     email: "",
   });
 
+  const [jarvisSettings] = useLocalStorage<{ enabled: boolean }>("jarvisSettings", { enabled: true });
+
   const {
     isListening,
     isSpeaking,
@@ -43,6 +45,8 @@ export function JarvisButton() {
   useEffect(() => {
     if (lastResponse) setShowPanel(true);
   }, [lastResponse]);
+
+  if (!jarvisSettings.enabled) return null;
 
   const getStatusText = () => {
     if (isProcessing) return "Processando...";
