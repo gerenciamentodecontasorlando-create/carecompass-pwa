@@ -134,6 +134,7 @@ const SettingsPage = () => {
     <div className="space-y-6 max-w-2xl">
       <h1 className="text-2xl font-bold">Configurações</h1>
 
+      {/* Dados do Profissional */}
       <Card>
         <CardContent className="p-6 space-y-6">
           <div>
@@ -190,6 +191,33 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Backup — antes do Jarvis */}
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <h2 className="text-lg font-semibold">Backup de Dados</h2>
+          <p className="text-sm text-muted-foreground">
+            Exporte todos os dados do sistema para um arquivo JSON e importe em outro aparelho.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button variant="outline" className="flex-1" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-2" />Exportar Dados
+            </Button>
+            <Button variant="outline" className="flex-1 relative" asChild>
+              <label className="cursor-pointer">
+                <Upload className="h-4 w-4 mr-2" />Importar Dados
+                <input
+                  type="file"
+                  accept=".json"
+                  className="sr-only"
+                  onChange={handleImport}
+                />
+              </label>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Assistente Jarvis — abaixo do backup */}
       <Card>
         <CardContent className="p-6 space-y-6">
           <div className="flex items-center justify-between">
@@ -289,31 +317,6 @@ const SettingsPage = () => {
           <p className="text-sm text-muted-foreground">
             Ajuste a voz e o comportamento do Jarvis. Clique em "Testar Voz" para ouvir antes de salvar.
           </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Backup de Dados</h2>
-          <p className="text-sm text-muted-foreground">
-            Exporte todos os dados do sistema para um arquivo JSON e importe em outro aparelho.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="outline" className="flex-1" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />Exportar Dados
-            </Button>
-            <Button variant="outline" className="flex-1 relative" asChild>
-              <label className="cursor-pointer">
-                <Upload className="h-4 w-4 mr-2" />Importar Dados
-                <input
-                  type="file"
-                  accept=".json"
-                  className="sr-only"
-                  onChange={handleImport}
-                />
-              </label>
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
