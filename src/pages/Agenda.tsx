@@ -21,13 +21,15 @@ interface Appointment {
   type: string;
   status: string;
   notes: string;
+  procedure: string;
+  dentist: string;
 }
 
 const Agenda = () => {
   const [appointments, setAppointments] = useLocalStorage<Appointment[]>("appointments", []);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ patientName: "", time: "09:00", type: "Consulta", notes: "" });
+  const [form, setForm] = useState({ patientName: "", time: "09:00", type: "Consulta", notes: "", procedure: "", dentist: "" });
 
   const dayAppointments = appointments
     .filter((a) => isSameDay(parseISO(a.date), selectedDate))
@@ -45,9 +47,11 @@ const Agenda = () => {
       type: form.type,
       status: "agendado",
       notes: form.notes,
+      procedure: form.procedure,
+      dentist: form.dentist,
     };
     setAppointments((prev) => [...prev, appt]);
-    setForm({ patientName: "", time: "09:00", type: "Consulta", notes: "" });
+    setForm({ patientName: "", time: "09:00", type: "Consulta", notes: "", procedure: "", dentist: "" });
     setOpen(false);
     toast.success("Consulta agendada");
   };
@@ -91,6 +95,14 @@ const Agenda = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Procedimento / Palavras-chave</Label>
+                <Input value={form.procedure} onChange={(e) => setForm({ ...form, procedure: e.target.value })} placeholder="Ex: Extração, Limpeza, Canal, Restauração..." />
+              </div>
+              <div className="grid gap-2">
+                <Label>Dentista responsável</Label>
+                <Input value={form.dentist} onChange={(e) => setForm({ ...form, dentist: e.target.value })} placeholder="Dr(a). nome do profissional" />
               </div>
               <div className="grid gap-2">
                 <Label>Observações</Label>
@@ -137,7 +149,8 @@ const Agenda = () => {
                       </div>
                       <div>
                         <p className="font-medium">{a.patientName}</p>
-                        <p className="text-xs text-muted-foreground">{a.type}</p>
+                        <p className="text-xs text-muted-foreground">{a.type}{a.procedure ? ` • ${a.procedure}` : ""}</p>
+                        {a.dentist && <p className="text-xs text-muted-foreground">🦷 {a.dentist}</p>}
                       </div>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id)}>
