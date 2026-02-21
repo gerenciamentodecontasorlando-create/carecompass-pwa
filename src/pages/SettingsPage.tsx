@@ -21,9 +21,11 @@ interface ClinicSettings {
 
 interface JarvisSettings {
   enabled: boolean;
+  alwaysListening: boolean;
   speed: number;
   pitch: number;
   volume: number;
+  voiceGender: "male" | "female";
 }
 
 const SettingsPage = () => {
@@ -39,9 +41,11 @@ const SettingsPage = () => {
 
   const [jarvisSettings, setJarvisSettings] = useLocalStorage<JarvisSettings>("jarvisSettings", {
     enabled: true,
+    alwaysListening: false,
     speed: 1.0,
     pitch: 0.9,
     volume: 1.0,
+    voiceGender: "male",
   });
 
   const [form, setForm] = useState(settings);
@@ -55,8 +59,26 @@ const SettingsPage = () => {
     utterance.pitch = jarvisForm.pitch;
     utterance.volume = jarvisForm.volume;
     const voices = window.speechSynthesis.getVoices();
-    const ptVoice = voices.find((v) => v.lang.startsWith("pt"));
-    if (ptVoice) utterance.voice = ptVoice;
+    const ptVoices = voices.filter((v) => v.lang.startsWith("pt"));
+    if (jarvisForm.voiceGender === "male") {
+      const male = ptVoices.find((v) =>
+        v.name.toLowerCase().includes("male") ||
+        v.name.toLowerCase().includes("masculin") ||
+        v.name.toLowerCase().includes("daniel") ||
+        v.name.toLowerCase().includes("ricardo")
+      );
+      if (male) utterance.voice = male;
+      else if (ptVoices[0]) utterance.voice = ptVoices[0];
+    } else {
+      const female = ptVoices.find((v) =>
+        v.name.toLowerCase().includes("female") ||
+        v.name.toLowerCase().includes("femin") ||
+        v.name.toLowerCase().includes("maria") ||
+        v.name.toLowerCase().includes("luciana")
+      );
+      if (female) utterance.voice = female;
+      else if (ptVoices[0]) utterance.voice = ptVoices[0];
+    }
     window.speechSynthesis.speak(utterance);
   };
 
@@ -228,12 +250,44 @@ const SettingsPage = () => {
             </div>
           </div>
 
+          <div className="grid gap-2">
+            <Label>Estilo de Voz</Label>
+            <div className="flex gap-3">
+              <Button
+                variant={jarvisForm.voiceGender === "male" ? "default" : "outline"}
+                className="flex-1"
+                onClick={() => setJarvisForm({ ...jarvisForm, voiceGender: "male" })}
+              >
+                🧑 Masculina
+              </Button>
+              <Button
+                variant={jarvisForm.voiceGender === "female" ? "default" : "outline"}
+                className="flex-1"
+                onClick={() => setJarvisForm({ ...jarvisForm, voiceGender: "female" })}
+              >
+                👩 Feminina
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="always-listening">Escuta contínua por voz</Label>
+              <p className="text-xs text-muted-foreground">Quando ativo, Jarvis fica ouvindo permanentemente</p>
+            </div>
+            <Switch
+              id="always-listening"
+              checked={jarvisForm.alwaysListening}
+              onCheckedChange={(checked) => setJarvisForm({ ...jarvisForm, alwaysListening: checked })}
+            />
+          </div>
+
           <Button variant="outline" className="w-full" onClick={handleTestVoice}>
             <Volume2 className="h-4 w-4 mr-2" />Testar Voz
           </Button>
 
           <p className="text-sm text-muted-foreground">
-            Ajuste a voz do Jarvis ao seu gosto. Clique em "Testar Voz" para ouvir antes de salvar.
+            Ajuste a voz e o comportamento do Jarvis. Clique em "Testar Voz" para ouvir antes de salvar.
           </p>
         </CardContent>
       </Card>

@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import {
   ArrowLeft, Printer, Plus, Trash2, FileImage, ClipboardList,
-  Stethoscope, Calendar, ImageIcon, Save
+  Stethoscope, Calendar, ImageIcon, Save, MessageCircle
 } from "lucide-react";
 
 export interface Evolution {
@@ -211,9 +211,21 @@ const PatientProfile = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">{patient.name}</h1>
-            <p className="text-sm text-muted-foreground">
-              {patient.phone || "Sem telefone"} {patient.cpf && `• CPF: ${patient.cpf}`}
-            </p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{patient.phone || "Sem telefone"} {patient.cpf && `• CPF: ${patient.cpf}`}</span>
+              {patient.phone && (
+                <a
+                  href={`https://wa.me/55${patient.phone.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-green-600 hover:text-green-700 font-medium"
+                  title="Abrir no WhatsApp"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span className="text-xs">WhatsApp</span>
+                </a>
+              )}
+            </div>
           </div>
         </div>
 

@@ -27,32 +27,29 @@ const NAVIGATION_MAP: Record<string, string> = {
   configurações: "/configuracoes",
 };
 
-function getMaleVoice(): SpeechSynthesisVoice | null {
+function getVoiceByGender(gender: "male" | "female"): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
-  // Try Portuguese male voices first
-  const ptMale = voices.find(
-    (v) =>
-      v.lang.startsWith("pt") &&
-      (v.name.toLowerCase().includes("male") ||
+  const ptVoices = voices.filter((v) => v.lang.startsWith("pt"));
+
+  if (gender === "male") {
+    const male = ptVoices.find(
+      (v) =>
+        v.name.toLowerCase().includes("male") ||
         v.name.toLowerCase().includes("masculin") ||
         v.name.toLowerCase().includes("daniel") ||
-        v.name.toLowerCase().includes("ricardo") ||
-        v.name.toLowerCase().includes("google") && v.name.toLowerCase().includes("português"))
-  );
-  if (ptMale) return ptMale;
-
-  // Any Portuguese voice
-  const ptAny = voices.find((v) => v.lang.startsWith("pt"));
-  if (ptAny) return ptAny;
-
-  // Fallback to any male-sounding voice
-  const anyMale = voices.find(
-    (v) =>
-      v.name.toLowerCase().includes("male") ||
-      v.name.toLowerCase().includes("daniel") ||
-      v.name.toLowerCase().includes("ricardo")
-  );
-  return anyMale || voices[0] || null;
+        v.name.toLowerCase().includes("ricardo")
+    );
+    return male || ptVoices[0] || voices[0] || null;
+  } else {
+    const female = ptVoices.find(
+      (v) =>
+        v.name.toLowerCase().includes("female") ||
+        v.name.toLowerCase().includes("femin") ||
+        v.name.toLowerCase().includes("maria") ||
+        v.name.toLowerCase().includes("luciana")
+    );
+    return female || ptVoices[0] || voices[0] || null;
+  }
 }
 
 function getGreeting(): string {
@@ -78,7 +75,7 @@ export function useJarvis({ professionalName, onGreetingDone }: UseJarvisOptions
     window.speechSynthesis.cancel();
     
     // Read jarvis settings from localStorage
-    let speed = 1.0, pitch = 0.9, volume = 1.0;
+    let speed = 1.0, pitch = 0.9, volume = 1.0, voiceGender: "male" | "female" = "male";
     try {
       const stored = localStorage.getItem("jarvisSettings");
       if (stored) {
@@ -86,6 +83,7 @@ export function useJarvis({ professionalName, onGreetingDone }: UseJarvisOptions
         speed = s.speed ?? 1.0;
         pitch = s.pitch ?? 0.9;
         volume = s.volume ?? 1.0;
+        voiceGender = s.voiceGender ?? "male";
       }
     } catch {}
 
@@ -95,7 +93,7 @@ export function useJarvis({ professionalName, onGreetingDone }: UseJarvisOptions
     utterance.pitch = pitch;
     utterance.volume = volume;
     
-    const voice = getMaleVoice();
+    const voice = getVoiceByGender(voiceGender);
     if (voice) utterance.voice = voice;
 
     utterance.onstart = () => setIsSpeaking(true);
