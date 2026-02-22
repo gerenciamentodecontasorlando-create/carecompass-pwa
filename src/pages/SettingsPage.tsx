@@ -43,7 +43,7 @@ const SettingsPage = () => {
     enabled: true,
     alwaysListening: false,
     speed: 1.0,
-    pitch: 0.9,
+    pitch: 0.7,
     volume: 1.0,
     voiceGender: "male",
   });
@@ -53,31 +53,41 @@ const SettingsPage = () => {
 
   const handleTestVoice = () => {
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance("Olá, eu sou o Jarvis, seu assistente virtual.");
+    const utterance = new SpeechSynthesisUtterance("Olá, eu sou o Jarvis, seu assistente virtual. Estou pronto para ajudá-lo.");
     utterance.lang = "pt-BR";
     utterance.rate = jarvisForm.speed;
     utterance.pitch = jarvisForm.pitch;
     utterance.volume = jarvisForm.volume;
     const voices = window.speechSynthesis.getVoices();
+    const ptBrVoices = voices.filter((v) => v.lang === "pt-BR");
     const ptVoices = voices.filter((v) => v.lang.startsWith("pt"));
+    const allPt = ptBrVoices.length > 0 ? ptBrVoices : ptVoices;
+
+    const maleKeywords = ["male", "masculin", "daniel", "ricardo", "marcos", "paulo", "jorge", "pedro", "google brasil", "microsoft daniel"];
+    const femaleKeywords = ["female", "femin", "maria", "luciana", "francisca", "vitoria", "microsoft maria"];
+
     if (jarvisForm.voiceGender === "male") {
-      const male = ptVoices.find((v) =>
-        v.name.toLowerCase().includes("male") ||
-        v.name.toLowerCase().includes("masculin") ||
-        v.name.toLowerCase().includes("daniel") ||
-        v.name.toLowerCase().includes("ricardo")
-      );
-      if (male) utterance.voice = male;
-      else if (ptVoices[0]) utterance.voice = ptVoices[0];
+      let voice: SpeechSynthesisVoice | undefined;
+      for (const keyword of maleKeywords) {
+        voice = allPt.find((v) => v.name.toLowerCase().includes(keyword));
+        if (voice) break;
+      }
+      if (!voice) {
+        const nonFemale = allPt.filter((v) => {
+          const n = v.name.toLowerCase();
+          return !femaleKeywords.some((k) => n.includes(k));
+        });
+        voice = nonFemale[0] || allPt[0];
+      }
+      if (voice) utterance.voice = voice;
     } else {
-      const female = ptVoices.find((v) =>
-        v.name.toLowerCase().includes("female") ||
-        v.name.toLowerCase().includes("femin") ||
-        v.name.toLowerCase().includes("maria") ||
-        v.name.toLowerCase().includes("luciana")
-      );
-      if (female) utterance.voice = female;
-      else if (ptVoices[0]) utterance.voice = ptVoices[0];
+      let voice: SpeechSynthesisVoice | undefined;
+      for (const keyword of femaleKeywords) {
+        voice = allPt.find((v) => v.name.toLowerCase().includes(keyword));
+        if (voice) break;
+      }
+      if (!voice) voice = allPt[0];
+      if (voice) utterance.voice = voice;
     }
     window.speechSynthesis.speak(utterance);
   };

@@ -29,26 +29,31 @@ const NAVIGATION_MAP: Record<string, string> = {
 
 function getVoiceByGender(gender: "male" | "female"): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
+  const ptBrVoices = voices.filter((v) => v.lang === "pt-BR");
   const ptVoices = voices.filter((v) => v.lang.startsWith("pt"));
+  const allPt = ptBrVoices.length > 0 ? ptBrVoices : ptVoices;
+
+  const maleKeywords = ["male", "masculin", "daniel", "ricardo", "marcos", "paulo", "jorge", "pedro", "google brasil", "microsoft daniel"];
+  const femaleKeywords = ["female", "femin", "maria", "luciana", "francisca", "vitoria", "microsoft maria"];
 
   if (gender === "male") {
-    const male = ptVoices.find(
-      (v) =>
-        v.name.toLowerCase().includes("male") ||
-        v.name.toLowerCase().includes("masculin") ||
-        v.name.toLowerCase().includes("daniel") ||
-        v.name.toLowerCase().includes("ricardo")
-    );
-    return male || ptVoices[0] || voices[0] || null;
+    // Try to find a male pt-BR voice first
+    for (const keyword of maleKeywords) {
+      const found = allPt.find((v) => v.name.toLowerCase().includes(keyword));
+      if (found) return found;
+    }
+    // Exclude known female voices, pick first remaining
+    const nonFemale = allPt.filter((v) => {
+      const n = v.name.toLowerCase();
+      return !femaleKeywords.some((k) => n.includes(k));
+    });
+    return nonFemale[0] || allPt[0] || voices[0] || null;
   } else {
-    const female = ptVoices.find(
-      (v) =>
-        v.name.toLowerCase().includes("female") ||
-        v.name.toLowerCase().includes("femin") ||
-        v.name.toLowerCase().includes("maria") ||
-        v.name.toLowerCase().includes("luciana")
-    );
-    return female || ptVoices[0] || voices[0] || null;
+    for (const keyword of femaleKeywords) {
+      const found = allPt.find((v) => v.name.toLowerCase().includes(keyword));
+      if (found) return found;
+    }
+    return allPt[0] || voices[0] || null;
   }
 }
 
@@ -75,7 +80,7 @@ export function useJarvis({ professionalName, onGreetingDone }: UseJarvisOptions
     window.speechSynthesis.cancel();
     
     // Read jarvis settings from localStorage
-    let speed = 1.0, pitch = 0.9, volume = 1.0, voiceGender: "male" | "female" = "male";
+    let speed = 1.0, pitch = 0.7, volume = 1.0, voiceGender: "male" | "female" = "male";
     try {
       const stored = localStorage.getItem("jarvisSettings");
       if (stored) {
