@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useClinicData } from "@/hooks/useClinicData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,40 +10,30 @@ import { Plus, Search, Trash2, AlertTriangle, Package } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
-interface Material {
-  id: string;
-  name: string;
-  quantity: number;
-  minQuantity: number;
-  unit: string;
-  category: string;
-}
-
 const Materials = () => {
-  const [materials, setMaterials] = useLocalStorage<Material[]>("materials", []);
+  const { data: materials, insert, update, remove } = useClinicData("materials");
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", quantity: "0", minQuantity: "5", unit: "un", category: "Consumível" });
 
-  const filtered = materials.filter((m) => m.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = materials.filter((m) => String(m.name).toLowerCase().includes(search.toLowerCase()));
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
-    setMaterials((prev) => [...prev, {
-      id: crypto.randomUUID(),
+    await insert({
       name: form.name,
       quantity: parseInt(form.quantity) || 0,
-      minQuantity: parseInt(form.minQuantity) || 5,
+      min_quantity: parseInt(form.minQuantity) || 5,
       unit: form.unit,
       category: form.category,
-    }]);
+    });
     setForm({ name: "", quantity: "0", minQuantity: "5", unit: "un", category: "Consumível" });
     setOpen(false);
     toast.success("Material adicionado");
   };
 
-  const updateQty = (id: string, delta: number) => {
-    setMaterials((prev) => prev.map((m) => m.id === id ? { ...m, quantity: Math.max(0, m.quantity + delta) } : m));
+  const updateQty = async (id: string, currentQty: number, delta: number) => {
+    await update(id, { quantity: Math.max(0, currentQty + delta) });
   };
 
   return (
@@ -118,25 +108,27 @@ const Materials = () => {
       ) : (
         <div className="grid gap-3">
           {filtered.map((m) => {
-            const isLow = m.quantity <= m.minQuantity;
+            const qty = Number(m.quantity);
+            const minQty = Number(m.min_quantity);
+            const isLow = qty <= minQty;
             return (
-              <Card key={m.id} className={isLow ? "border-destructive/50" : ""}>
+              <Card key={String(m.id)} className={isLow ? "border-destructive/50" : ""}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
                     {isLow && <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />}
                     <div>
-                      <p className="font-semibold">{m.name}</p>
-                      <p className="text-xs text-muted-foreground">{m.category} • Mín: {m.minQuantity} {m.unit}</p>
+                      <p className="font-semibold">{String(m.name)}</p>
+                      <p className="text-xs text-muted-foreground">{String(m.category)} • Mín: {minQty} {String(m.unit)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQty(m.id, -1)}>−</Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQty(String(m.id), qty, -1)}>−</Button>
                     <Badge variant={isLow ? "destructive" : "secondary"} className="min-w-[60px] justify-center">
-                      {m.quantity} {m.unit}
+                      {qty} {String(m.unit)}
                     </Badge>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQty(m.id, 1)}>+</Button>
-                    <Button variant="ghost" size="icon" onClick={() => {
-                      setMaterials((prev) => prev.filter((x) => x.id !== m.id));
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQty(String(m.id), qty, 1)}>+</Button>
+                    <Button variant="ghost" size="icon" onClick={async () => {
+                      await remove(String(m.id));
                       toast.success("Material removido");
                     }}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />

@@ -1,8 +1,9 @@
 import {
   LayoutDashboard, Users, CalendarDays, FileText, FileBadge,
-  Smile, DollarSign, Package, Settings, Bot, StickyNote,
+  Smile, DollarSign, Package, Settings, Bot, StickyNote, LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -23,6 +24,8 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const { signOut, profile } = useAuth();
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
@@ -53,6 +56,23 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Sair"
+                  onClick={signOut}
+                  className="flex items-center gap-3 text-destructive hover:text-destructive"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  <span>Sair</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

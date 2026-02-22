@@ -1,35 +1,27 @@
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useClinicData } from "@/hooks/useClinicData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, CalendarDays, DollarSign, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface Patient {
-  id: string; name: string; phone: string;
-}
-interface Appointment {
-  id: string; patientName: string; date: string; time: string; type: string; status: string;
-}
-interface Transaction {
-  id: string; date: string; type: "income" | "expense"; amount: number;
-}
-interface Material {
-  id: string; name: string; quantity: number; minQuantity: number;
-}
-
 const Dashboard = () => {
-  const [patients] = useLocalStorage<Patient[]>("patients", []);
-  const [appointments] = useLocalStorage<Appointment[]>("appointments", []);
-  const [transactions] = useLocalStorage<Transaction[]>("transactions", []);
-  const [materials] = useLocalStorage<Material[]>("materials", []);
+  const { data: patients } = useClinicData("patients");
+  const { data: appointments } = useClinicData("appointments");
+  const { data: transactions } = useClinicData("transactions");
+  const { data: materials } = useClinicData("materials");
 
   const today = format(new Date(), "yyyy-MM-dd");
   const todayAppointments = appointments.filter((a) => a.date === today);
+  const monthPrefix = format(new Date(), "yyyy-MM");
   const monthTransactions = transactions.filter((t) =>
-    t.date.startsWith(format(new Date(), "yyyy-MM"))
+    String(t.date).startsWith(monthPrefix)
   );
-  const monthIncome = monthTransactions.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
-  const lowStockMaterials = materials.filter((m) => m.quantity <= m.minQuantity);
+  const monthIncome = monthTransactions
+    .filter((t) => t.type === "income")
+    .reduce((s, t) => s + Number(t.amount || 0), 0);
+  const lowStockMaterials = materials.filter(
+    (m) => Number(m.quantity) <= Number(m.min_quantity)
+  );
 
   const stats = [
     { label: "Pacientes", value: patients.length, icon: Users, color: "text-primary" },
@@ -63,21 +55,19 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Consultas de Hoje</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-lg">Consultas de Hoje</CardTitle></CardHeader>
           <CardContent>
             {todayAppointments.length === 0 ? (
               <p className="text-muted-foreground text-sm">Nenhuma consulta agendada para hoje.</p>
             ) : (
               <div className="space-y-3">
                 {todayAppointments.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div key={String(a.id)} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                     <div>
-                      <p className="font-medium">{a.patientName}</p>
-                      <p className="text-sm text-muted-foreground">{a.type}</p>
+                      <p className="font-medium">{String(a.patient_name)}</p>
+                      <p className="text-sm text-muted-foreground">{String(a.type)}</p>
                     </div>
-                    <span className="text-sm font-semibold text-primary">{a.time}</span>
+                    <span className="text-sm font-semibold text-primary">{String(a.time)}</span>
                   </div>
                 ))}
               </div>
@@ -86,19 +76,17 @@ const Dashboard = () => {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Alertas de Estoque</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-lg">Alertas de Estoque</CardTitle></CardHeader>
           <CardContent>
             {lowStockMaterials.length === 0 ? (
               <p className="text-muted-foreground text-sm">Todos os materiais estão em estoque adequado.</p>
             ) : (
               <div className="space-y-3">
                 {lowStockMaterials.map((m) => (
-                  <div key={m.id} className="flex items-center justify-between p-3 rounded-lg bg-destructive/10">
-                    <span className="font-medium">{m.name}</span>
+                  <div key={String(m.id)} className="flex items-center justify-between p-3 rounded-lg bg-destructive/10">
+                    <span className="font-medium">{String(m.name)}</span>
                     <span className="text-sm font-semibold text-destructive">
-                      {m.quantity} / {m.minQuantity} min
+                      {String(m.quantity)} / {String(m.min_quantity)} min
                     </span>
                   </div>
                 ))}

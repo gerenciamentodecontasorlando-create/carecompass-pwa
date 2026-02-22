@@ -14,16 +14,703 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          date: string
+          dentist: string | null
+          id: string
+          notes: string | null
+          patient_name: string
+          procedure: string | null
+          status: string | null
+          time: string
+          type: string | null
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          date: string
+          dentist?: string | null
+          id?: string
+          notes?: string | null
+          patient_name: string
+          procedure?: string | null
+          status?: string | null
+          time: string
+          type?: string | null
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          date?: string
+          dentist?: string | null
+          id?: string
+          notes?: string | null
+          patient_name?: string
+          procedure?: string | null
+          status?: string | null
+          time?: string
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certificates: {
+        Row: {
+          clinic_id: string
+          content: string | null
+          created_at: string
+          date: string
+          days: string | null
+          id: string
+          patient_name: string
+        }
+        Insert: {
+          clinic_id: string
+          content?: string | null
+          created_at?: string
+          date: string
+          days?: string | null
+          id?: string
+          patient_name: string
+        }
+        Update: {
+          clinic_id?: string
+          content?: string | null
+          created_at?: string
+          date?: string
+          days?: string | null
+          id?: string
+          patient_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinic_settings: {
+        Row: {
+          address: string | null
+          clinic_id: string
+          clinic_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          jarvis_always_listening: boolean | null
+          jarvis_enabled: boolean | null
+          jarvis_pitch: number | null
+          jarvis_speed: number | null
+          jarvis_voice_gender: string | null
+          jarvis_volume: number | null
+          phone: string | null
+          professional_name: string | null
+          registration_number: string | null
+          specialty: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          clinic_id: string
+          clinic_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          jarvis_always_listening?: boolean | null
+          jarvis_enabled?: boolean | null
+          jarvis_pitch?: number | null
+          jarvis_speed?: number | null
+          jarvis_voice_gender?: string | null
+          jarvis_volume?: number | null
+          phone?: string | null
+          professional_name?: string | null
+          registration_number?: string | null
+          specialty?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          clinic_id?: string
+          clinic_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          jarvis_always_listening?: boolean | null
+          jarvis_enabled?: boolean | null
+          jarvis_pitch?: number | null
+          jarvis_speed?: number | null
+          jarvis_voice_gender?: string | null
+          jarvis_volume?: number | null
+          phone?: string | null
+          professional_name?: string | null
+          registration_number?: string | null
+          specialty?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_settings_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: true
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinical_records: {
+        Row: {
+          allergies: string | null
+          chief_complaint: string | null
+          clinic_id: string
+          created_at: string
+          current_medications: string | null
+          dental_history: string | null
+          diagnosis: string | null
+          extra_oral_exam: string | null
+          family_history: string | null
+          habits: string | null
+          id: string
+          intra_oral_exam: string | null
+          medical_history: string | null
+          patient_id: string
+          prognosis: string | null
+          treatment_plan: string | null
+          updated_at: string
+        }
+        Insert: {
+          allergies?: string | null
+          chief_complaint?: string | null
+          clinic_id: string
+          created_at?: string
+          current_medications?: string | null
+          dental_history?: string | null
+          diagnosis?: string | null
+          extra_oral_exam?: string | null
+          family_history?: string | null
+          habits?: string | null
+          id?: string
+          intra_oral_exam?: string | null
+          medical_history?: string | null
+          patient_id: string
+          prognosis?: string | null
+          treatment_plan?: string | null
+          updated_at?: string
+        }
+        Update: {
+          allergies?: string | null
+          chief_complaint?: string | null
+          clinic_id?: string
+          created_at?: string
+          current_medications?: string | null
+          dental_history?: string | null
+          diagnosis?: string | null
+          extra_oral_exam?: string | null
+          family_history?: string | null
+          habits?: string | null
+          id?: string
+          intra_oral_exam?: string | null
+          medical_history?: string | null
+          patient_id?: string
+          prognosis?: string | null
+          treatment_plan?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_records_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinics: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      evolutions: {
+        Row: {
+          assessment: string | null
+          clinic_id: string
+          created_at: string
+          date: string
+          id: string
+          objective: string | null
+          patient_id: string
+          plan: string | null
+          procedure: string | null
+          professional: string | null
+          subjective: string | null
+          tooth_number: string | null
+        }
+        Insert: {
+          assessment?: string | null
+          clinic_id: string
+          created_at?: string
+          date: string
+          id?: string
+          objective?: string | null
+          patient_id: string
+          plan?: string | null
+          procedure?: string | null
+          professional?: string | null
+          subjective?: string | null
+          tooth_number?: string | null
+        }
+        Update: {
+          assessment?: string | null
+          clinic_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          objective?: string | null
+          patient_id?: string
+          plan?: string | null
+          procedure?: string | null
+          professional?: string | null
+          subjective?: string | null
+          tooth_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolutions_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evolutions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materials: {
+        Row: {
+          category: string | null
+          clinic_id: string
+          created_at: string
+          id: string
+          min_quantity: number
+          name: string
+          quantity: number
+          unit: string | null
+        }
+        Insert: {
+          category?: string | null
+          clinic_id: string
+          created_at?: string
+          id?: string
+          min_quantity?: number
+          name: string
+          quantity?: number
+          unit?: string | null
+        }
+        Update: {
+          category?: string | null
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          min_quantity?: number
+          name?: string
+          quantity?: number
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materials_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          clinic_id: string
+          content: string | null
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          clinic_id: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          clinic_id?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      odontograms: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          id: string
+          patient_id: string
+          records: Json
+          updated_at: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          id?: string
+          patient_id: string
+          records?: Json
+          updated_at?: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          patient_id?: string
+          records?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "odontograms_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "odontograms_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_files: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          date: string | null
+          description: string | null
+          id: string
+          name: string
+          patient_id: string
+          storage_path: string | null
+          type: string | null
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          patient_id: string
+          storage_path?: string | null
+          type?: string | null
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          patient_id?: string
+          storage_path?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_files_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_files_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          address: string | null
+          birth_date: string | null
+          clinic_id: string
+          cpf: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          birth_date?: string | null
+          clinic_id: string
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          birth_date?: string | null
+          clinic_id?: string
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patients_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prescriptions: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          date: string
+          id: string
+          medications: string | null
+          patient_name: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          date: string
+          id?: string
+          medications?: string | null
+          patient_name: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          medications?: string | null
+          patient_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescriptions_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          clinic_id: string
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          registration_number: string | null
+          specialty: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          clinic_id: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          registration_number?: string | null
+          specialty?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          clinic_id?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          registration_number?: string | null
+          specialty?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string | null
+          clinic_id: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          type: string
+        }
+        Insert: {
+          amount?: number
+          category?: string | null
+          clinic_id: string
+          created_at?: string
+          date: string
+          description: string
+          id?: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          clinic_id?: string
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_clinic_id: { Args: { _user_id: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "owner" | "admin" | "dentist" | "receptionist" | "assistant"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +837,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["owner", "admin", "dentist", "receptionist", "assistant"],
+    },
   },
 } as const

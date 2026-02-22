@@ -1,11 +1,12 @@
-import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useLocalDataMigration } from "@/hooks/useLocalDataMigration";
 import { AppLayout } from "@/components/AppLayout";
-import PinLock from "./pages/PinLock";
+import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
 import PatientProfile from "./pages/PatientProfile";
@@ -22,53 +23,55 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [unlocked, setUnlocked] = useState(() => {
-    return sessionStorage.getItem("clinic-unlocked") === "true";
-  });
+function AppRoutes() {
+  const { user, loading } = useAuth();
+  useLocalDataMigration();
 
-  const handleUnlock = () => {
-    sessionStorage.setItem("clinic-unlocked", "true");
-    setUnlocked(true);
-  };
-
-  if (!unlocked) {
+  if (loading) {
     return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <PinLock onUnlock={handleUnlock} />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground">Carregando...</div>
+      </div>
     );
   }
 
+  if (!user) {
+    return <Auth />;
+  }
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/pacientes" element={<Patients />} />
+          <Route path="/pacientes/:id" element={<PatientProfile />} />
+          <Route path="/agenda" element={<Agenda />} />
+          <Route path="/receituario" element={<Prescriptions />} />
+          <Route path="/atestados" element={<Certificates />} />
+          <Route path="/odontograma" element={<OdontogramPage />} />
+          <Route path="/financeiro" element={<Financial />} />
+          <Route path="/materiais" element={<Materials />} />
+          <Route path="/assistente-ia" element={<AIAssistant />} />
+          <Route path="/notas" element={<NotePad />} />
+          <Route path="/configuracoes" element={<SettingsPage />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/pacientes" element={<Patients />} />
-              <Route path="/pacientes/:id" element={<PatientProfile />} />
-              <Route path="/agenda" element={<Agenda />} />
-              <Route path="/receituario" element={<Prescriptions />} />
-              <Route path="/atestados" element={<Certificates />} />
-              <Route path="/odontograma" element={<OdontogramPage />} />
-              <Route path="/financeiro" element={<Financial />} />
-              <Route path="/materiais" element={<Materials />} />
-              <Route path="/assistente-ia" element={<AIAssistant />} />
-              <Route path="/notas" element={<NotePad />} />
-              <Route path="/configuracoes" element={<SettingsPage />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AppRoutes />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
