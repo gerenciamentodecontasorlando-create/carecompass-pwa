@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useClinicData } from "@/hooks/useClinicData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,37 +11,23 @@ import { Plus, Clock, Trash2 } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-
-interface Appointment {
-  id: string;
-  patientName: string;
-  date: string;
-  time: string;
-  type: string;
-  status: string;
-  notes: string;
-  procedure: string;
-  dentist: string;
-}
 
 const Agenda = () => {
-  const [appointments, setAppointments] = useLocalStorage<Appointment[]>("appointments", []);
+  const { data: appointments, insert, remove } = useClinicData("appointments");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ patientName: "", time: "09:00", type: "Consulta", notes: "", procedure: "", dentist: "" });
 
   const dayAppointments = appointments
-    .filter((a) => isSameDay(parseISO(a.date), selectedDate))
-    .sort((a, b) => a.time.localeCompare(b.time));
+    .filter((a) => isSameDay(parseISO(String(a.date)), selectedDate))
+    .sort((a, b) => String(a.time).localeCompare(String(b.time)));
 
-  const datesWithAppointments = appointments.map((a) => parseISO(a.date));
+  const datesWithAppointments = appointments.map((a) => parseISO(String(a.date)));
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.patientName.trim()) { toast.error("Nome do paciente é obrigatório"); return; }
-    const appt: Appointment = {
-      id: crypto.randomUUID(),
-      patientName: form.patientName,
+    await insert({
+      patient_name: form.patientName,
       date: format(selectedDate, "yyyy-MM-dd"),
       time: form.time,
       type: form.type,
@@ -49,15 +35,14 @@ const Agenda = () => {
       notes: form.notes,
       procedure: form.procedure,
       dentist: form.dentist,
-    };
-    setAppointments((prev) => [...prev, appt]);
+    });
     setForm({ patientName: "", time: "09:00", type: "Consulta", notes: "", procedure: "", dentist: "" });
     setOpen(false);
     toast.success("Consulta agendada");
   };
 
-  const handleDelete = (id: string) => {
-    setAppointments((prev) => prev.filter((a) => a.id !== id));
+  const handleDelete = async (id: string) => {
+    await remove(id);
     toast.success("Consulta removida");
   };
 
@@ -98,11 +83,11 @@ const Agenda = () => {
               </div>
               <div className="grid gap-2">
                 <Label>Procedimento / Palavras-chave</Label>
-                <Input value={form.procedure} onChange={(e) => setForm({ ...form, procedure: e.target.value })} placeholder="Ex: Extração, Limpeza, Canal, Restauração..." />
+                <Input value={form.procedure} onChange={(e) => setForm({ ...form, procedure: e.target.value })} placeholder="Ex: Extração, Limpeza, Canal..." />
               </div>
               <div className="grid gap-2">
                 <Label>Dentista responsável</Label>
-                <Input value={form.dentist} onChange={(e) => setForm({ ...form, dentist: e.target.value })} placeholder="Dr(a). nome do profissional" />
+                <Input value={form.dentist} onChange={(e) => setForm({ ...form, dentist: e.target.value })} placeholder="Dr(a). nome" />
               </div>
               <div className="grid gap-2">
                 <Label>Observações</Label>
@@ -141,19 +126,19 @@ const Agenda = () => {
             ) : (
               <div className="space-y-3">
                 {dayAppointments.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <div key={String(a.id)} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1 text-primary font-semibold text-sm min-w-[60px]">
                         <Clock className="h-3.5 w-3.5" />
-                        {a.time}
+                        {String(a.time)}
                       </div>
                       <div>
-                        <p className="font-medium">{a.patientName}</p>
-                        <p className="text-xs text-muted-foreground">{a.type}{a.procedure ? ` • ${a.procedure}` : ""}</p>
-                        {a.dentist && <p className="text-xs text-muted-foreground">🦷 {a.dentist}</p>}
+                        <p className="font-medium">{String(a.patient_name)}</p>
+                        <p className="text-xs text-muted-foreground">{String(a.type)}{a.procedure ? ` • ${a.procedure}` : ""}</p>
+                        {a.dentist && <p className="text-xs text-muted-foreground">🦷 {String(a.dentist)}</p>}
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(String(a.id))}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>

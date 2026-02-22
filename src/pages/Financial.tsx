@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useClinicData } from "@/hooks/useClinicData";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,44 +10,34 @@ import { Plus, Trash2, TrendingUp, TrendingDown } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  type: "income" | "expense";
-  amount: number;
-  category: string;
-}
-
 const categories = {
   income: ["Consulta", "Procedimento", "Convênio", "Outro"],
   expense: ["Material", "Aluguel", "Funcionário", "Equipamento", "Impostos", "Outro"],
 };
 
 const Financial = () => {
-  const [transactions, setTransactions] = useLocalStorage<Transaction[]>("transactions", []);
+  const { data: transactions, insert, remove } = useClinicData("transactions");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ description: "", type: "income" as "income" | "expense", amount: "", category: "Consulta", date: format(new Date(), "yyyy-MM-dd") });
   const [filterMonth, setFilterMonth] = useState(format(new Date(), "yyyy-MM"));
 
   const filtered = transactions
-    .filter((t) => t.date.startsWith(filterMonth))
-    .sort((a, b) => b.date.localeCompare(a.date));
+    .filter((t) => String(t.date).startsWith(filterMonth))
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
-  const totalIncome = filtered.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
-  const totalExpense = filtered.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  const totalIncome = filtered.filter((t) => t.type === "income").reduce((s, t) => s + Number(t.amount || 0), 0);
+  const totalExpense = filtered.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount || 0), 0);
   const balance = totalIncome - totalExpense;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.description.trim() || !form.amount) { toast.error("Preencha todos os campos"); return; }
-    setTransactions((prev) => [...prev, {
-      id: crypto.randomUUID(),
+    await insert({
       date: form.date,
       description: form.description,
       type: form.type,
       amount: parseFloat(form.amount),
       category: form.category,
-    }]);
+    });
     setForm({ description: "", type: "income", amount: "", category: "Consulta", date: format(new Date(), "yyyy-MM-dd") });
     setOpen(false);
     toast.success("Lançamento adicionado");
@@ -144,20 +134,20 @@ const Financial = () => {
           ) : (
             <div className="divide-y">
               {filtered.map((t) => (
-                <div key={t.id} className="flex items-center justify-between p-4 hover:bg-muted/30">
+                <div key={String(t.id)} className="flex items-center justify-between p-4 hover:bg-muted/30">
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${t.type === "income" ? "bg-success" : "bg-destructive"}`} />
                     <div>
-                      <p className="font-medium text-sm">{t.description}</p>
-                      <p className="text-xs text-muted-foreground">{format(new Date(t.date), "dd/MM/yyyy")} • {t.category}</p>
+                      <p className="font-medium text-sm">{String(t.description)}</p>
+                      <p className="text-xs text-muted-foreground">{format(new Date(String(t.date)), "dd/MM/yyyy")} • {String(t.category)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`font-semibold ${t.type === "income" ? "text-success" : "text-destructive"}`}>
-                      {t.type === "income" ? "+" : "-"} R$ {t.amount.toFixed(2)}
+                      {t.type === "income" ? "+" : "-"} R$ {Number(t.amount).toFixed(2)}
                     </span>
-                    <Button variant="ghost" size="icon" onClick={() => {
-                      setTransactions((prev) => prev.filter((x) => x.id !== t.id));
+                    <Button variant="ghost" size="icon" onClick={async () => {
+                      await remove(String(t.id));
                       toast.success("Lançamento removido");
                     }}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />

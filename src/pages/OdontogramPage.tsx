@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useClinicData } from "@/hooks/useClinicData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,11 +14,6 @@ interface ToothRecord {
   notes: string;
 }
 
-interface PatientOdontogram {
-  patientName: string;
-  records: Record<number, ToothRecord>;
-}
-
 const conditions = [
   { value: "healthy", label: "Saudável", color: "bg-success" },
   { value: "cavity", label: "Cárie", color: "bg-destructive" },
@@ -30,17 +25,19 @@ const conditions = [
 ];
 
 const OdontogramPage = () => {
-  const [odontograms, setOdontograms] = useLocalStorage<Record<string, PatientOdontogram>>("odontograms", {});
-  const [currentPatient, setCurrentPatient] = useState("");
+  const { data: patients } = useClinicData("patients");
+  const { data: odontograms, insert, update } = useClinicData("odontograms");
+  const [selectedPatientId, setSelectedPatientId] = useState("");
   const [selectedTooth, setSelectedTooth] = useState<number | null>(null);
   const [selectedCondition, setSelectedCondition] = useState("healthy");
   const [toothNote, setToothNote] = useState("");
 
-  const currentData = currentPatient ? odontograms[currentPatient] : null;
+  const currentOdontogram = odontograms.find((o) => String(o.patient_id) === selectedPatientId);
+  const records = (currentOdontogram?.records || {}) as Record<string, ToothRecord>;
 
   const handleToothClick = (toothNumber: number) => {
     setSelectedTooth(toothNumber);
-    const record = currentData?.records[toothNumber];
+    const record = records[String(toothNumber)];
     if (record) {
       setSelectedCondition(record.condition);
       setToothNote(record.notes);
@@ -50,27 +47,27 @@ const OdontogramPage = () => {
     }
   };
 
-  const handleSave = () => {
-    if (!currentPatient.trim()) { toast.error("Selecione um paciente"); return; }
+  const handleSave = async () => {
+    if (!selectedPatientId) { toast.error("Selecione um paciente"); return; }
     if (selectedTooth === null) { toast.error("Selecione um dente"); return; }
-    setOdontograms((prev) => ({
-      ...prev,
-      [currentPatient]: {
-        patientName: currentPatient,
-        records: {
-          ...(prev[currentPatient]?.records || {}),
-          [selectedTooth]: { toothNumber: selectedTooth, condition: selectedCondition, notes: toothNote },
-        },
-      },
-    }));
+    
+    const updatedRecords = {
+      ...records,
+      [String(selectedTooth)]: { toothNumber: selectedTooth, condition: selectedCondition, notes: toothNote },
+    };
+
+    if (currentOdontogram) {
+      await update(String(currentOdontogram.id), { records: updatedRecords });
+    } else {
+      await insert({ patient_id: selectedPatientId, records: updatedRecords });
+    }
     toast.success(`Dente ${selectedTooth} atualizado`);
   };
 
   const getToothConditions = (): Record<number, string> => {
-    if (!currentData) return {};
     const result: Record<number, string> = {};
-    Object.entries(currentData.records).forEach(([num, rec]) => {
-      result[parseInt(num)] = rec.condition;
+    Object.entries(records).forEach(([num, rec]) => {
+      if (rec && typeof rec === "object") result[parseInt(num)] = (rec as ToothRecord).condition;
     });
     return result;
   };
@@ -82,7 +79,14 @@ const OdontogramPage = () => {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <Label>Paciente</Label>
-          <Input value={currentPatient} onChange={(e) => setCurrentPatient(e.target.value)} placeholder="Nome do paciente" />
+          <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+            <SelectTrigger><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
+            <SelectContent>
+              {patients.map((p) => (
+                <SelectItem key={String(p.id)} value={String(p.id)}>{String(p.name)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -123,7 +127,6 @@ const OdontogramPage = () => {
               </div>
             </div>
             <Button onClick={handleSave}>Salvar Dente {selectedTooth}</Button>
-
             <div className="flex flex-wrap gap-2 pt-2 border-t">
               {conditions.map((c) => (
                 <div key={c.value} className="flex items-center gap-1 text-xs">

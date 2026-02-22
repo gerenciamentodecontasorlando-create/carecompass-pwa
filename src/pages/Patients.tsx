@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useClinicData } from "@/hooks/useClinicData";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,51 +15,58 @@ export interface Patient {
   name: string;
   phone: string;
   email: string;
-  birthDate: string;
+  birth_date: string;
   cpf: string;
   address: string;
   notes: string;
+  clinic_id: string;
 }
 
-const emptyPatient: Omit<Patient, "id"> = {
-  name: "", phone: "", email: "", birthDate: "", cpf: "", address: "", notes: "",
-};
+const emptyForm = { name: "", phone: "", email: "", birth_date: "", cpf: "", address: "", notes: "" };
 
 const Patients = () => {
   const navigate = useNavigate();
-  const [patients, setPatients] = useLocalStorage<Patient[]>("patients", []);
+  const { data: patients, insert, update, remove } = useClinicData("patients");
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState(emptyPatient);
+  const [form, setForm] = useState(emptyForm);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const filtered = patients.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.cpf.includes(search)
+    String(p.name).toLowerCase().includes(search.toLowerCase()) ||
+    String(p.cpf).includes(search)
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
     if (editingId) {
-      setPatients((prev) => prev.map((p) => (p.id === editingId ? { ...form, id: editingId } : p)));
+      await update(editingId, form);
       toast.success("Paciente atualizado");
     } else {
-      setPatients((prev) => [...prev, { ...form, id: crypto.randomUUID() }]);
+      await insert(form);
       toast.success("Paciente cadastrado");
     }
-    setForm(emptyPatient);
+    setForm(emptyForm);
     setEditingId(null);
     setOpen(false);
   };
 
-  const handleEdit = (p: Patient) => {
-    setForm(p);
-    setEditingId(p.id);
+  const handleEdit = (p: Record<string, unknown>) => {
+    setForm({
+      name: String(p.name || ""),
+      phone: String(p.phone || ""),
+      email: String(p.email || ""),
+      birth_date: String(p.birth_date || ""),
+      cpf: String(p.cpf || ""),
+      address: String(p.address || ""),
+      notes: String(p.notes || ""),
+    });
+    setEditingId(String(p.id));
     setOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setPatients((prev) => prev.filter((p) => p.id !== id));
+  const handleDelete = async (id: string) => {
+    await remove(id);
     toast.success("Paciente removido");
   };
 
@@ -67,7 +74,7 @@ const Patients = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Pacientes</h1>
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setForm(emptyPatient); setEditingId(null); } }}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setForm(emptyForm); setEditingId(null); } }}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Novo Paciente</Button>
           </DialogTrigger>
@@ -87,7 +94,7 @@ const Patients = () => {
                 </div>
                 <div className="grid gap-2">
                   <Label>Data de Nascimento</Label>
-                  <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
+                  <Input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -129,18 +136,18 @@ const Patients = () => {
       ) : (
         <div className="grid gap-3">
           {filtered.map((p) => (
-            <Card key={p.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/pacientes/${p.id}`)}>
+            <Card key={String(p.id)} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/pacientes/${p.id}`)}>
               <CardContent className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <UserRound className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-semibold">{p.name}</p>
-                    <p className="text-sm text-muted-foreground">{p.phone || "Sem telefone"}</p>
+                    <p className="font-semibold">{String(p.name)}</p>
+                    <p className="text-sm text-muted-foreground">{String(p.phone) || "Sem telefone"}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDelete(String(p.id)); }}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </CardContent>
