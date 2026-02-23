@@ -8,13 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Printer, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useFormDraft } from "@/hooks/useFormDraft";
 
 const Certificates = () => {
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
   const { data: certificates, insert, remove } = useClinicData("certificates");
-  const [form, setForm] = useState({ patientName: "", content: "", days: "1" });
-  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [form, setForm, clearDraft] = useFormDraft("certificates-form", { patientName: "", content: "", days: "1" });
+  const [previewId, setPreviewId] = useFormDraft<string | null>("certificates-preview", null);
 
   const handleSave = async () => {
     if (!form.patientName.trim()) { toast.error("Preencha o nome do paciente"); return; }
@@ -25,7 +26,7 @@ const Certificates = () => {
       days: form.days,
     });
     if (result) {
-      setForm({ patientName: "", content: "", days: "1" });
+      clearDraft();
       setPreviewId(String(result.id));
       toast.success("Atestado gerado");
     }

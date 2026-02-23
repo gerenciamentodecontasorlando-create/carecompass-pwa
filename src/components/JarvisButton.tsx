@@ -1,31 +1,23 @@
 import { useState, useEffect } from "react";
-import { useJarvis } from "@/hooks/useJarvis";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useJarvis, type JarvisVoiceSettings } from "@/hooks/useJarvis";
+import { useClinicData } from "@/hooks/useClinicData";
 import { Mic, MicOff, Volume2, Loader2, Power } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface ClinicSettings {
-  professionalName: string;
-  specialty: string;
-  registrationNumber: string;
-  clinicName: string;
-  address: string;
-  phone: string;
-  email: string;
-}
-
 export function JarvisButton() {
-  const [settings] = useLocalStorage<ClinicSettings>("clinicSettings", {
-    professionalName: "",
-    specialty: "",
-    registrationNumber: "",
-    clinicName: "",
-    address: "",
-    phone: "",
-    email: "",
-  });
+  const { data: settingsArr } = useClinicData("clinic_settings");
+  const settings = settingsArr[0] || {};
 
-  const [jarvisSettings] = useLocalStorage<{ enabled: boolean }>("jarvisSettings", { enabled: true });
+  const professionalName = String(settings.professional_name || "");
+  const jarvisEnabled = settings.jarvis_enabled !== false;
+
+  const voiceSettings: JarvisVoiceSettings = {
+    speed: Number(settings.jarvis_speed) || 1.0,
+    pitch: Number(settings.jarvis_pitch) || 0.7,
+    volume: Number(settings.jarvis_volume) || 1.0,
+    voiceGender: (String(settings.jarvis_voice_gender || "male")) as "male" | "female",
+    alwaysListening: !!settings.jarvis_always_listening,
+  };
 
   const {
     isListening,
@@ -37,16 +29,15 @@ export function JarvisButton() {
     activate,
     deactivate,
     startListening,
-  } = useJarvis({ professionalName: settings.professionalName });
+  } = useJarvis({ professionalName, voiceSettings });
 
   const [showPanel, setShowPanel] = useState(false);
 
-  // Auto-hide panel after response
   useEffect(() => {
     if (lastResponse) setShowPanel(true);
   }, [lastResponse]);
 
-  if (!jarvisSettings.enabled) return null;
+  if (!jarvisEnabled) return null;
 
   const getStatusText = () => {
     if (isProcessing) return "Processando...";
@@ -74,9 +65,7 @@ export function JarvisButton() {
 
   return (
     <>
-      {/* Floating button */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 no-print">
-        {/* Status panel */}
         {isActive && showPanel && (transcript || lastResponse) && (
           <div className="bg-card border border-border rounded-2xl shadow-lg p-4 max-w-xs w-72 animate-in slide-in-from-bottom-2">
             {transcript && (
@@ -100,7 +89,6 @@ export function JarvisButton() {
           </div>
         )}
 
-        {/* Status label */}
         {isActive && (
           <span className="text-xs bg-card border border-border text-muted-foreground px-3 py-1.5 rounded-full shadow-sm">
             {getStatusText()}
@@ -108,7 +96,6 @@ export function JarvisButton() {
         )}
 
         <div className="flex items-center gap-2">
-          {/* Deactivate button */}
           {isActive && (
             <button
               onClick={deactivate}
@@ -119,7 +106,6 @@ export function JarvisButton() {
             </button>
           )}
 
-          {/* Main mic button */}
           <button
             onClick={handleMainClick}
             disabled={isSpeaking || isProcessing}
