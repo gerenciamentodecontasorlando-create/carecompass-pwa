@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { getCachedData, setCachedData, addToSyncQueue } from "@/lib/offlineDb";
+import { useOnlineStatus } from "./useOnlineStatus";
 
 type TableName = "patients" | "appointments" | "transactions" | "materials" | 
   "clinical_records" | "evolutions" | "patient_files" | "prescriptions" | 
@@ -16,13 +18,29 @@ export function useClinicData(
   }
 ) {
   const { clinicId } = useAuth();
+  const isOnline = useOnlineStatus();
   const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const cacheKey = `${table}:${clinicId}:${JSON.stringify(options?.filter)}`;
 
   const fetchData = useCallback(async () => {
     if (!clinicId) { setLoading(false); return; }
     setLoading(true);
-    
+
+    // Try loading from cache first (instant display)
+    const cached = await getCachedData(cacheKey);
+    if (cached) {
+      setData(cached);
+      setLoading(false);
+    }
+
+    if (!isOnline) {
+      if (!cached) setLoading(false);
+      return;
+    }
+
+    // Fetch from server
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = supabase.from(table).select("*").eq("clinic_id", clinicId);
     
@@ -41,9 +59,10 @@ export function useClinicData(
       console.error(`Error fetching ${table}:`, error);
     } else {
       setData(result || []);
+      await setCachedData(cacheKey, result || []);
     }
     setLoading(false);
-  }, [clinicId, table, JSON.stringify(options?.filter), options?.orderBy, options?.orderAsc]);
+  }, [clinicId, table, cacheKey, isOnline, options?.orderBy, options?.orderAsc]);
 
   useEffect(() => {
     fetchData();
@@ -51,9 +70,23 @@ export function useClinicData(
 
   const insert = async (record: Record<string, unknown>) => {
     if (!clinicId) return null;
+    const payload = { ...record, clinic_id: clinicId };
+
+    if (!isOnline) {
+      // Generate temp ID and save locally
+      const tempId = crypto.randomUUID();
+      const tempRecord = { ...payload, id: tempId, created_at: new Date().toISOString() };
+      const newData = [...data, tempRecord];
+      setData(newData);
+      await setCachedData(cacheKey, newData);
+      await addToSyncQueue({ table, operation: "insert", payload });
+      toast.info("Salvo offline — será sincronizado quando a conexão voltar");
+      return tempRecord;
+    }
+
     const { data: result, error } = await supabase
       .from(table)
-      .insert({ ...record, clinic_id: clinicId } as never)
+      .insert(payload as never)
       .select()
       .single();
     if (error) {
@@ -66,6 +99,17 @@ export function useClinicData(
   };
 
   const update = async (id: string, updates: Record<string, unknown>) => {
+    if (!isOnline) {
+      const newData = data.map((item) =>
+        String(item.id) === id ? { ...item, ...updates } : item
+      );
+      setData(newData);
+      await setCachedData(cacheKey, newData);
+      await addToSyncQueue({ table, operation: "update", payload: updates, recordId: id });
+      toast.info("Atualizado offline — será sincronizado quando a conexão voltar");
+      return true;
+    }
+
     const { error } = await supabase
       .from(table)
       .update(updates as never)
@@ -80,6 +124,15 @@ export function useClinicData(
   };
 
   const remove = async (id: string) => {
+    if (!isOnline) {
+      const newData = data.filter((item) => String(item.id) !== id);
+      setData(newData);
+      await setCachedData(cacheKey, newData);
+      await addToSyncQueue({ table, operation: "delete", recordId: id, payload: {} });
+      toast.info("Removido offline — será sincronizado quando a conexão voltar");
+      return true;
+    }
+
     const { error } = await supabase
       .from(table)
       .delete()
