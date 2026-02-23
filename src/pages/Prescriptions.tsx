@@ -8,13 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Printer, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useFormDraft } from "@/hooks/useFormDraft";
 
 const Prescriptions = () => {
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
   const { data: prescriptions, insert, remove } = useClinicData("prescriptions");
-  const [form, setForm] = useState({ patientName: "", medications: "" });
-  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [form, setForm, clearDraft] = useFormDraft("prescriptions-form", { patientName: "", medications: "" });
+  const [previewId, setPreviewId] = useFormDraft<string | null>("prescriptions-preview", null);
 
   const handleSave = async () => {
     if (!form.patientName.trim() || !form.medications.trim()) {
@@ -26,7 +27,7 @@ const Prescriptions = () => {
       medications: form.medications,
     });
     if (result) {
-      setForm({ patientName: "", medications: "" });
+      clearDraft();
       setPreviewId(String(result.id));
       toast.success("Receituário salvo");
     }
