@@ -2,3 +2,9 @@ project_id = "qwxdgmgrbfyglyiccwbi"
 
 [functions.ai-assistant]
 verify_jwt = false
+
+[functions.transcribe-consultation]
+verify_jwt = false
+
+[functions.generate-soap]
+verify_jwt = false

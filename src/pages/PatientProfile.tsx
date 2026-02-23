@@ -15,6 +15,7 @@ import {
   ArrowLeft, Printer, Plus, Trash2, FileImage, ClipboardList,
   Stethoscope, Calendar, ImageIcon, Save, MessageCircle
 } from "lucide-react";
+import { ConsultationRecorder } from "@/components/ConsultationRecorder";
 
 const emptyClinical = {
   chief_complaint: "", medical_history: "", allergies: "", current_medications: "",
@@ -266,6 +267,25 @@ const PatientProfile = () => {
 
           {/* EVOLUTIONS TAB */}
           <TabsContent value="evolutions" className="space-y-4 mt-4">
+            {/* Consultation Recorder */}
+            <ConsultationRecorder
+              patientName={String(patient.name)}
+              onSoapGenerated={(soap) => {
+                setEvoForm({
+                  ...emptyEvolution,
+                  subjective: soap.subjective || "",
+                  objective: soap.objective || "",
+                  assessment: soap.assessment || "",
+                  plan: soap.plan || "",
+                  procedure: soap.procedure || "",
+                  tooth_number: soap.tooth_number || "",
+                  professional: String(settings.professional_name || ""),
+                });
+                setEditingEvoId(null);
+                setEvoOpen(true);
+              }}
+            />
+
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">Evoluções Clínicas</h2>
               <Dialog open={evoOpen} onOpenChange={(v) => { setEvoOpen(v); if (!v) { setEvoForm(emptyEvolution); setEditingEvoId(null); } }}>
