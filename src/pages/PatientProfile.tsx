@@ -252,11 +252,11 @@ const PatientProfile = () => {
                   <div className="grid gap-2"><Label>Medicamentos em Uso</Label><Textarea value={clinicalForm.current_medications} onChange={(e) => setClinicalForm({ ...clinicalForm, current_medications: e.target.value })} rows={2} /></div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2"><Label>Histórico Odontológico</Label><Textarea value={clinicalForm.dental_history} onChange={(e) => setClinicalForm({ ...clinicalForm, dental_history: e.target.value })} rows={2} /></div>
-                  <div className="grid gap-2"><Label>Hábitos</Label><Textarea value={clinicalForm.habits} onChange={(e) => setClinicalForm({ ...clinicalForm, habits: e.target.value })} rows={2} /></div>
+                   <div className="grid gap-2"><Label>Histórico Clínico Específico</Label><Textarea value={clinicalForm.dental_history} onChange={(e) => setClinicalForm({ ...clinicalForm, dental_history: e.target.value })} rows={2} placeholder="Histórico específico da área (odontológico, dermatológico, etc.)" /></div>
+                   <div className="grid gap-2"><Label>Hábitos</Label><Textarea value={clinicalForm.habits} onChange={(e) => setClinicalForm({ ...clinicalForm, habits: e.target.value })} rows={2} /></div>
                 </div>
-                <div className="grid gap-2"><Label>Exame Extraoral (O)</Label><Textarea value={clinicalForm.extra_oral_exam} onChange={(e) => setClinicalForm({ ...clinicalForm, extra_oral_exam: e.target.value })} rows={2} /></div>
-                <div className="grid gap-2"><Label>Exame Intraoral (O)</Label><Textarea value={clinicalForm.intra_oral_exam} onChange={(e) => setClinicalForm({ ...clinicalForm, intra_oral_exam: e.target.value })} rows={3} /></div>
+                <div className="grid gap-2"><Label>Exame Físico Geral (O)</Label><Textarea value={clinicalForm.extra_oral_exam} onChange={(e) => setClinicalForm({ ...clinicalForm, extra_oral_exam: e.target.value })} rows={2} placeholder="Exame físico geral / extraoral" /></div>
+                <div className="grid gap-2"><Label>Exame Específico (O)</Label><Textarea value={clinicalForm.intra_oral_exam} onChange={(e) => setClinicalForm({ ...clinicalForm, intra_oral_exam: e.target.value })} rows={3} placeholder="Exame específico da área / intraoral" /></div>
                 <div className="grid gap-2"><Label>Diagnóstico (A)</Label><Textarea value={clinicalForm.diagnosis} onChange={(e) => setClinicalForm({ ...clinicalForm, diagnosis: e.target.value })} rows={2} /></div>
                 <div className="grid gap-2"><Label>Plano de Tratamento (P)</Label><Textarea value={clinicalForm.treatment_plan} onChange={(e) => setClinicalForm({ ...clinicalForm, treatment_plan: e.target.value })} rows={3} /></div>
                 <div className="grid gap-2"><Label>Prognóstico</Label><Textarea value={clinicalForm.prognosis} onChange={(e) => setClinicalForm({ ...clinicalForm, prognosis: e.target.value })} rows={2} /></div>
