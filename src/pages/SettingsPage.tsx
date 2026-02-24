@@ -120,11 +120,11 @@ const SettingsPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label>Especialidade</Label>
-                  <Input value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} placeholder="Odontologia..." />
+                  <Input value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} placeholder="Ex: Odontologia, Dermatologia, Clínica Geral..." />
                 </div>
                 <div className="grid gap-2">
-                  <Label>CRO / CRM</Label>
-                  <Input value={form.registration_number} onChange={(e) => setForm({ ...form, registration_number: e.target.value })} placeholder="CRO-SP 12345" />
+                  <Label>Registro Profissional</Label>
+                  <Input value={form.registration_number} onChange={(e) => setForm({ ...form, registration_number: e.target.value })} placeholder="CRO, CRM, CRP, CREFITO..." />
                 </div>
               </div>
             </div>
