@@ -214,7 +214,7 @@ const Prescriptions = () => {
               <div className="border-t-2 border-primary/30 pt-4 mt-8 text-center space-y-1">
                 <div className="w-48 border-t border-foreground mx-auto mb-2 mt-12" />
                 <p className="text-sm font-semibold">{String(settings.professional_name || "Assinatura")}</p>
-                <p className="text-xs text-muted-foreground">{String(settings.registration_number || "CRO/CRM")}</p>
+                <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
                 <p className="text-xs text-muted-foreground mt-3">{String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}</p>
               </div>
             </div>

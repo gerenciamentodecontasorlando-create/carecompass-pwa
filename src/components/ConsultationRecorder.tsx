@@ -2,8 +2,33 @@ import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Mic, Square, Pause, Play, Loader2, FileText, Clock } from "lucide-react";
+import { Mic, Square, Pause, Play, Loader2, FileText, Clock, Shield } from "lucide-react";
+
+const RECORDING_CONSENT_TEXT = `TERMO DE CONSENTIMENTO LIVRE E ESCLARECIDO — GRAVAÇÃO DE CONSULTA
+
+Em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018) e o Código de Ética Médica, declaro que:
+
+1. FINALIDADE DA GRAVAÇÃO
+A gravação de áudio desta consulta será utilizada exclusivamente para:
+• Transcrição automática da consulta para registro no prontuário eletrônico;
+• Geração de evolução clínica no formato SOAP (Subjetivo, Objetivo, Avaliação, Plano);
+• Melhoria da qualidade do atendimento e documentação clínica.
+
+2. PROCESSAMENTO
+O áudio será processado por inteligência artificial para transcrição e será descartado após o processamento. Apenas o texto transcrito e a evolução gerada serão armazenados no prontuário.
+
+3. CONFIDENCIALIDADE
+Todo o conteúdo da gravação é protegido pelo sigilo profissional e pela LGPD. Os dados não serão compartilhados com terceiros.
+
+4. DIREITO DE RECUSA
+O paciente pode recusar a gravação a qualquer momento, sem qualquer prejuízo ao atendimento.
+
+5. REVOGAÇÃO
+O consentimento pode ser revogado a qualquer momento, mediante solicitação ao profissional responsável.`;
 
 interface Segment {
   speaker: string;
@@ -36,6 +61,9 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
   const [fullText, setFullText] = useState("");
   const [recordingTime, setRecordingTime] = useState(0);
   const [recordingChunks, setRecordingChunks] = useState<Blob[]>([]);
+  const [showConsent, setShowConsent] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -60,7 +88,15 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
     return `${m}:${s}`;
   };
 
-  const startRecording = useCallback(async () => {
+  const handleStartRecording = useCallback(() => {
+    if (!consentAccepted) {
+      setShowConsent(true);
+      return;
+    }
+    doStartRecording();
+  }, [consentAccepted]);
+
+  const doStartRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, {
@@ -90,6 +126,13 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
       toast.error("Não foi possível acessar o microfone. Verifique as permissões.");
     }
   }, []);
+
+  const acceptConsentAndRecord = useCallback(() => {
+    setConsentAccepted(true);
+    setShowConsent(false);
+    // Start recording after consent
+    setTimeout(() => doStartRecording(), 100);
+  }, [doStartRecording]);
 
   const pauseRecording = useCallback(() => {
     if (mediaRecorderRef.current?.state === "recording") {
@@ -248,7 +291,7 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
         <div className="flex items-center gap-2 flex-wrap">
           {!isRecording ? (
             <Button
-              onClick={startRecording}
+              onClick={handleStartRecording}
               disabled={isProcessing}
               variant="default"
               size="sm"
@@ -327,6 +370,42 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
           </p>
         )}
       </CardContent>
+
+      {/* Consent Dialog */}
+      <Dialog open={showConsent} onOpenChange={setShowConsent}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Termo de Consentimento — Gravação
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[350px] pr-4">
+            <pre className="whitespace-pre-wrap text-sm leading-relaxed">{RECORDING_CONSENT_TEXT}</pre>
+          </ScrollArea>
+          <div className="space-y-4 pt-2">
+            <div className="flex items-start space-x-2">
+              <Checkbox
+                id="recording-consent"
+                checked={consentChecked}
+                onCheckedChange={(checked) => setConsentChecked(checked === true)}
+                className="mt-1"
+              />
+              <label htmlFor="recording-consent" className="text-sm text-muted-foreground leading-relaxed">
+                O paciente foi informado e autorizou a gravação desta consulta para fins de transcrição e registro em prontuário.
+              </label>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => { setShowConsent(false); setConsentChecked(false); }} className="flex-1">
+                Cancelar
+              </Button>
+              <Button onClick={acceptConsentAndRecord} disabled={!consentChecked} className="flex-1">
+                <Mic className="h-4 w-4 mr-2" />Aceitar e Gravar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

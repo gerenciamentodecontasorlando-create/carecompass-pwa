@@ -19,6 +19,8 @@ import Materials from "./pages/Materials";
 import SettingsPage from "./pages/SettingsPage";
 import AIAssistant from "./pages/AIAssistant";
 import NotePad from "./pages/NotePad";
+import AuditLog from "./pages/AuditLog";
+import DataImport from "./pages/DataImport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +57,8 @@ function AppRoutes() {
           <Route path="/assistente-ia" element={<AIAssistant />} />
           <Route path="/notas" element={<NotePad />} />
           <Route path="/configuracoes" element={<SettingsPage />} />
+          <Route path="/auditoria" element={<AuditLog />} />
+          <Route path="/importar-dados" element={<DataImport />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
