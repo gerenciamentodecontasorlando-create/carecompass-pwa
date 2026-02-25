@@ -295,7 +295,7 @@ const PatientProfile = () => {
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2"><Label>Data</Label><Input type="date" value={evoForm.date} onChange={(e) => setEvoForm({ ...evoForm, date: e.target.value })} /></div>
-                      <div className="grid gap-2"><Label>Dente / Região</Label><Input value={evoForm.tooth_number} onChange={(e) => setEvoForm({ ...evoForm, tooth_number: e.target.value })} placeholder="Ex: 36" /></div>
+                      <div className="grid gap-2"><Label>Região / Local</Label><Input value={evoForm.tooth_number} onChange={(e) => setEvoForm({ ...evoForm, tooth_number: e.target.value })} placeholder="Ex: região cervical, dente 36, MSD" /></div>
                     </div>
                     <div className="grid gap-2"><Label>Queixa (S)</Label><Textarea value={evoForm.subjective} onChange={(e) => setEvoForm({ ...evoForm, subjective: e.target.value })} rows={2} /></div>
                     <div className="grid gap-2"><Label>Exame (O)</Label><Textarea value={evoForm.objective} onChange={(e) => setEvoForm({ ...evoForm, objective: e.target.value })} rows={2} /></div>
@@ -427,10 +427,10 @@ const PatientProfile = () => {
             {clinicalForm.family_history && <div><strong>Histórico Familiar:</strong><p className="ml-4">{clinicalForm.family_history}</p></div>}
             {clinicalForm.allergies && <div><strong>Alergias:</strong><p className="ml-4">{clinicalForm.allergies}</p></div>}
             {clinicalForm.current_medications && <div><strong>Medicamentos:</strong><p className="ml-4">{clinicalForm.current_medications}</p></div>}
-            {clinicalForm.dental_history && <div><strong>Histórico Odontológico:</strong><p className="ml-4">{clinicalForm.dental_history}</p></div>}
+            {clinicalForm.dental_history && <div><strong>Histórico Clínico Específico:</strong><p className="ml-4">{clinicalForm.dental_history}</p></div>}
             {clinicalForm.habits && <div><strong>Hábitos:</strong><p className="ml-4">{clinicalForm.habits}</p></div>}
-            {clinicalForm.extra_oral_exam && <div><strong>Exame Extraoral:</strong><p className="ml-4">{clinicalForm.extra_oral_exam}</p></div>}
-            {clinicalForm.intra_oral_exam && <div><strong>Exame Intraoral:</strong><p className="ml-4">{clinicalForm.intra_oral_exam}</p></div>}
+            {clinicalForm.extra_oral_exam && <div><strong>Exame Físico Geral:</strong><p className="ml-4">{clinicalForm.extra_oral_exam}</p></div>}
+            {clinicalForm.intra_oral_exam && <div><strong>Exame Específico:</strong><p className="ml-4">{clinicalForm.intra_oral_exam}</p></div>}
             {clinicalForm.diagnosis && <div><strong>Diagnóstico:</strong><p className="ml-4">{clinicalForm.diagnosis}</p></div>}
             {clinicalForm.treatment_plan && <div><strong>Plano de Tratamento:</strong><p className="ml-4">{clinicalForm.treatment_plan}</p></div>}
             {clinicalForm.prognosis && <div><strong>Prognóstico:</strong><p className="ml-4">{clinicalForm.prognosis}</p></div>}
@@ -444,7 +444,7 @@ const PatientProfile = () => {
           <PrintHeader /><PatientHeader />
           <h2 className="text-lg font-bold text-center mb-4">EVOLUÇÃO CLÍNICA</h2>
           <p className="mb-2"><strong>Data:</strong> {String(selectedEvo.date).split("-").reverse().join("/")}</p>
-          {selectedEvo.tooth_number && <p className="mb-2"><strong>Dente:</strong> {String(selectedEvo.tooth_number)}</p>}
+          {selectedEvo.tooth_number && <p className="mb-2"><strong>Região/Local:</strong> {String(selectedEvo.tooth_number)}</p>}
           <div className="space-y-2 mt-4">
             {selectedEvo.subjective && <div><strong>S:</strong><p className="ml-4">{String(selectedEvo.subjective)}</p></div>}
             {selectedEvo.objective && <div><strong>O:</strong><p className="ml-4">{String(selectedEvo.objective)}</p></div>}

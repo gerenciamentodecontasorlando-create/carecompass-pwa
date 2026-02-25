@@ -1,6 +1,7 @@
 import {
   LayoutDashboard, Users, CalendarDays, FileText, FileBadge,
   Smile, DollarSign, Package, Settings, Bot, StickyNote, LogOut,
+  Shield, Upload,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +21,8 @@ const items = [
   { title: "Notas", url: "/notas", icon: StickyNote },
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
   { title: "Materiais", url: "/materiais", icon: Package },
+  { title: "Auditoria", url: "/auditoria", icon: Shield },
+  { title: "Importar Dados", url: "/importar-dados", icon: Upload },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
