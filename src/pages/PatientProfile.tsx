@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useClinicData } from "@/hooks/useClinicData";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,12 +10,26 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 import {
   ArrowLeft, Printer, Plus, Trash2, FileImage, ClipboardList,
-  Stethoscope, Calendar, ImageIcon, Save, MessageCircle
+  Stethoscope, Calendar, ImageIcon, Save, MessageCircle, Search,
+  Brain, Loader2, ZoomIn, FlaskConical, X
 } from "lucide-react";
 import { ConsultationRecorder } from "@/components/ConsultationRecorder";
+
+type FileCategory = "radiografia" | "laboratorial" | "fotografia" | "documento" | "outro";
+const FILE_CATEGORIES: { value: FileCategory; label: string }[] = [
+  { value: "radiografia", label: "Radiografia / Imagem" },
+  { value: "laboratorial", label: "Exame Laboratorial" },
+  { value: "fotografia", label: "Foto Clínica" },
+  { value: "documento", label: "Documento" },
+  { value: "outro", label: "Outro" },
+];
 
 const emptyClinical = {
   chief_complaint: "", medical_history: "", allergies: "", current_medications: "",
@@ -58,6 +72,12 @@ const PatientProfile = () => {
   const [printMode, setPrintMode] = useState<"clinical" | "evolution" | "file" | null>(null);
   const [printEvoId, setPrintEvoId] = useState<string | null>(null);
   const [printFileId, setPrintFileId] = useState<string | null>(null);
+  const [uploadCategory, setUploadCategory] = useState<FileCategory>("radiografia");
+  const [fileFilter, setFileFilter] = useState<FileCategory | "all">("all");
+  const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [aiAnalysis, setAiAnalysis] = useState<Record<string, string>>({});
+  const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
 
   // Load clinical form when data arrives
   useEffect(() => {
@@ -78,6 +98,28 @@ const PatientProfile = () => {
       });
     }
   }, [clinical]);
+
+  // Generate signed URLs for private bucket files
+  const refreshSignedUrls = useCallback(async () => {
+    const imagePaths = files
+      .filter((f) => String(f.storage_path))
+      .map((f) => String(f.storage_path));
+    if (imagePaths.length === 0) return;
+    const { data, error } = await supabase.storage
+      .from("patient-files")
+      .createSignedUrls(imagePaths, 3600);
+    if (!error && data) {
+      const urls: Record<string, string> = {};
+      data.forEach((item) => {
+        if (item.signedUrl) urls[item.path || ""] = item.signedUrl;
+      });
+      setSignedUrls(urls);
+    }
+  }, [files]);
+
+  useEffect(() => {
+    refreshSignedUrls();
+  }, [refreshSignedUrls]);
 
   if (!patient || !id) {
     return (
@@ -137,8 +179,8 @@ const PatientProfile = () => {
     const fileList = e.target.files;
     if (!fileList || !clinicId) return;
     for (const file of Array.from(fileList)) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} excede 5MB.`); continue;
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} excede 10MB.`); continue;
       }
       const path = `${clinicId}/${id}/${crypto.randomUUID()}-${file.name}`;
       const { error } = await supabase.storage.from("patient-files").upload(path, file);
@@ -149,11 +191,12 @@ const PatientProfile = () => {
         type: file.type,
         storage_path: path,
         date: new Date().toISOString().slice(0, 10),
-        description: "",
+        description: `[${uploadCategory}]`,
       });
       toast.success(`${file.name} anexado!`);
     }
     e.target.value = "";
+    setTimeout(() => refreshSignedUrls(), 1000);
   };
 
   const handleDeleteFile = async (fileId: string, storagePath: string) => {
@@ -172,13 +215,45 @@ const PatientProfile = () => {
     setTimeout(() => setPrintMode(null), 1000);
   };
 
+  const handleAiAnalysis = async (fileId: string, fileName: string, description: string) => {
+    setAiLoading((prev) => ({ ...prev, [fileId]: true }));
+    try {
+      const category = getFileCategory(description);
+      const { data, error } = await supabase.functions.invoke("analyze-exam", {
+        body: {
+          description,
+          fileName,
+          category: FILE_CATEGORIES.find((c) => c.value === category)?.label || category,
+          patientInfo: `Nome: ${String(patient.name)}${patient.birth_date ? `, Nasc: ${String(patient.birth_date)}` : ""}`,
+        },
+      });
+      if (error) throw error;
+      setAiAnalysis((prev) => ({ ...prev, [fileId]: data.analysis }));
+    } catch (err) {
+      console.error("AI analysis error:", err);
+      toast.error("Erro ao analisar exame com IA");
+    } finally {
+      setAiLoading((prev) => ({ ...prev, [fileId]: false }));
+    }
+  };
+
+  const getFileCategory = (desc: string): FileCategory => {
+    const d = (desc || "").toLowerCase();
+    if (d.includes("[radiografia]")) return "radiografia";
+    if (d.includes("[laboratorial]")) return "laboratorial";
+    if (d.includes("[fotografia]")) return "fotografia";
+    if (d.includes("[documento]")) return "documento";
+    return "outro";
+  };
+
+  const getFileUrl = (path: string) => signedUrls[path] || "";
+
+  const filteredFiles = fileFilter === "all"
+    ? files
+    : files.filter((f) => getFileCategory(String(f.description || "")) === fileFilter);
+
   const selectedEvo = evolutions.find((e) => String(e.id) === printEvoId);
   const selectedFile = files.find((f) => String(f.id) === printFileId);
-
-  const getFileUrl = (path: string) => {
-    const { data } = supabase.storage.from("patient-files").getPublicUrl(path);
-    return data.publicUrl;
-  };
 
   const PrintHeader = () => (
     <div className="text-center border-b-2 border-foreground pb-4 mb-6">
@@ -342,45 +417,124 @@ const PatientProfile = () => {
 
           {/* FILES TAB */}
           <TabsContent value="files" className="space-y-4 mt-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Arquivos e Imagens</h2>
-              <Button asChild>
-                <label className="cursor-pointer">
-                  <Plus className="h-4 w-4 mr-2" />Anexar Arquivo
-                  <input type="file" accept="image/*,.pdf" multiple className="sr-only" onChange={handleFileUpload} />
-                </label>
-              </Button>
+            {/* Upload controls */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <h2 className="text-lg font-semibold">Exames e Arquivos</h2>
+              <div className="flex items-center gap-2">
+                <Select value={uploadCategory} onValueChange={(v) => setUploadCategory(v as FileCategory)}>
+                  <SelectTrigger className="w-[180px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FILE_CATEGORIES.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button asChild>
+                  <label className="cursor-pointer">
+                    <Plus className="h-4 w-4 mr-2" />Anexar
+                    <input type="file" accept="image/*,.pdf,.doc,.docx" multiple className="sr-only" onChange={handleFileUpload} />
+                  </label>
+                </Button>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">Radiografias, fotos, documentos (máx. 5MB).</p>
 
-            {files.length === 0 ? (
-              <Card><CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground"><ImageIcon className="h-12 w-12 mb-4 opacity-40" /><p>Nenhum arquivo anexado</p></CardContent></Card>
+            {/* Category filter */}
+            <div className="flex gap-2 flex-wrap">
+              <Badge variant={fileFilter === "all" ? "default" : "outline"} className="cursor-pointer" onClick={() => setFileFilter("all")}>Todos ({files.length})</Badge>
+              {FILE_CATEGORIES.map((c) => {
+                const count = files.filter((f) => getFileCategory(String(f.description || "")) === c.value).length;
+                if (count === 0) return null;
+                return (
+                  <Badge key={c.value} variant={fileFilter === c.value ? "default" : "outline"} className="cursor-pointer" onClick={() => setFileFilter(c.value)}>
+                    {c.value === "radiografia" && <FileImage className="h-3 w-3 mr-1" />}
+                    {c.value === "laboratorial" && <FlaskConical className="h-3 w-3 mr-1" />}
+                    {c.label} ({count})
+                  </Badge>
+                );
+              })}
+            </div>
+
+            <p className="text-xs text-muted-foreground">Radiografias, exames laboratoriais, fotos clínicas, documentos (máx. 10MB).</p>
+
+            {filteredFiles.length === 0 ? (
+              <Card><CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground"><ImageIcon className="h-12 w-12 mb-4 opacity-40" /><p>Nenhum arquivo nesta categoria</p></CardContent></Card>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {files.map((f) => {
+              <div className="space-y-4">
+                {filteredFiles.map((f) => {
                   const isImage = String(f.type).startsWith("image/");
                   const url = f.storage_path ? getFileUrl(String(f.storage_path)) : "";
+                  const fileId = String(f.id);
+                  const category = getFileCategory(String(f.description || ""));
+                  const catLabel = FILE_CATEGORIES.find((c) => c.value === category)?.label || "Outro";
+                  const descText = String(f.description || "").replace(/\[\w+\]\s*/, "");
                   return (
-                    <Card key={String(f.id)}>
-                      <CardContent className="p-3 space-y-2">
-                        {isImage && url ? (
-                          <img src={url} alt={String(f.name)} className="w-full h-48 object-cover rounded-md" />
-                        ) : (
-                          <div className="w-full h-48 flex items-center justify-center bg-muted rounded-md">
-                            <FileImage className="h-16 w-16 text-muted-foreground" />
+                    <Card key={fileId} className="overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="flex flex-col lg:flex-row">
+                          {/* Image / Preview side */}
+                          <div className="lg:w-1/2 relative">
+                            {isImage && url ? (
+                              <div className="relative group">
+                                <img src={url} alt={String(f.name)} className="w-full h-64 lg:h-80 object-contain bg-black/5 cursor-pointer" onClick={() => setViewingImage({ url, name: String(f.name) })} />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                  <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-full h-64 lg:h-80 flex items-center justify-center bg-muted">
+                                <FileImage className="h-20 w-20 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="absolute top-2 left-2">
+                              <Badge variant="secondary" className="text-xs">{catLabel}</Badge>
+                            </div>
                           </div>
-                        )}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{String(f.name)}</p>
-                            <p className="text-xs text-muted-foreground">{String(f.date).split("-").reverse().join("/")}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => handlePrint("file", String(f.id))}><Printer className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteFile(String(f.id), String(f.storage_path || ""))}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+
+                          {/* Info + AI side */}
+                          <div className="lg:w-1/2 p-4 flex flex-col gap-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{String(f.name)}</p>
+                                <p className="text-xs text-muted-foreground">{String(f.date).split("-").reverse().join("/")}</p>
+                              </div>
+                              <div className="flex gap-1 shrink-0">
+                                {url && <Button variant="ghost" size="icon" onClick={() => window.open(url, "_blank")}><Search className="h-4 w-4" /></Button>}
+                                <Button variant="ghost" size="icon" onClick={() => handlePrint("file", fileId)}><Printer className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleDeleteFile(fileId, String(f.storage_path || ""))}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                              </div>
+                            </div>
+
+                            <Input placeholder="Observações do profissional..." value={descText} onChange={(e) => updateFile(fileId, { description: `[${category}] ${e.target.value}` })} className="text-xs" />
+
+                            {/* AI Analysis */}
+                            <div className="border rounded-lg p-3 bg-muted/30 flex-1 flex flex-col gap-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-sm font-medium">
+                                  <Brain className="h-4 w-4 text-primary" />
+                                  Análise IA
+                                </div>
+                                <Button size="sm" variant="outline" disabled={aiLoading[fileId]} onClick={() => handleAiAnalysis(fileId, String(f.name), String(f.description || ""))}>
+                                  {aiLoading[fileId] ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Brain className="h-3 w-3 mr-1" />}
+                                  {aiLoading[fileId] ? "Analisando..." : "Analisar"}
+                                </Button>
+                              </div>
+                              {aiAnalysis[fileId] ? (
+                                <ScrollArea className="max-h-48 text-xs">
+                                  <div className="prose prose-xs max-w-none text-xs">
+                                    <ReactMarkdown>{aiAnalysis[fileId]}</ReactMarkdown>
+                                  </div>
+                                </ScrollArea>
+                              ) : (
+                                <p className="text-xs text-muted-foreground italic">Clique em "Analisar" para obter sugestões da IA sobre este exame.</p>
+                              )}
+                              {aiAnalysis[fileId] && (
+                                <p className="text-[10px] text-muted-foreground mt-1">⚠️ Análise auxiliar — decisão final é do profissional.</p>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <Input placeholder="Descrição..." value={String(f.description || "")} onChange={(e) => updateFile(String(f.id), { description: e.target.value })} className="text-xs" />
                       </CardContent>
                     </Card>
                   );
@@ -388,6 +542,18 @@ const PatientProfile = () => {
               </div>
             )}
           </TabsContent>
+
+          {/* Image Viewer Dialog */}
+          <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
+            <DialogContent className="max-w-4xl max-h-[90vh] p-2">
+              <DialogHeader>
+                <DialogTitle className="text-sm">{viewingImage?.name}</DialogTitle>
+              </DialogHeader>
+              {viewingImage && (
+                <img src={viewingImage.url} alt={viewingImage.name} className="w-full h-auto max-h-[80vh] object-contain" />
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* PRINT TAB */}
           <TabsContent value="print" className="space-y-4 mt-4">
