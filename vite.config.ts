@@ -63,8 +63,8 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       manifest: {
-        name: "ClínicaPRO - Prontuário Clínico",
-        short_name: "ClínicaPRO",
+        name: "Btx CliniCos - Prontuário Clínico",
+        short_name: "Btx CliniCos",
         description: "Sistema completo de prontuário clínico",
         theme_color: "#0f766e",
         background_color: "#f5f7fa",
