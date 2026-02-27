@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Lock, UserPlus, LogIn, Shield } from "lucide-react";
 
-const PRIVACY_POLICY = `POLÍTICA DE PRIVACIDADE — ClínicaPRO
+const PRIVACY_POLICY = `POLÍTICA DE PRIVACIDADE — Btx CliniCos
 
 Em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018), informamos:
 
@@ -42,13 +42,13 @@ Os dados clínicos são mantidos pelo prazo mínimo legal de 20 anos (CFM Resolu
 8. RESPONSÁVEL
 O profissional de saúde cadastrado é o controlador dos dados de seus pacientes, nos termos da LGPD.`;
 
-const TERMS_OF_USE = `TERMOS DE USO — ClínicaPRO
+const TERMS_OF_USE = `TERMOS DE USO — Btx CliniCos
 
 1. ACEITE
 Ao criar uma conta, o usuário aceita integralmente estes Termos e a Política de Privacidade.
 
 2. LICENÇA DE USO
-O ClínicaPRO é licenciado como Software como Serviço (SaaS). É vedada a cópia, redistribuição, engenharia reversa ou sublicenciamento.
+O Btx CliniCos é licenciado como Software como Serviço (SaaS). É vedada a cópia, redistribuição, engenharia reversa ou sublicenciamento.
 
 3. RESPONSABILIDADES DO USUÁRIO
 • Manter suas credenciais de acesso em sigilo;
@@ -58,10 +58,10 @@ O ClínicaPRO é licenciado como Software como Serviço (SaaS). É vedada a cóp
 • Realizar backup periódico de informações críticas.
 
 4. DADOS DE PACIENTES
-O profissional é o CONTROLADOR dos dados dos pacientes inseridos no sistema, conforme a LGPD. O ClínicaPRO atua como OPERADOR.
+O profissional é o CONTROLADOR dos dados dos pacientes inseridos no sistema, conforme a LGPD. O Btx CliniCos atua como OPERADOR.
 
 5. LIMITAÇÃO DE RESPONSABILIDADE
-O ClínicaPRO não se responsabiliza por:
+O Btx CliniCos não se responsabiliza por:
 • Decisões clínicas baseadas nas informações do sistema;
 • Perdas decorrentes de uso indevido;
 • Indisponibilidade temporária por manutenção.
@@ -120,7 +120,7 @@ const Auth = () => {
           <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
             <Lock className="h-8 w-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">ClínicaPRO</h1>
+          <h1 className="text-2xl font-bold">Btx CliniCos</h1>
           <p className="text-sm text-muted-foreground">
             {mode === "login" ? "Acesse sua conta" : "Crie sua conta e clínica"}
           </p>

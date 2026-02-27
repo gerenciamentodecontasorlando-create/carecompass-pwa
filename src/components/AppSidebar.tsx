@@ -33,11 +33,11 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <div className="p-4 flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-          <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-bold text-sm shrink-0">
-            C+
+          <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-bold text-xs shrink-0">
+            Btx
           </div>
           <span className="font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-            ClínicaPRO
+            Btx CliniCos
           </span>
         </div>
         <SidebarGroup>
