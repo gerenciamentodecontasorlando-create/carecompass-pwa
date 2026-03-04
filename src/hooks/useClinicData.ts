@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -19,8 +19,14 @@ export function useClinicData(
 ) {
   const { clinicId } = useAuth();
   const isOnline = useOnlineStatus();
+  const isOnlineRef = useRef(isOnline);
   const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Keep ref in sync without triggering re-renders of fetchData
+  useEffect(() => {
+    isOnlineRef.current = isOnline;
+  }, [isOnline]);
 
   const cacheKey = `${table}:${clinicId}:${JSON.stringify(options?.filter)}`;
 
@@ -35,7 +41,7 @@ export function useClinicData(
       setLoading(false);
     }
 
-    if (!isOnline) {
+    if (!isOnlineRef.current) {
       if (!cached) setLoading(false);
       return;
     }
@@ -62,17 +68,24 @@ export function useClinicData(
       await setCachedData(cacheKey, result || []);
     }
     setLoading(false);
-  }, [clinicId, table, cacheKey, isOnline, options?.orderBy, options?.orderAsc]);
+  }, [clinicId, table, cacheKey, options?.orderBy, options?.orderAsc]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
+  // Re-fetch when coming back online (without recreating fetchData)
+  useEffect(() => {
+    if (isOnline && clinicId) {
+      fetchData();
+    }
+  }, [isOnline]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const insert = async (record: Record<string, unknown>) => {
     if (!clinicId) return null;
     const payload = { ...record, clinic_id: clinicId };
 
-    if (!isOnline) {
+    if (!isOnlineRef.current) {
       // Generate temp ID and save locally
       const tempId = crypto.randomUUID();
       const tempRecord = { ...payload, id: tempId, created_at: new Date().toISOString() };
@@ -99,7 +112,7 @@ export function useClinicData(
   };
 
   const update = async (id: string, updates: Record<string, unknown>) => {
-    if (!isOnline) {
+    if (!isOnlineRef.current) {
       const newData = data.map((item) =>
         String(item.id) === id ? { ...item, ...updates } : item
       );
@@ -124,7 +137,7 @@ export function useClinicData(
   };
 
   const remove = async (id: string) => {
-    if (!isOnline) {
+    if (!isOnlineRef.current) {
       const newData = data.filter((item) => String(item.id) !== id);
       setData(newData);
       await setCachedData(cacheKey, newData);
