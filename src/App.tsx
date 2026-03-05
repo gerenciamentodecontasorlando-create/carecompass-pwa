@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,6 +23,7 @@ import NotePad from "./pages/NotePad";
 import AuditLog from "./pages/AuditLog";
 import DataImport from "./pages/DataImport";
 import NotFound from "./pages/NotFound";
+import PinLock from "./pages/PinLock";
 
 const queryClient = new QueryClient();
 
@@ -66,7 +68,22 @@ function AppRoutes() {
   );
 }
 
+const PIN_SESSION_KEY = "clinicapro-pin-unlocked";
+
 const App = () => {
+  const [pinUnlocked, setPinUnlocked] = useState(() => {
+    return sessionStorage.getItem(PIN_SESSION_KEY) === "true";
+  });
+
+  const handleUnlock = () => {
+    sessionStorage.setItem(PIN_SESSION_KEY, "true");
+    setPinUnlocked(true);
+  };
+
+  if (!pinUnlocked) {
+    return <PinLock onUnlock={handleUnlock} />;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
