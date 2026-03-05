@@ -23,6 +23,7 @@ import NotePad from "./pages/NotePad";
 import AuditLog from "./pages/AuditLog";
 import DataImport from "./pages/DataImport";
 import NotFound from "./pages/NotFound";
+import PinLock from "./pages/PinLock";
 
 const queryClient = new QueryClient();
 
