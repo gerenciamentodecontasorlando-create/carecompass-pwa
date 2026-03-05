@@ -125,6 +125,7 @@ const Auth = () => {
           <p className="text-sm text-muted-foreground">
             {mode === "login" ? "Acesse sua conta" : "Crie sua conta e clínica"}
           </p>
+        </div>
 
         <Card>
           <CardContent className="p-6">
