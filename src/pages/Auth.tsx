@@ -121,10 +121,10 @@ const Auth = () => {
             <Lock className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold">Btx CliniCos</h1>
+          <p className="text-xs text-muted-foreground mb-1">Sistema de gestão para clínicas e consultórios</p>
           <p className="text-sm text-muted-foreground">
             {mode === "login" ? "Acesse sua conta" : "Crie sua conta e clínica"}
           </p>
-        </div>
 
         <Card>
           <CardContent className="p-6">
