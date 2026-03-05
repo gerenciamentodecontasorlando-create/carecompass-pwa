@@ -83,10 +83,10 @@ const Agenda = () => {
               </div>
               <div className="grid gap-2">
                 <Label>Procedimento / Palavras-chave</Label>
-                <Input value={form.procedure} onChange={(e) => setForm({ ...form, procedure: e.target.value })} placeholder="Ex: Extração, Limpeza, Canal..." />
+                <Input value={form.procedure} onChange={(e) => setForm({ ...form, procedure: e.target.value })} placeholder="Ex: Avaliação, Sessão, Procedimento..." />
               </div>
               <div className="grid gap-2">
-                <Label>Dentista responsável</Label>
+                <Label>Profissional responsável</Label>
                 <Input value={form.dentist} onChange={(e) => setForm({ ...form, dentist: e.target.value })} placeholder="Dr(a). nome" />
               </div>
               <div className="grid gap-2">
