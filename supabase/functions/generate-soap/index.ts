@@ -18,17 +18,17 @@ serve(async (req) => {
       ? segments.map((s: { speaker: string; text: string }) => `[${s.speaker}]: ${s.text}`).join("\n")
       : transcript;
 
-    const systemPrompt = `Você é um assistente clínico odontológico especializado em transformar transcrições de consultas em notas clínicas no formato SOAP.
+    const systemPrompt = `Você é um assistente clínico especializado em transformar transcrições de consultas em notas clínicas no formato SOAP. Você atende profissionais de diversas áreas da saúde (medicina, odontologia, fisioterapia, nutrição, estética, etc.).
 
 Regras:
-1. A transcrição possui dois falantes: um é o PROFISSIONAL (dentista) e outro é o PACIENTE.
+1. A transcrição possui dois falantes: um é o PROFISSIONAL e outro é o PACIENTE.
 2. Use o contexto para identificar quem é quem (o profissional faz perguntas técnicas, examina, dá instruções; o paciente relata sintomas, responde perguntas).
 3. Organize as informações relevantes no formato SOAP:
    - **S (Subjetivo)**: Queixas, sintomas e relatos do PACIENTE em suas próprias palavras.
    - **O (Objetivo)**: Achados clínicos, observações e exames relatados pelo PROFISSIONAL.
    - **A (Avaliação)**: Diagnóstico ou hipótese diagnóstica mencionada pelo profissional.
    - **P (Plano)**: Tratamento proposto, orientações e próximos passos.
-4. Se informações de procedimento ou dente forem mencionadas, inclua-as separadamente.
+4. Se informações de procedimento ou região/local forem mencionadas, inclua-as separadamente.
 5. Filtre conversas irrelevantes (cumprimentos, assuntos pessoais).
 6. Responda APENAS em português brasileiro.
 7. Retorne SOMENTE o JSON, sem markdown, sem code blocks.

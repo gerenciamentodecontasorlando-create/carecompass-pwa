@@ -30,8 +30,9 @@ const PinLock = ({ onUnlock }: PinLockProps) => {
           <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
             <Lock className="h-8 w-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">Btx CliniCos</h1>
-          <p className="text-sm text-muted-foreground">Digite o PIN para acessar</p>
+           <h1 className="text-2xl font-bold">Btx CliniCos</h1>
+           <p className="text-xs text-muted-foreground">Gestão para clínicas e consultórios de saúde</p>
+           <p className="text-sm text-muted-foreground mt-1">Digite o PIN para acessar</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input

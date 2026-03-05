@@ -135,7 +135,7 @@ const Agenda = () => {
                       <div>
                         <p className="font-medium">{String(a.patient_name)}</p>
                         <p className="text-xs text-muted-foreground">{String(a.type)}{a.procedure ? ` • ${a.procedure}` : ""}</p>
-                        {a.dentist && <p className="text-xs text-muted-foreground">🦷 {String(a.dentist)}</p>}
+                        {a.dentist && <p className="text-xs text-muted-foreground">👤 {String(a.dentist)}</p>}
                       </div>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(String(a.id))}>

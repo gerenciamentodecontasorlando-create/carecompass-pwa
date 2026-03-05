@@ -25,7 +25,7 @@ Com base nas informações fornecidas sobre o exame, forneça:
 IMPORTANTE: 
 - Suas análises são AUXILIARES e a decisão final é SEMPRE do profissional.
 - Seja objetivo e conciso.
-- Use terminologia médica/odontológica adequada.
+- Use terminologia técnica adequada à área de atuação do profissional.
 - Responda em português brasileiro.`;
 
     const userMessage = `Analise o seguinte exame:
