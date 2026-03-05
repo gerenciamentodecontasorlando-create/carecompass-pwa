@@ -68,7 +68,22 @@ function AppRoutes() {
   );
 }
 
+const PIN_SESSION_KEY = "clinicapro-pin-unlocked";
+
 const App = () => {
+  const [pinUnlocked, setPinUnlocked] = useState(() => {
+    return sessionStorage.getItem(PIN_SESSION_KEY) === "true";
+  });
+
+  const handleUnlock = () => {
+    sessionStorage.setItem(PIN_SESSION_KEY, "true");
+    setPinUnlocked(true);
+  };
+
+  if (!pinUnlocked) {
+    return <PinLock onUnlock={handleUnlock} />;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
