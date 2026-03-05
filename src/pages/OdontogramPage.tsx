@@ -74,7 +74,10 @@ const OdontogramPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Odontograma</h1>
+      <div>
+        <h1 className="text-2xl font-bold">Odontograma</h1>
+        <p className="text-sm text-muted-foreground">Módulo exclusivo para profissionais de Odontologia</p>
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">

@@ -83,10 +83,10 @@ const Agenda = () => {
               </div>
               <div className="grid gap-2">
                 <Label>Procedimento / Palavras-chave</Label>
-                <Input value={form.procedure} onChange={(e) => setForm({ ...form, procedure: e.target.value })} placeholder="Ex: Extração, Limpeza, Canal..." />
+                <Input value={form.procedure} onChange={(e) => setForm({ ...form, procedure: e.target.value })} placeholder="Ex: Avaliação, Sessão, Procedimento..." />
               </div>
               <div className="grid gap-2">
-                <Label>Dentista responsável</Label>
+                <Label>Profissional responsável</Label>
                 <Input value={form.dentist} onChange={(e) => setForm({ ...form, dentist: e.target.value })} placeholder="Dr(a). nome" />
               </div>
               <div className="grid gap-2">
@@ -135,7 +135,7 @@ const Agenda = () => {
                       <div>
                         <p className="font-medium">{String(a.patient_name)}</p>
                         <p className="text-xs text-muted-foreground">{String(a.type)}{a.procedure ? ` • ${a.procedure}` : ""}</p>
-                        {a.dentist && <p className="text-xs text-muted-foreground">🦷 {String(a.dentist)}</p>}
+                        {a.dentist && <p className="text-xs text-muted-foreground">👤 {String(a.dentist)}</p>}
                       </div>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(String(a.id))}>
