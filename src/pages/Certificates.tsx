@@ -97,7 +97,7 @@ const Certificates = () => {
               <div>
                 <div className="text-center border-b-2 border-primary/30 pb-4 mb-6">
                   <h2 className="text-xl font-bold text-primary">{String(settings.professional_name || "Dr(a). Nome")}</h2>
-                  <p className="text-sm text-muted-foreground">{String(settings.specialty || "Especialidade")} — {String(settings.registration_number || "CRO/CRM")}</p>
+                  <p className="text-sm text-muted-foreground">{String(settings.specialty || "Especialidade")} — {String(settings.registration_number || "Registro Profissional")}</p>
                 </div>
                 {previewCert ? (
                   <div className="space-y-6">
