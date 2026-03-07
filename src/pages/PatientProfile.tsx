@@ -351,6 +351,51 @@ const PatientProfile = () => {
           </div>
         </div>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Dados cadastrais do paciente</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Nome completo *</Label>
+                <Input value={patientForm.name} onChange={(e) => setPatientForm({ ...patientForm, name: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <Label>Telefone</Label>
+                <Input value={patientForm.phone} onChange={(e) => setPatientForm({ ...patientForm, phone: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Email</Label>
+                <Input type="email" value={patientForm.email} onChange={(e) => setPatientForm({ ...patientForm, email: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <Label>Data de nascimento</Label>
+                <Input type="date" value={patientForm.birth_date} onChange={(e) => setPatientForm({ ...patientForm, birth_date: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>CPF</Label>
+                <Input value={patientForm.cpf} onChange={(e) => setPatientForm({ ...patientForm, cpf: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <Label>Endereço</Label>
+                <Input value={patientForm.address} onChange={(e) => setPatientForm({ ...patientForm, address: e.target.value })} />
+              </div>
+            </div>
+
+            <Button onClick={handleSavePatientData} disabled={savingPatient} className="w-full sm:w-auto">
+              <Save className="h-4 w-4 mr-2" />
+              {savingPatient ? "Salvando..." : "Salvar dados cadastrais"}
+            </Button>
+          </CardContent>
+        </Card>
+
         <Tabs defaultValue="clinical" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="clinical" className="text-xs sm:text-sm"><ClipboardList className="h-4 w-4 mr-1 hidden sm:inline" />Ficha</TabsTrigger>

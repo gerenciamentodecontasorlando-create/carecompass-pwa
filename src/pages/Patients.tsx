@@ -70,8 +70,10 @@ const Patients = () => {
   };
 
   const handleDelete = async (id: string) => {
-    await remove(id);
-    toast.success("Paciente removido");
+    const removed = await remove(id);
+    if (removed) {
+      toast.success("Paciente removido");
+    }
   };
 
   return (
