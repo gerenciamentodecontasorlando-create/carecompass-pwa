@@ -87,6 +87,20 @@ const PatientProfile = () => {
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [aiAnalysis, setAiAnalysis] = useState<Record<string, string>>({});
   const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
+  const [patientForm, setPatientForm] = useState(emptyPatientForm);
+  const [savingPatient, setSavingPatient] = useState(false);
+
+  useEffect(() => {
+    if (!patient) return;
+    setPatientForm({
+      name: String(patient.name || ""),
+      phone: String(patient.phone || ""),
+      email: String(patient.email || ""),
+      birth_date: String(patient.birth_date || ""),
+      cpf: String(patient.cpf || ""),
+      address: String(patient.address || ""),
+    });
+  }, [patient]);
 
   // Load clinical form when data arrives
   useEffect(() => {
@@ -130,7 +144,19 @@ const PatientProfile = () => {
     refreshSignedUrls();
   }, [refreshSignedUrls]);
 
-  if (!patient || !id) {
+  if (!id) {
+    return null;
+  }
+
+  if (patientsLoading && !patient) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <p>Carregando paciente...</p>
+      </div>
+    );
+  }
+
+  if (!patient) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
         <p>Paciente não encontrado</p>
@@ -138,6 +164,21 @@ const PatientProfile = () => {
       </div>
     );
   }
+
+  const handleSavePatientData = async () => {
+    if (!patientForm.name.trim()) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+
+    setSavingPatient(true);
+    const updated = await updatePatient(String(patient.id), patientForm);
+    setSavingPatient(false);
+
+    if (updated) {
+      toast.success("Dados cadastrais atualizados");
+    }
+  };
 
   const handleSaveClinical = async () => {
     if (clinical) {
