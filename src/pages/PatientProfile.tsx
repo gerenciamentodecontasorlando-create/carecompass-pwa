@@ -43,13 +43,22 @@ const emptyEvolution = {
   procedure: "", tooth_number: "", professional: "",
 };
 
+const emptyPatientForm = {
+  name: "",
+  phone: "",
+  email: "",
+  birth_date: "",
+  cpf: "",
+  address: "",
+};
+
 const PatientProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { clinicId } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const { data: patients } = useClinicData("patients");
+  const { data: patients, loading: patientsLoading, update: updatePatient } = useClinicData("patients");
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
 
