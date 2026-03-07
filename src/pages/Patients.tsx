@@ -39,13 +39,17 @@ const Patients = () => {
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
+
     if (editingId) {
-      await update(editingId, form);
+      const updated = await update(editingId, form);
+      if (!updated) return;
       toast.success("Paciente atualizado");
     } else {
-      await insert(form);
+      const created = await insert(form);
+      if (!created) return;
       toast.success("Paciente cadastrado");
     }
+
     setForm(emptyForm);
     setEditingId(null);
     setOpen(false);
@@ -66,8 +70,10 @@ const Patients = () => {
   };
 
   const handleDelete = async (id: string) => {
-    await remove(id);
-    toast.success("Paciente removido");
+    const removed = await remove(id);
+    if (removed) {
+      toast.success("Paciente removido");
+    }
   };
 
   return (
