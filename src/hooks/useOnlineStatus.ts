@@ -11,6 +11,7 @@ async function checkBackendReachable(signal: AbortSignal): Promise<boolean> {
   try {
     await fetch(`${backendUrl}${HEALTH_PATH}?t=${Date.now()}`, {
       method: "GET",
+      mode: "no-cors",
       cache: "no-store",
       signal,
     });
