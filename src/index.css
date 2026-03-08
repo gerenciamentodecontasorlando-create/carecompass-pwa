@@ -84,6 +84,27 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+/* Tablet orientation support */
+@media (orientation: landscape) and (max-height: 600px) {
+  .sidebar-trigger {
+    padding: 0.25rem;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 768px) {
+  #root {
+    min-height: 100dvh;
+  }
+}
+
+@media (orientation: portrait) and (min-width: 768px) {
+  #root {
+    min-height: 100dvh;
   }
 }
 

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Outlet } from "react-router-dom";
@@ -8,6 +9,18 @@ import { Shield, Lock } from "lucide-react";
 
 export function AppLayout() {
   useSyncQueue();
+
+  // Force re-render on orientation change / resize for tablets
+  const [, setViewKey] = useState(0);
+  useEffect(() => {
+    const handleResize = () => setViewKey((k) => k + 1);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
+  }, []);
 
   return (
     <SidebarProvider>
