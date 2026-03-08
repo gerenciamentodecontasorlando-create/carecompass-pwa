@@ -44,16 +44,33 @@ export function useSyncQueue() {
   }, [isOnline]);
 
   useEffect(() => {
-    if (isOnline) {
-      processQueue();
-    }
+    if (!isOnline) return;
+    void processQueue();
   }, [isOnline, processQueue]);
 
-  // Periodic check every 30s when online
+  // Periodic check every 30s when online + focus/visibility retry
   useEffect(() => {
     if (!isOnline) return;
-    const interval = setInterval(processQueue, 30000);
-    return () => clearInterval(interval);
+
+    const triggerProcess = () => {
+      void processQueue();
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void processQueue();
+      }
+    };
+
+    const interval = setInterval(triggerProcess, 30000);
+    window.addEventListener("focus", triggerProcess);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", triggerProcess);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [isOnline, processQueue]);
 
   return { processQueue };
