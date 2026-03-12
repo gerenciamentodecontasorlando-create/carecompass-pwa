@@ -103,11 +103,16 @@ const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> =
 };
 
 const Prescriptions = () => {
+  const { clinicId } = useAuth();
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
   const { data: prescriptions, insert, remove } = useClinicData("prescriptions");
+  const { data: patients } = useClinicData("patients");
   const [form, setForm, clearDraft] = useFormDraft("prescriptions-form", { patientName: "", medications: "" });
   const [previewId, setPreviewId] = useFormDraft<string | null>("prescriptions-preview", null);
+  const [aiReview, setAiReview] = useState<string | null>(null);
+  const [aiReviewLoading, setAiReviewLoading] = useState(false);
+  const [aiReviewOpen, setAiReviewOpen] = useState(false);
 
   const addMedication = (med: { name: string; posology: string }) => {
     const current = form.medications.trim();
