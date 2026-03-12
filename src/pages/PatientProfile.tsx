@@ -21,6 +21,7 @@ import {
   Brain, Loader2, ZoomIn, FlaskConical, X, AlertTriangle, ShieldAlert
 } from "lucide-react";
 import { ConsultationRecorder } from "@/components/ConsultationRecorder";
+import { MedicalAlerts } from "@/components/MedicalAlerts";
 
 type FileCategory = "radiografia" | "laboratorial" | "fotografia" | "documento" | "outro";
 const FILE_CATEGORIES: { value: FileCategory; label: string }[] = [
