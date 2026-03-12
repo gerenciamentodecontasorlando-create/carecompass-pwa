@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Printer, Plus, Trash2, Pill, ChevronDown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import ReactMarkdown from "react-markdown";
 
 const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> = {
   "Antibióticos": [
