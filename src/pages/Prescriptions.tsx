@@ -124,6 +124,52 @@ const Prescriptions = () => {
     toast.success(`${med.name} adicionado`);
   };
 
+  const handleAiReview = async () => {
+    if (!form.medications.trim()) {
+      toast.error("Adicione medicamentos antes de revisar"); return;
+    }
+    setAiReviewLoading(true);
+    setAiReviewOpen(true);
+    setAiReview(null);
+    try {
+      // Find patient clinical data if available
+      const matchedPatient = patients.find(p => 
+        String(p.name).toLowerCase() === form.patientName.trim().toLowerCase()
+      );
+      let allergies = "", medicalHistory = "", currentMedications = "";
+      if (matchedPatient && clinicId) {
+        const { data: records } = await supabase
+          .from("clinical_records")
+          .select("allergies, medical_history, current_medications")
+          .eq("patient_id", String(matchedPatient.id))
+          .eq("clinic_id", clinicId)
+          .maybeSingle();
+        if (records) {
+          allergies = records.allergies || "";
+          medicalHistory = records.medical_history || "";
+          currentMedications = records.current_medications || "";
+        }
+      }
+      const { data, error } = await supabase.functions.invoke("review-prescription", {
+        body: {
+          medications: form.medications,
+          allergies,
+          medicalHistory,
+          currentMedications,
+          patientName: form.patientName,
+        },
+      });
+      if (error) throw error;
+      setAiReview(data.review);
+    } catch (err) {
+      console.error("AI review error:", err);
+      toast.error("Erro ao revisar prescrição com IA");
+      setAiReview("Erro ao processar a revisão. Tente novamente.");
+    } finally {
+      setAiReviewLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!form.patientName.trim() || !form.medications.trim()) {
       toast.error("Preencha paciente e medicamentos"); return;
