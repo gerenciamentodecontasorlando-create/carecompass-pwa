@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.generate-soap]
 verify_jwt = false
+
+[functions.analyze-exam]
+verify_jwt = false
+
+[functions.review-prescription]
+verify_jwt = false

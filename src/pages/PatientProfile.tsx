@@ -18,9 +18,10 @@ import ReactMarkdown from "react-markdown";
 import {
   ArrowLeft, Printer, Plus, Trash2, FileImage, ClipboardList,
   Stethoscope, Calendar, ImageIcon, Save, MessageCircle, Search,
-  Brain, Loader2, ZoomIn, FlaskConical, X
+  Brain, Loader2, ZoomIn, FlaskConical, X, AlertTriangle, ShieldAlert
 } from "lucide-react";
 import { ConsultationRecorder } from "@/components/ConsultationRecorder";
+import { MedicalAlerts } from "@/components/MedicalAlerts";
 
 type FileCategory = "radiografia" | "laboratorial" | "fotografia" | "documento" | "outro";
 const FILE_CATEGORIES: { value: FileCategory; label: string }[] = [
@@ -338,7 +339,7 @@ const PatientProfile = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate("/pacientes")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold">{String(patient.name)}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>{String(patient.phone) || "Sem telefone"} {patient.cpf && `• CPF: ${patient.cpf}`}</span>
@@ -350,6 +351,9 @@ const PatientProfile = () => {
             </div>
           </div>
         </div>
+
+        {/* Medical Alert Badges */}
+        <MedicalAlerts clinicalForm={clinicalForm} clinical={clinical} />
 
         <Card>
           <CardHeader>

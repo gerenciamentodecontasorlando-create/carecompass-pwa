@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Printer, Plus, Trash2, Pill, ChevronDown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import ReactMarkdown from "react-markdown";
 
 const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> = {
   "Antibióticos": [
@@ -98,11 +103,16 @@ const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> =
 };
 
 const Prescriptions = () => {
+  const { clinicId } = useAuth();
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
   const { data: prescriptions, insert, remove } = useClinicData("prescriptions");
+  const { data: patients } = useClinicData("patients");
   const [form, setForm, clearDraft] = useFormDraft("prescriptions-form", { patientName: "", medications: "" });
   const [previewId, setPreviewId] = useFormDraft<string | null>("prescriptions-preview", null);
+  const [aiReview, setAiReview] = useState<string | null>(null);
+  const [aiReviewLoading, setAiReviewLoading] = useState(false);
+  const [aiReviewOpen, setAiReviewOpen] = useState(false);
 
   const addMedication = (med: { name: string; posology: string }) => {
     const current = form.medications.trim();
@@ -112,6 +122,52 @@ const Prescriptions = () => {
     const newMeds = current ? `${current}\n\n${entry}` : entry;
     setForm({ ...form, medications: newMeds });
     toast.success(`${med.name} adicionado`);
+  };
+
+  const handleAiReview = async () => {
+    if (!form.medications.trim()) {
+      toast.error("Adicione medicamentos antes de revisar"); return;
+    }
+    setAiReviewLoading(true);
+    setAiReviewOpen(true);
+    setAiReview(null);
+    try {
+      // Find patient clinical data if available
+      const matchedPatient = patients.find(p => 
+        String(p.name).toLowerCase() === form.patientName.trim().toLowerCase()
+      );
+      let allergies = "", medicalHistory = "", currentMedications = "";
+      if (matchedPatient && clinicId) {
+        const { data: records } = await supabase
+          .from("clinical_records")
+          .select("allergies, medical_history, current_medications")
+          .eq("patient_id", String(matchedPatient.id))
+          .eq("clinic_id", clinicId)
+          .maybeSingle();
+        if (records) {
+          allergies = records.allergies || "";
+          medicalHistory = records.medical_history || "";
+          currentMedications = records.current_medications || "";
+        }
+      }
+      const { data, error } = await supabase.functions.invoke("review-prescription", {
+        body: {
+          medications: form.medications,
+          allergies,
+          medicalHistory,
+          currentMedications,
+          patientName: form.patientName,
+        },
+      });
+      if (error) throw error;
+      setAiReview(data.review);
+    } catch (err) {
+      console.error("AI review error:", err);
+      toast.error("Erro ao revisar prescrição com IA");
+      setAiReview("Erro ao processar a revisão. Tente novamente.");
+    } finally {
+      setAiReviewLoading(false);
+    }
   };
 
   const handleSave = async () => {
@@ -187,7 +243,11 @@ const Prescriptions = () => {
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                <Button onClick={handleAiReview} variant="outline" disabled={!form.medications.trim() || aiReviewLoading} className="gap-1.5">
+                  {aiReviewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                  Revisar com IA
+                </Button>
                 <Button onClick={handleSave} className="flex-1">
                   <Plus className="h-4 w-4 mr-2" />Gerar Receituário
                 </Button>
@@ -267,6 +327,34 @@ const Prescriptions = () => {
           </div>
         </div>
       </div>
+
+
+      {/* AI Review Dialog */}
+      <Dialog open={aiReviewOpen} onOpenChange={setAiReviewOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              Revisão de Prescrição por IA
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            {aiReviewLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Analisando prescrição com base científica...</p>
+              </div>
+            ) : aiReview ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <ReactMarkdown>{aiReview}</ReactMarkdown>
+              </div>
+            ) : null}
+          </ScrollArea>
+          <p className="text-xs text-muted-foreground mt-2">
+            ⚠️ Esta é uma análise assistida por IA. Sempre confirme com fontes oficiais antes de prescrever.
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
