@@ -327,7 +327,8 @@ const Prescriptions = () => {
           </div>
         </div>
       </div>
-    </div>
+
+
       {/* AI Review Dialog */}
       <Dialog open={aiReviewOpen} onOpenChange={setAiReviewOpen}>
         <DialogContent className="max-w-lg max-h-[80vh]">
