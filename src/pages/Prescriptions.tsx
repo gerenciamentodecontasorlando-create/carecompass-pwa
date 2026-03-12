@@ -243,7 +243,11 @@ const Prescriptions = () => {
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                <Button onClick={handleAiReview} variant="outline" disabled={!form.medications.trim() || aiReviewLoading} className="gap-1.5">
+                  {aiReviewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                  Revisar com IA
+                </Button>
                 <Button onClick={handleSave} className="flex-1">
                   <Plus className="h-4 w-4 mr-2" />Gerar Receituário
                 </Button>
