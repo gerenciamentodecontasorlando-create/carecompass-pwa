@@ -328,6 +328,33 @@ const Prescriptions = () => {
         </div>
       </div>
     </div>
+      {/* AI Review Dialog */}
+      <Dialog open={aiReviewOpen} onOpenChange={setAiReviewOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              Revisão de Prescrição por IA
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            {aiReviewLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Analisando prescrição com base científica...</p>
+              </div>
+            ) : aiReview ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <ReactMarkdown>{aiReview}</ReactMarkdown>
+              </div>
+            ) : null}
+          </ScrollArea>
+          <p className="text-xs text-muted-foreground mt-2">
+            ⚠️ Esta é uma análise assistida por IA. Sempre confirme com fontes oficiais antes de prescrever.
+          </p>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
