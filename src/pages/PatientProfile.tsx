@@ -338,7 +338,7 @@ const PatientProfile = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate("/pacientes")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold">{String(patient.name)}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>{String(patient.phone) || "Sem telefone"} {patient.cpf && `• CPF: ${patient.cpf}`}</span>
@@ -350,6 +350,9 @@ const PatientProfile = () => {
             </div>
           </div>
         </div>
+
+        {/* Medical Alert Badges */}
+        <MedicalAlerts clinicalForm={clinicalForm} clinical={clinical} />
 
         <Card>
           <CardHeader>
