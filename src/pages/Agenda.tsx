@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, Clock, Trash2 } from "lucide-react";
+import { Plus, Clock, Trash2, MessageCircle } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
 const Agenda = () => {
+  const { data: patients } = useClinicData("patients");
+  const { data: settingsArr } = useClinicData("clinic_settings");
+  const settings = settingsArr[0] || {};
   const { data: appointments, insert, remove } = useClinicData("appointments");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [open, setOpen] = useState(false);
@@ -44,6 +48,22 @@ const Agenda = () => {
   const handleDelete = async (id: string) => {
     await remove(id);
     toast.success("Consulta removida");
+  };
+
+  const handleWhatsAppReminder = (appointment: Record<string, unknown>) => {
+    const patientName = String(appointment.patient_name || "");
+    const matchedPatient = patients.find(p => String(p.name).toLowerCase() === patientName.toLowerCase());
+    const phone = matchedPatient ? String(matchedPatient.phone || "").replace(/\D/g, "") : "";
+    if (!phone) { toast.error("Telefone do paciente não encontrado no cadastro"); return; }
+
+    const dateStr = String(appointment.date).split("-").reverse().join("/");
+    const time = String(appointment.time);
+    const type = String(appointment.type || "Consulta");
+    const clinicName = String(settings.clinic_name || settings.professional_name || "Clínica");
+
+    const text = `Olá ${patientName}! 😊\n\nLembramos que você tem uma *${type}* agendada:\n\n📅 *Data:* ${dateStr}\n🕐 *Horário:* ${time}\n🏥 *Local:* ${clinicName}${settings.address ? `\n📍 ${settings.address}` : ""}\n\nPor favor, confirme sua presença respondendo esta mensagem.\n\nAtenciosamente,\n${String(settings.professional_name || "")}`;
+
+    window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   return (
@@ -138,9 +158,14 @@ const Agenda = () => {
                         {a.dentist && <p className="text-xs text-muted-foreground">👤 {String(a.dentist)}</p>}
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(String(a.id))}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleWhatsAppReminder(a)} title="Lembrete WhatsApp">
+                        <MessageCircle className="h-4 w-4 text-green-600" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(String(a.id))}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

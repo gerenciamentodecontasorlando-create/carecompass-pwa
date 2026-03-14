@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2 } from "lucide-react";
+import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
@@ -293,7 +293,17 @@ const Prescriptions = () => {
         </div>
 
         <div>
-          <div className="flex justify-end mb-2 no-print">
+          <div className="flex justify-end gap-2 mb-2 no-print">
+            <Button variant="outline" size="sm" disabled={!previewPrescription} onClick={() => {
+              if (!previewPrescription) return;
+              const matchedP = patients.find(p => String(p.name).toLowerCase() === String(previewPrescription.patient_name).toLowerCase());
+              const phone = matchedP ? String(matchedP.phone || "").replace(/\D/g, "") : "";
+              if (!phone) { toast.error("Telefone do paciente não encontrado"); return; }
+              const text = `Olá ${String(previewPrescription.patient_name)}!\n\nSegue sua receita:\n\n${String(previewPrescription.medications)}\n\n${String(settings.professional_name || "")}\n${String(settings.registration_number || "")}`;
+              window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(text)}`, "_blank");
+            }}>
+              <MessageCircle className="h-4 w-4 mr-2 text-green-600" />WhatsApp
+            </Button>
             <Button variant="outline" size="sm" onClick={() => window.print()} disabled={!previewPrescription}>
               <Printer className="h-4 w-4 mr-2" />Imprimir
             </Button>

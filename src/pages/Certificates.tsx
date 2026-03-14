@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Printer, Plus, Trash2 } from "lucide-react";
+import { Printer, Plus, Trash2, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
@@ -15,6 +15,7 @@ const Certificates = () => {
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
   const { data: certificates, insert, remove } = useClinicData("certificates");
+  const { data: patients } = useClinicData("patients");
   const [form, setForm, clearDraft] = useFormDraft("certificates-form", { patientName: "", content: "", days: "1" });
   const [previewId, setPreviewId] = useFormDraft<string | null>("certificates-preview", null);
   const [patientSignature, setPatientSignature] = useState<string | null>(null);
@@ -90,7 +91,17 @@ const Certificates = () => {
         </div>
 
         <div>
-          <div className="flex justify-end mb-2 no-print">
+          <div className="flex justify-end gap-2 mb-2 no-print">
+            <Button variant="outline" size="sm" disabled={!previewCert} onClick={() => {
+              if (!previewCert) return;
+              const matchedP = patients.find(p => String(p.name).toLowerCase() === String(previewCert.patient_name).toLowerCase());
+              const phone = matchedP ? String(matchedP.phone || "").replace(/\D/g, "") : "";
+              if (!phone) { toast.error("Telefone do paciente não encontrado"); return; }
+              const text = `Olá ${String(previewCert.patient_name)}!\n\nSegue seu atestado:\n\n${String(previewCert.content)}\n\n${String(settings.professional_name || "")}\n${String(settings.registration_number || "")}`;
+              window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(text)}`, "_blank");
+            }}>
+              <MessageCircle className="h-4 w-4 mr-2 text-green-600" />WhatsApp
+            </Button>
             <Button variant="outline" size="sm" onClick={() => window.print()} disabled={!previewCert}>
               <Printer className="h-4 w-4 mr-2" />Imprimir
             </Button>
