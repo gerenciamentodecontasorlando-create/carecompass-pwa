@@ -271,6 +271,114 @@ const PatientProfile = () => {
     setTimeout(() => setPrintMode(null), 1000);
   };
 
+  const handleExportPDF = async () => {
+    try {
+      toast.info("Gerando PDF do prontuário...");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const w = pdf.internal.pageSize.getWidth();
+      let y = 15;
+
+      const addLine = (text: string, bold = false, size = 10) => {
+        pdf.setFontSize(size);
+        pdf.setFont("helvetica", bold ? "bold" : "normal");
+        const lines = pdf.splitTextToSize(text, w - 20);
+        for (const line of lines) {
+          if (y > 275) { pdf.addPage(); y = 15; }
+          pdf.text(line, 10, y);
+          y += size * 0.45;
+        }
+        y += 2;
+      };
+
+      // Header
+      addLine(String(settings.clinic_name || "Clínica"), true, 16);
+      addLine(`${String(settings.professional_name || "")} — ${String(settings.specialty || "")}`, false, 10);
+      addLine(String(settings.registration_number || ""), false, 9);
+      y += 4;
+      pdf.setDrawColor(0); pdf.line(10, y, w - 10, y); y += 6;
+
+      // Patient info
+      addLine("DADOS DO PACIENTE", true, 12);
+      addLine(`Nome: ${String(patient.name)}`);
+      if (patient.birth_date) addLine(`Nascimento: ${String(patient.birth_date).split("-").reverse().join("/")}`);
+      if (patient.cpf) addLine(`CPF: ${String(patient.cpf)}`);
+      if (patient.phone) addLine(`Telefone: ${String(patient.phone)}`);
+      if (patient.email) addLine(`Email: ${String(patient.email)}`);
+      if (patient.address) addLine(`Endereço: ${String(patient.address)}`);
+      y += 4;
+
+      // Clinical record
+      if (clinical) {
+        pdf.line(10, y, w - 10, y); y += 6;
+        addLine("FICHA CLÍNICA", true, 12);
+        const fields = [
+          ["Queixa Principal", clinicalForm.chief_complaint],
+          ["Histórico Médico", clinicalForm.medical_history],
+          ["Alergias", clinicalForm.allergies],
+          ["Medicamentos em Uso", clinicalForm.current_medications],
+          ["Histórico Familiar", clinicalForm.family_history],
+          ["Histórico Clínico", clinicalForm.dental_history],
+          ["Hábitos", clinicalForm.habits],
+          ["Exame Físico Geral", clinicalForm.extra_oral_exam],
+          ["Exame Específico", clinicalForm.intra_oral_exam],
+          ["Diagnóstico", clinicalForm.diagnosis],
+          ["Plano de Tratamento", clinicalForm.treatment_plan],
+          ["Prognóstico", clinicalForm.prognosis],
+        ];
+        for (const [label, value] of fields) {
+          if (value) { addLine(`${label}:`, true, 10); addLine(value); }
+        }
+      }
+
+      // Evolutions
+      if (evolutions.length > 0) {
+        y += 2; pdf.line(10, y, w - 10, y); y += 6;
+        addLine("EVOLUÇÕES CLÍNICAS", true, 12);
+        for (const evo of [...evolutions].sort((a, b) => String(b.date).localeCompare(String(a.date)))) {
+          addLine(`Data: ${String(evo.date).split("-").reverse().join("/")}${evo.tooth_number ? ` — ${String(evo.tooth_number)}` : ""}`, true);
+          if (evo.subjective) addLine(`S: ${String(evo.subjective)}`);
+          if (evo.objective) addLine(`O: ${String(evo.objective)}`);
+          if (evo.assessment) addLine(`A: ${String(evo.assessment)}`);
+          if (evo.plan) addLine(`P: ${String(evo.plan)}`);
+          if (evo.procedure) addLine(`Procedimento: ${String(evo.procedure)}`);
+          if (evo.professional) addLine(`Prof.: ${String(evo.professional)}`, false, 9);
+          y += 3;
+        }
+      }
+
+      // Footer
+      y += 4; pdf.line(10, y, w - 10, y); y += 6;
+      addLine(`${String(settings.address || "")}`, false, 9);
+      addLine(`${[settings.phone, settings.email].filter(Boolean).join(" • ")}`, false, 9);
+
+      pdf.save(`prontuario-${String(patient.name).replace(/\s+/g, "_")}.pdf`);
+      toast.success("PDF exportado!");
+    } catch {
+      toast.error("Erro ao gerar PDF");
+    }
+  };
+
+  const handleShareWhatsApp = (type: "prontuario" | "lembrete", appointmentData?: Record<string, unknown>) => {
+    const phone = String(patient.phone || "").replace(/\D/g, "");
+    if (!phone) { toast.error("Paciente sem telefone cadastrado"); return; }
+
+    let text = "";
+    if (type === "prontuario") {
+      text = `Olá ${String(patient.name)}! Segue resumo do seu atendimento:\n\n`;
+      if (clinicalForm.diagnosis) text += `*Diagnóstico:* ${clinicalForm.diagnosis}\n`;
+      if (clinicalForm.treatment_plan) text += `*Plano de Tratamento:* ${clinicalForm.treatment_plan}\n`;
+      const lastEvo = [...evolutions].sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
+      if (lastEvo) {
+        text += `\n*Última evolução (${String(lastEvo.date).split("-").reverse().join("/")})::*\n`;
+        if (lastEvo.procedure) text += `Procedimento: ${String(lastEvo.procedure)}\n`;
+        if (lastEvo.plan) text += `Plano: ${String(lastEvo.plan)}\n`;
+      }
+      text += `\n${String(settings.professional_name || "")}\n${String(settings.registration_number || "")}`;
+    }
+
+    window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
   const handleAiAnalysis = async (fileId: string, fileName: string, description: string) => {
     setAiLoading((prev) => ({ ...prev, [fileId]: true }));
     try {
