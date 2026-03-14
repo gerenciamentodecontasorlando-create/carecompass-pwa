@@ -9,6 +9,7 @@ import { Printer, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { SignaturePad } from "@/components/SignaturePad";
 
 const Certificates = () => {
   const { data: settingsArr } = useClinicData("clinic_settings");
@@ -16,6 +17,7 @@ const Certificates = () => {
   const { data: certificates, insert, remove } = useClinicData("certificates");
   const [form, setForm, clearDraft] = useFormDraft("certificates-form", { patientName: "", content: "", days: "1" });
   const [previewId, setPreviewId] = useFormDraft<string | null>("certificates-preview", null);
+  const [patientSignature, setPatientSignature] = useState<string | null>(null);
 
   const handleSave = async () => {
     if (!form.patientName.trim()) { toast.error("Preencha o nome do paciente"); return; }
@@ -54,6 +56,7 @@ const Certificates = () => {
                 <Label>Texto personalizado (opcional)</Label>
                 <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={4} placeholder="Deixe em branco para usar o modelo padrão" />
               </div>
+              <SignaturePad value={patientSignature} onChange={setPatientSignature} label="Assinatura do Paciente" />
               <Button onClick={handleSave} className="w-full"><Plus className="h-4 w-4 mr-2" />Gerar Atestado</Button>
             </CardContent>
           </Card>
@@ -111,6 +114,12 @@ const Certificates = () => {
                   <p className="text-center text-muted-foreground py-20">Selecione ou crie um atestado.</p>
                 )}
               </div>
+              {patientSignature && (
+                <div className="mt-8 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Assinatura do Paciente:</p>
+                  <img src={patientSignature} alt="Assinatura do paciente" className="mx-auto max-h-20 border-b border-foreground" />
+                </div>
+              )}
               <div className="border-t-2 border-primary/30 pt-4 mt-8 text-center space-y-1">
                 <div className="w-48 border-t border-foreground mx-auto mb-2 mt-12" />
                 <p className="text-sm font-semibold">{String(settings.professional_name || "Assinatura")}</p>

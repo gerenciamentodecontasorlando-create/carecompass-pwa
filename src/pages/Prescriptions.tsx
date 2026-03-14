@@ -16,6 +16,7 @@ import { useFormDraft } from "@/hooks/useFormDraft";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ReactMarkdown from "react-markdown";
+import { SignaturePad } from "@/components/SignaturePad";
 
 const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> = {
   "Antibióticos": [
@@ -113,6 +114,7 @@ const Prescriptions = () => {
   const [aiReview, setAiReview] = useState<string | null>(null);
   const [aiReviewLoading, setAiReviewLoading] = useState(false);
   const [aiReviewOpen, setAiReviewOpen] = useState(false);
+  const [patientSignature, setPatientSignature] = useState<string | null>(null);
 
   const addMedication = (med: { name: string; posology: string }) => {
     const current = form.medications.trim();
@@ -243,6 +245,8 @@ const Prescriptions = () => {
                 />
               </div>
 
+              <SignaturePad value={patientSignature} onChange={setPatientSignature} label="Assinatura do Paciente" />
+
               <div className="flex gap-2 flex-wrap">
                 <Button onClick={handleAiReview} variant="outline" disabled={!form.medications.trim() || aiReviewLoading} className="gap-1.5">
                   {aiReviewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
@@ -317,6 +321,12 @@ const Prescriptions = () => {
                   <p className="text-center text-muted-foreground py-20">Selecione ou crie um receituário.</p>
                 )}
               </div>
+              {patientSignature && (
+                <div className="mt-8 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Assinatura do Paciente:</p>
+                  <img src={patientSignature} alt="Assinatura do paciente" className="mx-auto max-h-20 border-b border-foreground" />
+                </div>
+              )}
               <div className="border-t-2 border-primary/30 pt-4 mt-8 text-center space-y-1">
                 <div className="w-48 border-t border-foreground mx-auto mb-2 mt-12" />
                 <p className="text-sm font-semibold">{String(settings.professional_name || "Assinatura")}</p>
