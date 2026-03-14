@@ -14,6 +14,9 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
 const Agenda = () => {
+  const { data: patients } = useClinicData("patients");
+  const { data: settingsArr } = useClinicData("clinic_settings");
+  const settings = settingsArr[0] || {};
   const { data: appointments, insert, remove } = useClinicData("appointments");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [open, setOpen] = useState(false);
