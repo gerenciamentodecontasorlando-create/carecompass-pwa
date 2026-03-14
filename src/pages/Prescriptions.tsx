@@ -114,6 +114,7 @@ const Prescriptions = () => {
   const [aiReview, setAiReview] = useState<string | null>(null);
   const [aiReviewLoading, setAiReviewLoading] = useState(false);
   const [aiReviewOpen, setAiReviewOpen] = useState(false);
+  const [patientSignature, setPatientSignature] = useState<string | null>(null);
 
   const addMedication = (med: { name: string; posology: string }) => {
     const current = form.medications.trim();
