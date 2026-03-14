@@ -16,6 +16,7 @@ import { useFormDraft } from "@/hooks/useFormDraft";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ReactMarkdown from "react-markdown";
+import { SignaturePad } from "@/components/SignaturePad";
 
 const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> = {
   "Antibióticos": [
