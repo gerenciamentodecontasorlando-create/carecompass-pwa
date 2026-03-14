@@ -17,6 +17,7 @@ const Certificates = () => {
   const { data: certificates, insert, remove } = useClinicData("certificates");
   const [form, setForm, clearDraft] = useFormDraft("certificates-form", { patientName: "", content: "", days: "1" });
   const [previewId, setPreviewId] = useFormDraft<string | null>("certificates-preview", null);
+  const [patientSignature, setPatientSignature] = useState<string | null>(null);
 
   const handleSave = async () => {
     if (!form.patientName.trim()) { toast.error("Preencha o nome do paciente"); return; }
