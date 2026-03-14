@@ -56,6 +56,7 @@ const Certificates = () => {
                 <Label>Texto personalizado (opcional)</Label>
                 <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={4} placeholder="Deixe em branco para usar o modelo padrão" />
               </div>
+              <SignaturePad value={patientSignature} onChange={setPatientSignature} label="Assinatura do Paciente" />
               <Button onClick={handleSave} className="w-full"><Plus className="h-4 w-4 mr-2" />Gerar Atestado</Button>
             </CardContent>
           </Card>
