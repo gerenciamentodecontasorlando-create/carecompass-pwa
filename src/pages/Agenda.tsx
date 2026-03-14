@@ -158,9 +158,14 @@ const Agenda = () => {
                         {a.dentist && <p className="text-xs text-muted-foreground">👤 {String(a.dentist)}</p>}
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(String(a.id))}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleWhatsAppReminder(a)} title="Lembrete WhatsApp">
+                        <MessageCircle className="h-4 w-4 text-green-600" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(String(a.id))}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
