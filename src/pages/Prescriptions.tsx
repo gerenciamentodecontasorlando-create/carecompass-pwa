@@ -245,6 +245,8 @@ const Prescriptions = () => {
                 />
               </div>
 
+              <SignaturePad value={patientSignature} onChange={setPatientSignature} label="Assinatura do Paciente" />
+
               <div className="flex gap-2 flex-wrap">
                 <Button onClick={handleAiReview} variant="outline" disabled={!form.medications.trim() || aiReviewLoading} className="gap-1.5">
                   {aiReviewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
