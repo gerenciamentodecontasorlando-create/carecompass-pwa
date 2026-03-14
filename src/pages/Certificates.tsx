@@ -91,7 +91,17 @@ const Certificates = () => {
         </div>
 
         <div>
-          <div className="flex justify-end mb-2 no-print">
+          <div className="flex justify-end gap-2 mb-2 no-print">
+            <Button variant="outline" size="sm" disabled={!previewCert} onClick={() => {
+              if (!previewCert) return;
+              const matchedP = patients.find(p => String(p.name).toLowerCase() === String(previewCert.patient_name).toLowerCase());
+              const phone = matchedP ? String(matchedP.phone || "").replace(/\D/g, "") : "";
+              if (!phone) { toast.error("Telefone do paciente não encontrado"); return; }
+              const text = `Olá ${String(previewCert.patient_name)}!\n\nSegue seu atestado:\n\n${String(previewCert.content)}\n\n${String(settings.professional_name || "")}\n${String(settings.registration_number || "")}`;
+              window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(text)}`, "_blank");
+            }}>
+              <MessageCircle className="h-4 w-4 mr-2 text-green-600" />WhatsApp
+            </Button>
             <Button variant="outline" size="sm" onClick={() => window.print()} disabled={!previewCert}>
               <Printer className="h-4 w-4 mr-2" />Imprimir
             </Button>
