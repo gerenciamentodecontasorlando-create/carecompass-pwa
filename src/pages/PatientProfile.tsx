@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { ConsultationRecorder } from "@/components/ConsultationRecorder";
 import { MedicalAlerts } from "@/components/MedicalAlerts";
+import { SignaturePad } from "@/components/SignaturePad";
 
 type FileCategory = "radiografia" | "laboratorial" | "fotografia" | "documento" | "outro";
 const FILE_CATEGORIES: { value: FileCategory; label: string }[] = [
