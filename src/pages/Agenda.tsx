@@ -50,6 +50,22 @@ const Agenda = () => {
     toast.success("Consulta removida");
   };
 
+  const handleWhatsAppReminder = (appointment: Record<string, unknown>) => {
+    const patientName = String(appointment.patient_name || "");
+    const matchedPatient = patients.find(p => String(p.name).toLowerCase() === patientName.toLowerCase());
+    const phone = matchedPatient ? String(matchedPatient.phone || "").replace(/\D/g, "") : "";
+    if (!phone) { toast.error("Telefone do paciente não encontrado no cadastro"); return; }
+
+    const dateStr = String(appointment.date).split("-").reverse().join("/");
+    const time = String(appointment.time);
+    const type = String(appointment.type || "Consulta");
+    const clinicName = String(settings.clinic_name || settings.professional_name || "Clínica");
+
+    const text = `Olá ${patientName}! 😊\n\nLembramos que você tem uma *${type}* agendada:\n\n📅 *Data:* ${dateStr}\n🕐 *Horário:* ${time}\n🏥 *Local:* ${clinicName}${settings.address ? `\n📍 ${settings.address}` : ""}\n\nPor favor, confirme sua presença respondendo esta mensagem.\n\nAtenciosamente,\n${String(settings.professional_name || "")}`;
+
+    window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
