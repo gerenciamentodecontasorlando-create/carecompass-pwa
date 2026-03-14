@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2 } from "lucide-react";
+import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
