@@ -91,6 +91,7 @@ const PatientProfile = () => {
   const [aiLoading, setAiLoading] = useState<Record<string, boolean>>({});
   const [patientForm, setPatientForm] = useState(emptyPatientForm);
   const [savingPatient, setSavingPatient] = useState(false);
+  const [evoSignature, setEvoSignature] = useState<string | null>(null);
 
   useEffect(() => {
     if (!patient) return;
