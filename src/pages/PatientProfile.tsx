@@ -664,11 +664,19 @@ const PatientProfile = () => {
           <TabsContent value="print" className="space-y-4 mt-4">
             <Card>
               <CardContent className="p-6 space-y-4">
-                <h2 className="text-lg font-semibold">Impressão</h2>
+                <h2 className="text-lg font-semibold">Impressão e Exportação</h2>
                 <div className="grid gap-3">
+                  <Button variant="default" onClick={handleExportPDF} className="justify-start gap-2">
+                    <Download className="h-4 w-4" />Exportar Prontuário Completo (PDF)
+                  </Button>
                   <Button variant="outline" onClick={() => handlePrint("clinical")} className="justify-start">
                     <ClipboardList className="h-4 w-4 mr-2" />Imprimir Ficha Clínica
                   </Button>
+                  {patient.phone && (
+                    <Button variant="outline" onClick={() => handleShareWhatsApp("prontuario")} className="justify-start gap-2 text-green-700 hover:text-green-800 hover:bg-green-50">
+                      <MessageCircle className="h-4 w-4" />Enviar Resumo via WhatsApp
+                    </Button>
+                  )}
                   {evolutions.length > 0 && (
                     <>
                       <p className="text-sm font-medium mt-2">Evoluções:</p>
