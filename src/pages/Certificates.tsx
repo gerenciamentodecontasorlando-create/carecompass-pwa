@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
