@@ -479,6 +479,7 @@ const PatientProfile = () => {
                     <div className="grid gap-2"><Label>Plano (P)</Label><Textarea value={evoForm.plan} onChange={(e) => setEvoForm({ ...evoForm, plan: e.target.value })} rows={2} /></div>
                     <div className="grid gap-2"><Label>Procedimento</Label><Textarea value={evoForm.procedure} onChange={(e) => setEvoForm({ ...evoForm, procedure: e.target.value })} rows={2} /></div>
                     <div className="grid gap-2"><Label>Profissional</Label><Input value={evoForm.professional} onChange={(e) => setEvoForm({ ...evoForm, professional: e.target.value })} placeholder={String(settings.professional_name || "Nome")} /></div>
+                    <SignaturePad value={evoSignature} onChange={setEvoSignature} label="Assinatura do Paciente" />
                     <Button onClick={handleSaveEvolution} className="w-full">Salvar Evolução</Button>
                   </div>
                 </DialogContent>

@@ -321,6 +321,12 @@ const Prescriptions = () => {
                   <p className="text-center text-muted-foreground py-20">Selecione ou crie um receituário.</p>
                 )}
               </div>
+              {patientSignature && (
+                <div className="mt-8 text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Assinatura do Paciente:</p>
+                  <img src={patientSignature} alt="Assinatura do paciente" className="mx-auto max-h-20 border-b border-foreground" />
+                </div>
+              )}
               <div className="border-t-2 border-primary/30 pt-4 mt-8 text-center space-y-1">
                 <div className="w-48 border-t border-foreground mx-auto mb-2 mt-12" />
                 <p className="text-sm font-semibold">{String(settings.professional_name || "Assinatura")}</p>
