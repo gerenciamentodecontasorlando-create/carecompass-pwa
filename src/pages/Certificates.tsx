@@ -9,6 +9,7 @@ import { Printer, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { SignaturePad } from "@/components/SignaturePad";
 
 const Certificates = () => {
   const { data: settingsArr } = useClinicData("clinic_settings");
