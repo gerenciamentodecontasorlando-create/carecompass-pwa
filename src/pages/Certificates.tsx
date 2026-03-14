@@ -15,6 +15,7 @@ const Certificates = () => {
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
   const { data: certificates, insert, remove } = useClinicData("certificates");
+  const { data: patients } = useClinicData("patients");
   const [form, setForm, clearDraft] = useFormDraft("certificates-form", { patientName: "", content: "", days: "1" });
   const [previewId, setPreviewId] = useFormDraft<string | null>("certificates-preview", null);
   const [patientSignature, setPatientSignature] = useState<string | null>(null);
