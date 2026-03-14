@@ -109,7 +109,6 @@ const Prescriptions = () => {
   const settings = settingsArr[0] || {};
   const { data: prescriptions, insert, remove } = useClinicData("prescriptions");
   const { data: patients } = useClinicData("patients");
-  const { data: patientsForPhone } = useClinicData("patients");
   const [form, setForm, clearDraft] = useFormDraft("prescriptions-form", { patientName: "", medications: "" });
   const [previewId, setPreviewId] = useFormDraft<string | null>("prescriptions-preview", null);
   const [aiReview, setAiReview] = useState<string | null>(null);
