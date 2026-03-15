@@ -9,14 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, MessageCircle } from "lucide-react";
+import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, MessageCircle, Receipt, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ReactMarkdown from "react-markdown";
-import { SignaturePad } from "@/components/SignaturePad";
 
 const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> = {
   "Antibióticos": [
@@ -114,7 +113,9 @@ const Prescriptions = () => {
   const [aiReview, setAiReview] = useState<string | null>(null);
   const [aiReviewLoading, setAiReviewLoading] = useState(false);
   const [aiReviewOpen, setAiReviewOpen] = useState(false);
-  const [patientSignature, setPatientSignature] = useState<string | null>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptAmount, setReceiptAmount] = useState("");
+  const [receiptDescription, setReceiptDescription] = useState("");
 
   const addMedication = (med: { name: string; posology: string }) => {
     const current = form.medications.trim();
@@ -126,6 +127,11 @@ const Prescriptions = () => {
     toast.success(`${med.name} adicionado`);
   };
 
+  const handleEditPrescription = (p: Record<string, unknown>) => {
+    setForm({ patientName: String(p.patient_name), medications: String(p.medications || "") });
+    toast.info("Receituário carregado para edição");
+  };
+
   const handleAiReview = async () => {
     if (!form.medications.trim()) {
       toast.error("Adicione medicamentos antes de revisar"); return;
@@ -134,8 +140,7 @@ const Prescriptions = () => {
     setAiReviewOpen(true);
     setAiReview(null);
     try {
-      // Find patient clinical data if available
-      const matchedPatient = patients.find(p => 
+      const matchedPatient = patients.find(p =>
         String(p.name).toLowerCase() === form.patientName.trim().toLowerCase()
       );
       let allergies = "", medicalHistory = "", currentMedications = "";
@@ -189,6 +194,14 @@ const Prescriptions = () => {
   };
 
   const previewPrescription = previewId ? prescriptions.find((p) => String(p.id) === previewId) : null;
+
+  const printReceipt = () => {
+    setShowReceipt(true);
+    setTimeout(() => {
+      window.print();
+      setShowReceipt(false);
+    }, 300);
+  };
 
   return (
     <div className="space-y-6">
@@ -245,8 +258,6 @@ const Prescriptions = () => {
                 />
               </div>
 
-              <SignaturePad value={patientSignature} onChange={setPatientSignature} label="Assinatura do Paciente" />
-
               <div className="flex gap-2 flex-wrap">
                 <Button onClick={handleAiReview} variant="outline" disabled={!form.medications.trim() || aiReviewLoading} className="gap-1.5">
                   {aiReviewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
@@ -264,6 +275,26 @@ const Prescriptions = () => {
             </CardContent>
           </Card>
 
+          {/* Receipt area */}
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Receipt className="h-4 w-4" />Recibo
+              </h3>
+              <div className="grid gap-2">
+                <Label>Valor (R$)</Label>
+                <Input value={receiptAmount} onChange={(e) => setReceiptAmount(e.target.value)} placeholder="150,00" />
+              </div>
+              <div className="grid gap-2">
+                <Label>Descrição do serviço</Label>
+                <Input value={receiptDescription} onChange={(e) => setReceiptDescription(e.target.value)} placeholder="Consulta odontológica" />
+              </div>
+              <Button variant="outline" onClick={printReceipt} disabled={!receiptAmount || !form.patientName}>
+                <Printer className="h-4 w-4 mr-2" />Imprimir Recibo
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent className="p-4">
               <h3 className="font-semibold mb-3">Receituários anteriores</h3>
@@ -277,13 +308,18 @@ const Prescriptions = () => {
                         <p className="text-sm font-medium">{String(p.patient_name)}</p>
                         <p className="text-xs text-muted-foreground">{format(new Date(String(p.date)), "dd/MM/yyyy")}</p>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={async (e) => {
-                        e.stopPropagation();
-                        await remove(String(p.id));
-                        if (previewId === String(p.id)) setPreviewId(null);
-                      }}>
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleEditPrescription(p); }}>
+                          <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={async (e) => {
+                          e.stopPropagation();
+                          await remove(String(p.id));
+                          if (previewId === String(p.id)) setPreviewId(null);
+                        }}>
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -308,46 +344,72 @@ const Prescriptions = () => {
               <Printer className="h-4 w-4 mr-2" />Imprimir
             </Button>
           </div>
-          <div className="print-area">
-            <div className="bg-card border-2 border-border rounded-xl p-8 min-h-[700px] flex flex-col justify-between shadow-sm">
-              <div>
-                <div className="text-center border-b-2 border-primary/30 pb-4 mb-6">
-                   <h2 className="text-xl font-bold text-primary">{String(settings.professional_name || "Dr(a). Nome")}</h2>
-                   <p className="text-sm text-muted-foreground">{String(settings.specialty || "Especialidade")} — {String(settings.registration_number || "Registro Profissional")}</p>
-                  {settings.clinic_name && <p className="text-sm font-medium mt-1">{String(settings.clinic_name)}</p>}
-                </div>
-                {previewPrescription ? (
-                  <div className="space-y-6">
-                    <div className="flex justify-between text-sm">
-                      <span><strong>Paciente:</strong> {String(previewPrescription.patient_name)}</span>
-                      <span><strong>Data:</strong> {format(new Date(String(previewPrescription.date)), "dd/MM/yyyy")}</span>
-                    </div>
-                    <div className="border-t pt-4">
-                      <h3 className="font-semibold mb-3 text-center text-lg">RECEITUÁRIO</h3>
-                      <div className="whitespace-pre-wrap text-sm leading-relaxed">{String(previewPrescription.medications)}</div>
-                    </div>
+
+          {/* Prescription print area */}
+          {!showReceipt && (
+            <div className="print-area">
+              <div className="bg-card border border-border rounded-xl shadow-sm" style={{ padding: "2.5rem 3rem", minHeight: "700px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div>
+                  <div className="text-center pb-5 mb-6" style={{ borderBottom: "2px solid hsl(var(--primary) / 0.25)" }}>
+                    <h2 className="text-xl font-bold text-primary">{String(settings.professional_name || "Dr(a). Nome")}</h2>
+                    <p className="text-sm text-muted-foreground">{String(settings.specialty || "Especialidade")} — {String(settings.registration_number || "Registro Profissional")}</p>
+                    {settings.clinic_name && <p className="text-sm font-medium mt-1">{String(settings.clinic_name)}</p>}
                   </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-20">Selecione ou crie um receituário.</p>
-                )}
-              </div>
-              {patientSignature && (
-                <div className="mt-8 text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Assinatura do Paciente:</p>
-                  <img src={patientSignature} alt="Assinatura do paciente" className="mx-auto max-h-20 border-b border-foreground" />
+                  {previewPrescription ? (
+                    <div className="space-y-6">
+                      <div className="flex justify-between text-sm">
+                        <span><strong>Paciente:</strong> {String(previewPrescription.patient_name)}</span>
+                        <span><strong>Data:</strong> {format(new Date(String(previewPrescription.date)), "dd/MM/yyyy")}</span>
+                      </div>
+                      <div className="pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
+                        <h3 className="font-semibold mb-4 text-center text-lg tracking-wide">RECEITUÁRIO</h3>
+                        <div className="whitespace-pre-wrap text-sm leading-7" style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
+                          {String(previewPrescription.medications)}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground py-20">Selecione ou crie um receituário.</p>
+                  )}
                 </div>
-              )}
-              <div className="border-t-2 border-primary/30 pt-4 mt-8 text-center space-y-1">
-                <div className="w-48 border-t border-foreground mx-auto mb-2 mt-12" />
-                <p className="text-sm font-semibold">{String(settings.professional_name || "Assinatura")}</p>
-                <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
-                <p className="text-xs text-muted-foreground mt-3">{String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}</p>
+                <div className="text-center space-y-1 mt-12" style={{ borderTop: "2px solid hsl(var(--primary) / 0.25)", paddingTop: "1.5rem" }}>
+                  <div className="w-48 mx-auto mb-2 mt-8" style={{ borderTop: "1px solid hsl(var(--foreground))" }} />
+                  <p className="text-sm font-semibold">{String(settings.professional_name || "Assinatura")}</p>
+                  <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
+                  <p className="text-xs text-muted-foreground mt-3">{String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Receipt print area */}
+          {showReceipt && (
+            <div className="print-area">
+              <div className="bg-card border border-border rounded-xl shadow-sm" style={{ padding: "2.5rem 3rem", minHeight: "500px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div>
+                  <div className="text-center pb-5 mb-6" style={{ borderBottom: "2px solid hsl(var(--primary) / 0.25)" }}>
+                    <h2 className="text-xl font-bold text-primary">{String(settings.professional_name || "Dr(a). Nome")}</h2>
+                    <p className="text-sm text-muted-foreground">{String(settings.specialty || "Especialidade")} — {String(settings.registration_number || "Registro Profissional")}</p>
+                    {settings.clinic_name && <p className="text-sm font-medium mt-1">{String(settings.clinic_name)}</p>}
+                  </div>
+                  <h3 className="font-semibold mb-6 text-center text-lg tracking-wide">RECIBO</h3>
+                  <div className="space-y-4 text-sm" style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
+                    <p>Recebi de <strong>{form.patientName || "_______________"}</strong> a quantia de <strong>R$ {receiptAmount || "___"}</strong> referente a:</p>
+                    <p className="leading-7">{receiptDescription || "Serviços prestados."}</p>
+                    <p className="mt-8">Para clareza e validade, firmo o presente recibo.</p>
+                    <p className="mt-4">Data: {format(new Date(), "dd/MM/yyyy")}</p>
+                  </div>
+                </div>
+                <div className="text-center space-y-1 mt-12" style={{ borderTop: "2px solid hsl(var(--primary) / 0.25)", paddingTop: "1.5rem" }}>
+                  <div className="w-48 mx-auto mb-2 mt-8" style={{ borderTop: "1px solid hsl(var(--foreground))" }} />
+                  <p className="text-sm font-semibold">{String(settings.professional_name || "Assinatura")}</p>
+                  <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
 
       {/* AI Review Dialog */}
       <Dialog open={aiReviewOpen} onOpenChange={setAiReviewOpen}>
