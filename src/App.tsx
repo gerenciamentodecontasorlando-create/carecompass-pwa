@@ -62,6 +62,7 @@ function AppRoutes() {
           <Route path="/configuracoes" element={<SettingsPage />} />
           <Route path="/auditoria" element={<AuditLog />} />
           <Route path="/importar-dados" element={<DataImport />} />
+          <Route path="/consentimento" element={<InformedConsent />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

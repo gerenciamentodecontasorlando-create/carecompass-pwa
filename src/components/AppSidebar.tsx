@@ -16,6 +16,7 @@ const items = [
   { title: "Agenda", url: "/agenda", icon: CalendarDays },
   { title: "Receituário", url: "/receituario", icon: FileText },
   { title: "Atestados", url: "/atestados", icon: FileBadge },
+  { title: "Consentimento (TCLE)", url: "/consentimento", icon: ClipboardCheck },
   { title: "Odontograma (Odonto)", url: "/odontograma", icon: Smile },
   { title: "Assistente IA", url: "/assistente-ia", icon: Bot },
   { title: "Notas", url: "/notas", icon: StickyNote },
