@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, CalendarDays, FileText, FileBadge,
   Smile, DollarSign, Package, Settings, Bot, StickyNote, LogOut,
-  Shield, Upload,
+  Shield, Upload, ClipboardCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
