@@ -160,11 +160,11 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Assistente Jarvis */}
+      {/* Assistente Nando */}
       <Card>
         <CardContent className="p-6 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Assistente Jarvis</h2>
+            <h2 className="text-lg font-semibold">Assistente Nando</h2>
             <div className="flex items-center gap-2">
               <Label htmlFor="jarvis-toggle" className="text-sm text-muted-foreground">
                 {jarvisForm.jarvis_enabled ? "Ativado" : "Desativado"}
