@@ -160,7 +160,7 @@ const Prescriptions = () => {
   const { clinicId } = useAuth();
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
-  const { data: prescriptions, insert, remove } = useClinicData("prescriptions");
+  const { data: prescriptions, insert, remove, update: updatePrescription } = useClinicData("prescriptions");
   const { data: patients } = useClinicData("patients");
   const [form, setForm, clearDraft] = useFormDraft("prescriptions-form", { patientName: "", medications: "" });
   const [previewId, setPreviewId] = useFormDraft<string | null>("prescriptions-preview", null);
