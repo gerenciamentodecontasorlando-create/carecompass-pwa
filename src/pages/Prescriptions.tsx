@@ -365,11 +365,11 @@ const Prescriptions = () => {
           <Card>
             <CardContent className="p-4">
               <h3 className="font-semibold mb-3">Receituários anteriores</h3>
-              {prescriptions.length === 0 ? (
+              {prescriptions.filter(p => !p.deleted_at).length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhum receituário emitido.</p>
               ) : (
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {[...prescriptions].reverse().map((p) => (
+                  {[...prescriptions].filter(p => !p.deleted_at).reverse().map((p) => (
                     <div key={String(p.id)} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => setPreviewId(String(p.id))}>
                       <div>
                         <p className="text-sm font-medium">{String(p.patient_name)}</p>
