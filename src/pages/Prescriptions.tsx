@@ -170,6 +170,9 @@ const Prescriptions = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptAmount, setReceiptAmount] = useState("");
   const [receiptDescription, setReceiptDescription] = useState("");
+  const [isPediatric, setIsPediatric] = useState(false);
+
+  const activeCatalog = isPediatric ? PEDIATRIC_CATALOG : ADULT_CATALOG;
 
   const addMedication = (med: { name: string; posology: string }) => {
     const current = form.medications.trim();
