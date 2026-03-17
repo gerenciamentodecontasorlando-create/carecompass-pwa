@@ -118,7 +118,7 @@ export function JarvisButton() {
                   : "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground"
             )}
-            title={isActive ? "Falar com Jarvis" : "Ativar Jarvis"}
+            title={isActive ? "Falar com Nando" : "Ativar Nando"}
           >
             {getStatusIcon()}
           </button>

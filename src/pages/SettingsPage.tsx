@@ -199,7 +199,7 @@ const SettingsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="always-listening">Escuta contínua</Label>
-              <p className="text-xs text-muted-foreground">Jarvis fica ouvindo permanentemente</p>
+              <p className="text-xs text-muted-foreground">Nando fica ouvindo permanentemente</p>
             </div>
             <Switch id="always-listening" checked={jarvisForm.jarvis_always_listening} onCheckedChange={(checked) => setJarvisForm({ ...jarvisForm, jarvis_always_listening: checked })} />
           </div>

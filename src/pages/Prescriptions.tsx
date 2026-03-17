@@ -275,37 +275,47 @@ const Prescriptions = () => {
 
               {/* Medication catalog */}
               <div className="grid gap-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <Label>Prescrição *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-1.5">
-                        <Pill className="h-3.5 w-3.5" />Adicionar Medicamento
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 max-h-[420px] overflow-y-auto p-2" align="end">
-                      {Object.entries(MEDICATION_CATALOG).map(([category, meds]) => (
-                        <Collapsible key={category}>
-                          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-semibold hover:bg-muted/50">
-                            {category}
-                            <ChevronDown className="h-4 w-4" />
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="pl-2">
-                            {meds.map((med) => (
-                              <button
-                                key={med.name}
-                                onClick={() => addMedication(med)}
-                                className="w-full text-left rounded-md px-3 py-2 text-sm hover:bg-primary/10 transition-colors"
-                              >
-                                <span className="font-medium">{med.name}</span>
-                                <span className="block text-xs text-muted-foreground mt-0.5">{med.posology}</span>
-                              </button>
-                            ))}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      ))}
-                    </PopoverContent>
-                  </Popover>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={isPediatric ? "default" : "outline"}
+                      size="sm"
+                      className="gap-1 text-xs"
+                      onClick={() => setIsPediatric(!isPediatric)}
+                    >
+                      👶 {isPediatric ? "Pediátrico" : "Adulto"}
+                    </Button>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-1.5">
+                          <Pill className="h-3.5 w-3.5" />Adicionar Medicamento
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 max-h-[420px] overflow-y-auto p-2" align="end">
+                        {Object.entries(activeCatalog).map(([category, meds]) => (
+                          <Collapsible key={category}>
+                            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-semibold hover:bg-muted/50">
+                              {category}
+                              <ChevronDown className="h-4 w-4" />
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="pl-2">
+                              {meds.map((med) => (
+                                <button
+                                  key={med.name}
+                                  onClick={() => addMedication(med)}
+                                  className="w-full text-left rounded-md px-3 py-2 text-sm hover:bg-primary/10 transition-colors"
+                                >
+                                  <span className="font-medium">{med.name}</span>
+                                  <span className="block text-xs text-muted-foreground mt-0.5">{med.posology}</span>
+                                </button>
+                              ))}
+                            </CollapsibleContent>
+                          </Collapsible>
+                        ))}
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
                 <Textarea
                   value={form.medications}
