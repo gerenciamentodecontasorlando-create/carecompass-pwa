@@ -17,7 +17,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ReactMarkdown from "react-markdown";
 
-const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> = {
+type MedEntry = { name: string; posology: string };
+
+const ADULT_CATALOG: Record<string, MedEntry[]> = {
   "Antibióticos": [
     { name: "Amoxicilina + Clavulanato (Clavulin) 875/125mg", posology: "Tomar 1 comprimido de 12 em 12 horas por 7 dias." },
     { name: "Amoxicilina 500mg", posology: "Tomar 1 cápsula de 8 em 8 horas por 7 dias." },
@@ -101,6 +103,58 @@ const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> =
     { name: "Piritionato de Zinco Shampoo 1%", posology: "Usar 3 vezes por semana, deixar agir 3 a 5 minutos antes de enxaguar." },
   ],
 };
+
+const PEDIATRIC_CATALOG: Record<string, MedEntry[]> = {
+  "Antibióticos Pediátricos": [
+    { name: "Amoxicilina Suspensão 250mg/5mL", posology: "Administrar ___mL de 8 em 8 horas por 7 dias. (Dose: 25-50mg/kg/dia)" },
+    { name: "Amoxicilina + Clavulanato Suspensão 250/62,5mg/5mL", posology: "Administrar ___mL de 8 em 8 horas por 7 dias. (Dose: 25-45mg/kg/dia)" },
+    { name: "Azitromicina Suspensão 200mg/5mL", posology: "Administrar ___mL 1x/dia por 3 dias. (Dose: 10mg/kg/dia)" },
+    { name: "Cefalexina Suspensão 250mg/5mL", posology: "Administrar ___mL de 6 em 6 horas por 7 dias. (Dose: 25-50mg/kg/dia)" },
+    { name: "Sulfametoxazol + Trimetoprima Suspensão (Bactrim)", posology: "Administrar ___mL de 12 em 12 horas por 7 dias. (Dose: 40mg/kg/dia de SMX)" },
+  ],
+  "Analgésicos e Antitérmicos Pediátricos": [
+    { name: "Dipirona Gotas 500mg/mL", posology: "Administrar 1 gota/kg de 6 em 6 horas se dor ou febre. Máx. 40 gotas/dose." },
+    { name: "Paracetamol Gotas 200mg/mL", posology: "Administrar 1 gota/kg de 6 em 6 horas se dor ou febre. Máx. 35 gotas/dose." },
+    { name: "Ibuprofeno Gotas 100mg/mL", posology: "Administrar 1 gota/kg de 6 em 6 horas (máx. 40 gotas). Uso por até 3 dias." },
+    { name: "Ibuprofeno Suspensão 50mg/mL", posology: "Administrar ___mL de 6 em 8 horas. (Dose: 5-10mg/kg/dose)" },
+  ],
+  "Anti-inflamatórios Pediátricos": [
+    { name: "Prednisolona Solução Oral 3mg/mL", posology: "Administrar ___mL 1x/dia por 3-5 dias. (Dose: 1-2mg/kg/dia)" },
+    { name: "Dexametasona Elixir 0,1mg/mL", posology: "Administrar ___mL 1x/dia por 3 dias. (Dose: 0,15-0,6mg/kg/dia)" },
+    { name: "Nimesulida Gotas 50mg/mL (>2 anos)", posology: "Administrar 1 gota/kg de 12 em 12 horas por 3 dias. (Dose: 5mg/kg/dia)" },
+  ],
+  "Antialérgicos Pediátricos": [
+    { name: "Loratadina Xarope 1mg/mL", posology: "<30kg: 5mL 1x/dia. >30kg: 10mL 1x/dia." },
+    { name: "Desloratadina Xarope 0,5mg/mL", posology: "1-5 anos: 2,5mL 1x/dia. 6-11 anos: 5mL 1x/dia. >12 anos: 10mL 1x/dia." },
+    { name: "Dexclorfeniramina Xarope 0,4mg/mL (Polaramine)", posology: "2-6 anos: 2,5mL 3x/dia. 6-12 anos: 5mL 3x/dia." },
+    { name: "Hidroxizina Xarope 2mg/mL (Hixizine)", posology: "Administrar ___mL de 8 em 8 horas. (Dose: 1-2mg/kg/dia)" },
+  ],
+  "Antitussígenos e Mucolíticos Pediátricos": [
+    { name: "Ambroxol Xarope Pediátrico 15mg/5mL", posology: "<2 anos: 2,5mL 2x/dia. 2-5 anos: 2,5mL 3x/dia. >5 anos: 5mL 3x/dia." },
+    { name: "Acetilcisteína Granulado 100mg", posology: "2-6 anos: 1 sachê 2x/dia. >6 anos: 1 sachê 3x/dia. Dissolver em água." },
+    { name: "Brometo de Ipratrópio 0,025% (Atrovent) Solução inalatória", posology: "<6 anos: 10-20 gotas em 3mL de SF, 3x/dia. >6 anos: 20-40 gotas em 3mL de SF, 3x/dia." },
+  ],
+  "Antifúngicos e Antiparasitários Pediátricos": [
+    { name: "Nistatina Suspensão Oral 100.000 UI/mL", posology: "Lactentes: 1mL 4x/dia. Crianças: 2-5mL 4x/dia. Aplicar na mucosa oral por 14 dias." },
+    { name: "Miconazol Gel Oral 2%", posology: "Aplicar ½ colher de chá na região afetada 4x/dia por 7-14 dias." },
+    { name: "Albendazol Suspensão 40mg/mL", posology: ">2 anos: 10mL (400mg) em dose única." },
+    { name: "Mebendazol Suspensão 20mg/mL", posology: ">1 ano: 5mL de 12 em 12 horas por 3 dias." },
+    { name: "Ivermectina Gotas 6mg/mL (>15kg)", posology: "Administrar conforme peso: 200mcg/kg em dose única, em jejum." },
+  ],
+  "Gastrointestinais Pediátricos": [
+    { name: "Sais de Reidratação Oral (SRO)", posology: "Dissolver 1 envelope em 1L de água. Oferecer após cada evacuação: <1 ano: 50-100mL, 1-10 anos: 100-200mL." },
+    { name: "Ondansetrona Xarope 0,8mg/mL (Vonau)", posology: "Administrar ___mL de 8 em 8 horas. (Dose: 0,15mg/kg/dose, máx. 4mg)" },
+    { name: "Dimeticona Gotas 75mg/mL", posology: "Lactentes: 3-5 gotas antes das mamadas. Crianças: 5-8 gotas de 8 em 8 horas." },
+    { name: "Domperidona Suspensão 1mg/mL (Motilium)", posology: "Administrar ___mL de 8 em 8 horas antes das refeições. (Dose: 0,25mg/kg/dose)" },
+  ],
+  "Vitaminas e Suplementos Pediátricos": [
+    { name: "Sulfato Ferroso Gotas 125mg/mL (25mg Fe elem./mL)", posology: "Profilaxia: 1mg Fe/kg/dia. Tratamento: 3-5mg Fe/kg/dia. Administrar 30min antes das refeições." },
+    { name: "Vitamina D3 Gotas 200UI/gota", posology: "Lactentes até 1 ano: 2 gotas/dia (400UI). 1-2 anos: 3 gotas/dia (600UI)." },
+    { name: "Polivitamínico Gotas (Ad-til / Protovit)", posology: "Administrar 12 gotas 1x/dia." },
+  ],
+};
+
+const MEDICATION_CATALOG = ADULT_CATALOG;
 
 const Prescriptions = () => {
   const { clinicId } = useAuth();
