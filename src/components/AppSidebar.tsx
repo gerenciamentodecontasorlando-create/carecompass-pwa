@@ -23,7 +23,9 @@ const items = [
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
   { title: "Materiais", url: "/materiais", icon: Package },
   { title: "Auditoria", url: "/auditoria", icon: Shield },
+  { title: "Lixeira", url: "/lixeira", icon: Trash2 },
   { title: "Importar Dados", url: "/importar-dados", icon: Upload },
+  { title: "Configurações", url: "/configuracoes", icon: Settings },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 

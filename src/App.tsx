@@ -64,6 +64,7 @@ function AppRoutes() {
           <Route path="/auditoria" element={<AuditLog />} />
           <Route path="/importar-dados" element={<DataImport />} />
           <Route path="/consentimento" element={<InformedConsent />} />
+          <Route path="/lixeira" element={<Trash />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

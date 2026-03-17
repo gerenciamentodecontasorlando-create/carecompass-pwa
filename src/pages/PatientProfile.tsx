@@ -212,8 +212,8 @@ const PatientProfile = () => {
   };
 
   const handleDeleteEvolution = async (evoId: string) => {
-    await removeEvo(evoId);
-    toast.success("Evolução removida");
+    await updateEvo(evoId, { deleted_at: new Date().toISOString() } as any);
+    toast.success("Evolução movida para a lixeira");
   };
 
   const handleEditEvolution = (evo: Record<string, unknown>) => {
