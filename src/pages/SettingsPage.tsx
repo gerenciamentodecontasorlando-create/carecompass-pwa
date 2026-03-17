@@ -59,7 +59,7 @@ const SettingsPage = () => {
 
   const handleTestVoice = () => {
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance("Olá, eu sou o Jarvis, seu assistente virtual.");
+    const utterance = new SpeechSynthesisUtterance("Olá, eu sou o Nando, seu assistente virtual.");
     utterance.lang = "pt-BR";
     utterance.rate = jarvisForm.jarvis_speed;
     utterance.pitch = jarvisForm.jarvis_pitch;
