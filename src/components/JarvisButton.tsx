@@ -43,8 +43,8 @@ export function JarvisButton() {
     if (isProcessing) return "Processando...";
     if (isSpeaking) return "Falando...";
     if (isListening) return "Ouvindo...";
-    if (isActive) return "Jarvis ativo — toque para falar";
-    return "Toque para ativar Jarvis";
+    if (isActive) return "Nando ativo — toque para falar";
+    return "Toque para ativar Nando";
   };
 
   const getStatusIcon = () => {
