@@ -381,8 +381,9 @@ const Prescriptions = () => {
                         </Button>
                         <Button variant="ghost" size="icon" onClick={async (e) => {
                           e.stopPropagation();
-                          await remove(String(p.id));
+                          await updatePrescription(String(p.id), { deleted_at: new Date().toISOString() } as any);
                           if (previewId === String(p.id)) setPreviewId(null);
+                          toast.success("Receituário movido para a lixeira");
                         }}>
                           <Trash2 className="h-3.5 w-3.5 text-destructive" />
                         </Button>
