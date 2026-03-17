@@ -23,6 +23,7 @@ import NotePad from "./pages/NotePad";
 import AuditLog from "./pages/AuditLog";
 import DataImport from "./pages/DataImport";
 import InformedConsent from "./pages/InformedConsent";
+import Trash from "./pages/Trash";
 import NotFound from "./pages/NotFound";
 import PinLock from "./pages/PinLock";
 
