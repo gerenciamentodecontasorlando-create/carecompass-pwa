@@ -100,7 +100,7 @@ export function JarvisButton() {
             <button
               onClick={deactivate}
               className="w-10 h-10 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity"
-              title="Desativar Jarvis"
+              title="Desativar Nando"
             >
               <Power className="h-4 w-4" />
             </button>
