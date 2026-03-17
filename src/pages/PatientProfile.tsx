@@ -597,11 +597,11 @@ const PatientProfile = () => {
               </Dialog>
             </div>
 
-            {evolutions.length === 0 ? (
+            {evolutions.filter(e => !e.deleted_at).length === 0 ? (
               <Card><CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground"><Calendar className="h-12 w-12 mb-4 opacity-40" /><p>Nenhuma evolução registrada</p></CardContent></Card>
             ) : (
               <div className="space-y-3">
-                {[...evolutions].sort((a, b) => String(b.date).localeCompare(String(a.date))).map((evo) => (
+                {[...evolutions].filter(e => !e.deleted_at).sort((a, b) => String(b.date).localeCompare(String(a.date))).map((evo) => (
                   <Card key={String(evo.id)} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-start justify-between">
