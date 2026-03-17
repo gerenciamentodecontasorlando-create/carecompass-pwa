@@ -76,7 +76,7 @@ export function JarvisButton() {
             )}
             {lastResponse && (
               <div>
-                <p className="text-xs text-muted-foreground font-medium">Jarvis:</p>
+                <p className="text-xs text-muted-foreground font-medium">Nando:</p>
                 <p className="text-sm text-foreground line-clamp-6">{lastResponse.replace(/[#*_`]/g, "")}</p>
               </div>
             )}
