@@ -71,6 +71,7 @@ export type Database = {
           created_at: string
           date: string
           days: string | null
+          deleted_at: string | null
           id: string
           patient_name: string
         }
@@ -80,6 +81,7 @@ export type Database = {
           created_at?: string
           date: string
           days?: string | null
+          deleted_at?: string | null
           id?: string
           patient_name: string
         }
@@ -89,6 +91,7 @@ export type Database = {
           created_at?: string
           date?: string
           days?: string | null
+          deleted_at?: string | null
           id?: string
           patient_name?: string
         }
@@ -177,6 +180,7 @@ export type Database = {
           clinic_id: string
           created_at: string
           current_medications: string | null
+          deleted_at: string | null
           dental_history: string | null
           diagnosis: string | null
           extra_oral_exam: string | null
@@ -196,6 +200,7 @@ export type Database = {
           clinic_id: string
           created_at?: string
           current_medications?: string | null
+          deleted_at?: string | null
           dental_history?: string | null
           diagnosis?: string | null
           extra_oral_exam?: string | null
@@ -215,6 +220,7 @@ export type Database = {
           clinic_id?: string
           created_at?: string
           current_medications?: string | null
+          deleted_at?: string | null
           dental_history?: string | null
           diagnosis?: string | null
           extra_oral_exam?: string | null
@@ -281,6 +287,7 @@ export type Database = {
           clinic_id: string
           created_at: string
           date: string
+          deleted_at: string | null
           id: string
           objective: string | null
           patient_id: string
@@ -295,6 +302,7 @@ export type Database = {
           clinic_id: string
           created_at?: string
           date: string
+          deleted_at?: string | null
           id?: string
           objective?: string | null
           patient_id: string
@@ -309,6 +317,7 @@ export type Database = {
           clinic_id?: string
           created_at?: string
           date?: string
+          deleted_at?: string | null
           id?: string
           objective?: string | null
           patient_id?: string
@@ -559,6 +568,7 @@ export type Database = {
           clinic_id: string
           created_at: string
           date: string
+          deleted_at: string | null
           id: string
           medications: string | null
           patient_name: string
@@ -567,6 +577,7 @@ export type Database = {
           clinic_id: string
           created_at?: string
           date: string
+          deleted_at?: string | null
           id?: string
           medications?: string | null
           patient_name: string
@@ -575,6 +586,7 @@ export type Database = {
           clinic_id?: string
           created_at?: string
           date?: string
+          deleted_at?: string | null
           id?: string
           medications?: string | null
           patient_name?: string

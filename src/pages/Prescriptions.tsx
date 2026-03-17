@@ -17,7 +17,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ReactMarkdown from "react-markdown";
 
-const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> = {
+type MedEntry = { name: string; posology: string };
+
+const ADULT_CATALOG: Record<string, MedEntry[]> = {
   "Antibióticos": [
     { name: "Amoxicilina + Clavulanato (Clavulin) 875/125mg", posology: "Tomar 1 comprimido de 12 em 12 horas por 7 dias." },
     { name: "Amoxicilina 500mg", posology: "Tomar 1 cápsula de 8 em 8 horas por 7 dias." },
@@ -102,11 +104,63 @@ const MEDICATION_CATALOG: Record<string, { name: string; posology: string }[]> =
   ],
 };
 
+const PEDIATRIC_CATALOG: Record<string, MedEntry[]> = {
+  "Antibióticos Pediátricos": [
+    { name: "Amoxicilina Suspensão 250mg/5mL", posology: "Administrar ___mL de 8 em 8 horas por 7 dias. (Dose: 25-50mg/kg/dia)" },
+    { name: "Amoxicilina + Clavulanato Suspensão 250/62,5mg/5mL", posology: "Administrar ___mL de 8 em 8 horas por 7 dias. (Dose: 25-45mg/kg/dia)" },
+    { name: "Azitromicina Suspensão 200mg/5mL", posology: "Administrar ___mL 1x/dia por 3 dias. (Dose: 10mg/kg/dia)" },
+    { name: "Cefalexina Suspensão 250mg/5mL", posology: "Administrar ___mL de 6 em 6 horas por 7 dias. (Dose: 25-50mg/kg/dia)" },
+    { name: "Sulfametoxazol + Trimetoprima Suspensão (Bactrim)", posology: "Administrar ___mL de 12 em 12 horas por 7 dias. (Dose: 40mg/kg/dia de SMX)" },
+  ],
+  "Analgésicos e Antitérmicos Pediátricos": [
+    { name: "Dipirona Gotas 500mg/mL", posology: "Administrar 1 gota/kg de 6 em 6 horas se dor ou febre. Máx. 40 gotas/dose." },
+    { name: "Paracetamol Gotas 200mg/mL", posology: "Administrar 1 gota/kg de 6 em 6 horas se dor ou febre. Máx. 35 gotas/dose." },
+    { name: "Ibuprofeno Gotas 100mg/mL", posology: "Administrar 1 gota/kg de 6 em 6 horas (máx. 40 gotas). Uso por até 3 dias." },
+    { name: "Ibuprofeno Suspensão 50mg/mL", posology: "Administrar ___mL de 6 em 8 horas. (Dose: 5-10mg/kg/dose)" },
+  ],
+  "Anti-inflamatórios Pediátricos": [
+    { name: "Prednisolona Solução Oral 3mg/mL", posology: "Administrar ___mL 1x/dia por 3-5 dias. (Dose: 1-2mg/kg/dia)" },
+    { name: "Dexametasona Elixir 0,1mg/mL", posology: "Administrar ___mL 1x/dia por 3 dias. (Dose: 0,15-0,6mg/kg/dia)" },
+    { name: "Nimesulida Gotas 50mg/mL (>2 anos)", posology: "Administrar 1 gota/kg de 12 em 12 horas por 3 dias. (Dose: 5mg/kg/dia)" },
+  ],
+  "Antialérgicos Pediátricos": [
+    { name: "Loratadina Xarope 1mg/mL", posology: "<30kg: 5mL 1x/dia. >30kg: 10mL 1x/dia." },
+    { name: "Desloratadina Xarope 0,5mg/mL", posology: "1-5 anos: 2,5mL 1x/dia. 6-11 anos: 5mL 1x/dia. >12 anos: 10mL 1x/dia." },
+    { name: "Dexclorfeniramina Xarope 0,4mg/mL (Polaramine)", posology: "2-6 anos: 2,5mL 3x/dia. 6-12 anos: 5mL 3x/dia." },
+    { name: "Hidroxizina Xarope 2mg/mL (Hixizine)", posology: "Administrar ___mL de 8 em 8 horas. (Dose: 1-2mg/kg/dia)" },
+  ],
+  "Antitussígenos e Mucolíticos Pediátricos": [
+    { name: "Ambroxol Xarope Pediátrico 15mg/5mL", posology: "<2 anos: 2,5mL 2x/dia. 2-5 anos: 2,5mL 3x/dia. >5 anos: 5mL 3x/dia." },
+    { name: "Acetilcisteína Granulado 100mg", posology: "2-6 anos: 1 sachê 2x/dia. >6 anos: 1 sachê 3x/dia. Dissolver em água." },
+    { name: "Brometo de Ipratrópio 0,025% (Atrovent) Solução inalatória", posology: "<6 anos: 10-20 gotas em 3mL de SF, 3x/dia. >6 anos: 20-40 gotas em 3mL de SF, 3x/dia." },
+  ],
+  "Antifúngicos e Antiparasitários Pediátricos": [
+    { name: "Nistatina Suspensão Oral 100.000 UI/mL", posology: "Lactentes: 1mL 4x/dia. Crianças: 2-5mL 4x/dia. Aplicar na mucosa oral por 14 dias." },
+    { name: "Miconazol Gel Oral 2%", posology: "Aplicar ½ colher de chá na região afetada 4x/dia por 7-14 dias." },
+    { name: "Albendazol Suspensão 40mg/mL", posology: ">2 anos: 10mL (400mg) em dose única." },
+    { name: "Mebendazol Suspensão 20mg/mL", posology: ">1 ano: 5mL de 12 em 12 horas por 3 dias." },
+    { name: "Ivermectina Gotas 6mg/mL (>15kg)", posology: "Administrar conforme peso: 200mcg/kg em dose única, em jejum." },
+  ],
+  "Gastrointestinais Pediátricos": [
+    { name: "Sais de Reidratação Oral (SRO)", posology: "Dissolver 1 envelope em 1L de água. Oferecer após cada evacuação: <1 ano: 50-100mL, 1-10 anos: 100-200mL." },
+    { name: "Ondansetrona Xarope 0,8mg/mL (Vonau)", posology: "Administrar ___mL de 8 em 8 horas. (Dose: 0,15mg/kg/dose, máx. 4mg)" },
+    { name: "Dimeticona Gotas 75mg/mL", posology: "Lactentes: 3-5 gotas antes das mamadas. Crianças: 5-8 gotas de 8 em 8 horas." },
+    { name: "Domperidona Suspensão 1mg/mL (Motilium)", posology: "Administrar ___mL de 8 em 8 horas antes das refeições. (Dose: 0,25mg/kg/dose)" },
+  ],
+  "Vitaminas e Suplementos Pediátricos": [
+    { name: "Sulfato Ferroso Gotas 125mg/mL (25mg Fe elem./mL)", posology: "Profilaxia: 1mg Fe/kg/dia. Tratamento: 3-5mg Fe/kg/dia. Administrar 30min antes das refeições." },
+    { name: "Vitamina D3 Gotas 200UI/gota", posology: "Lactentes até 1 ano: 2 gotas/dia (400UI). 1-2 anos: 3 gotas/dia (600UI)." },
+    { name: "Polivitamínico Gotas (Ad-til / Protovit)", posology: "Administrar 12 gotas 1x/dia." },
+  ],
+};
+
+const MEDICATION_CATALOG = ADULT_CATALOG;
+
 const Prescriptions = () => {
   const { clinicId } = useAuth();
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
-  const { data: prescriptions, insert, remove } = useClinicData("prescriptions");
+  const { data: prescriptions, insert, remove, update: updatePrescription } = useClinicData("prescriptions");
   const { data: patients } = useClinicData("patients");
   const [form, setForm, clearDraft] = useFormDraft("prescriptions-form", { patientName: "", medications: "" });
   const [previewId, setPreviewId] = useFormDraft<string | null>("prescriptions-preview", null);
@@ -116,6 +170,9 @@ const Prescriptions = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptAmount, setReceiptAmount] = useState("");
   const [receiptDescription, setReceiptDescription] = useState("");
+  const [isPediatric, setIsPediatric] = useState(false);
+
+  const activeCatalog = isPediatric ? PEDIATRIC_CATALOG : ADULT_CATALOG;
 
   const addMedication = (med: { name: string; posology: string }) => {
     const current = form.medications.trim();
@@ -218,37 +275,47 @@ const Prescriptions = () => {
 
               {/* Medication catalog */}
               <div className="grid gap-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <Label>Prescrição *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-1.5">
-                        <Pill className="h-3.5 w-3.5" />Adicionar Medicamento
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80 max-h-[420px] overflow-y-auto p-2" align="end">
-                      {Object.entries(MEDICATION_CATALOG).map(([category, meds]) => (
-                        <Collapsible key={category}>
-                          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-semibold hover:bg-muted/50">
-                            {category}
-                            <ChevronDown className="h-4 w-4" />
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="pl-2">
-                            {meds.map((med) => (
-                              <button
-                                key={med.name}
-                                onClick={() => addMedication(med)}
-                                className="w-full text-left rounded-md px-3 py-2 text-sm hover:bg-primary/10 transition-colors"
-                              >
-                                <span className="font-medium">{med.name}</span>
-                                <span className="block text-xs text-muted-foreground mt-0.5">{med.posology}</span>
-                              </button>
-                            ))}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      ))}
-                    </PopoverContent>
-                  </Popover>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={isPediatric ? "default" : "outline"}
+                      size="sm"
+                      className="gap-1 text-xs"
+                      onClick={() => setIsPediatric(!isPediatric)}
+                    >
+                      👶 {isPediatric ? "Pediátrico" : "Adulto"}
+                    </Button>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="gap-1.5">
+                          <Pill className="h-3.5 w-3.5" />Adicionar Medicamento
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 max-h-[420px] overflow-y-auto p-2" align="end">
+                        {Object.entries(activeCatalog).map(([category, meds]) => (
+                          <Collapsible key={category}>
+                            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-semibold hover:bg-muted/50">
+                              {category}
+                              <ChevronDown className="h-4 w-4" />
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="pl-2">
+                              {meds.map((med) => (
+                                <button
+                                  key={med.name}
+                                  onClick={() => addMedication(med)}
+                                  className="w-full text-left rounded-md px-3 py-2 text-sm hover:bg-primary/10 transition-colors"
+                                >
+                                  <span className="font-medium">{med.name}</span>
+                                  <span className="block text-xs text-muted-foreground mt-0.5">{med.posology}</span>
+                                </button>
+                              ))}
+                            </CollapsibleContent>
+                          </Collapsible>
+                        ))}
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
                 <Textarea
                   value={form.medications}
@@ -298,11 +365,11 @@ const Prescriptions = () => {
           <Card>
             <CardContent className="p-4">
               <h3 className="font-semibold mb-3">Receituários anteriores</h3>
-              {prescriptions.length === 0 ? (
+              {prescriptions.filter(p => !p.deleted_at).length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhum receituário emitido.</p>
               ) : (
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {[...prescriptions].reverse().map((p) => (
+                  {[...prescriptions].filter(p => !p.deleted_at).reverse().map((p) => (
                     <div key={String(p.id)} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => setPreviewId(String(p.id))}>
                       <div>
                         <p className="text-sm font-medium">{String(p.patient_name)}</p>
@@ -314,8 +381,9 @@ const Prescriptions = () => {
                         </Button>
                         <Button variant="ghost" size="icon" onClick={async (e) => {
                           e.stopPropagation();
-                          await remove(String(p.id));
+                          await updatePrescription(String(p.id), { deleted_at: new Date().toISOString() } as any);
                           if (previewId === String(p.id)) setPreviewId(null);
+                          toast.success("Receituário movido para a lixeira");
                         }}>
                           <Trash2 className="h-3.5 w-3.5 text-destructive" />
                         </Button>

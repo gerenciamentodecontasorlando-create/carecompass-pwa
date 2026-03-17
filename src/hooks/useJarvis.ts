@@ -159,7 +159,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     const greeting = getGreeting();
     const name = professionalName || "Doutor";
     const title = name.toLowerCase().startsWith("dr") ? name : `Dr. ${name}`;
-    const text = `${greeting}, ${title}. Sou o Jarvis, seu assistente. Vamos começar?`;
+    const text = `${greeting}, ${title}. Sou o Nando, seu assistente. Vamos começar?`;
 
     speak(text, onGreetingDone);
   }, [professionalName, speak, onGreetingDone]);

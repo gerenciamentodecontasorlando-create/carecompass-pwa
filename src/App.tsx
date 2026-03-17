@@ -23,6 +23,7 @@ import NotePad from "./pages/NotePad";
 import AuditLog from "./pages/AuditLog";
 import DataImport from "./pages/DataImport";
 import InformedConsent from "./pages/InformedConsent";
+import Trash from "./pages/Trash";
 import NotFound from "./pages/NotFound";
 import PinLock from "./pages/PinLock";
 
@@ -63,6 +64,7 @@ function AppRoutes() {
           <Route path="/auditoria" element={<AuditLog />} />
           <Route path="/importar-dados" element={<DataImport />} />
           <Route path="/consentimento" element={<InformedConsent />} />
+          <Route path="/lixeira" element={<Trash />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

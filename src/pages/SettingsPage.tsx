@@ -59,7 +59,7 @@ const SettingsPage = () => {
 
   const handleTestVoice = () => {
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance("Olá, eu sou o Jarvis, seu assistente virtual.");
+    const utterance = new SpeechSynthesisUtterance("Olá, eu sou o Nando, seu assistente virtual.");
     utterance.lang = "pt-BR";
     utterance.rate = jarvisForm.jarvis_speed;
     utterance.pitch = jarvisForm.jarvis_pitch;
@@ -160,11 +160,11 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Assistente Jarvis */}
+      {/* Assistente Nando */}
       <Card>
         <CardContent className="p-6 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Assistente Jarvis</h2>
+            <h2 className="text-lg font-semibold">Assistente Nando</h2>
             <div className="flex items-center gap-2">
               <Label htmlFor="jarvis-toggle" className="text-sm text-muted-foreground">
                 {jarvisForm.jarvis_enabled ? "Ativado" : "Desativado"}
@@ -199,7 +199,7 @@ const SettingsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="always-listening">Escuta contínua</Label>
-              <p className="text-xs text-muted-foreground">Jarvis fica ouvindo permanentemente</p>
+              <p className="text-xs text-muted-foreground">Nando fica ouvindo permanentemente</p>
             </div>
             <Switch id="always-listening" checked={jarvisForm.jarvis_always_listening} onCheckedChange={(checked) => setJarvisForm({ ...jarvisForm, jarvis_always_listening: checked })} />
           </div>
