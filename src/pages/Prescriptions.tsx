@@ -308,6 +308,7 @@ const Prescriptions = () => {
     }
   };
 
+  const addMedication = (med: { name: string; posology: string }) => {
     const current = form.medications.trim();
     const lines = current ? current.split("\n").filter(l => l.match(/^\d+\)/)) : [];
     const nextNum = lines.length + 1;
