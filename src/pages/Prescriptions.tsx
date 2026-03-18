@@ -684,6 +684,44 @@ const Prescriptions = () => {
           </p>
         </DialogContent>
       </Dialog>
+
+      {/* AI Pediatric Suggestion Dialog */}
+      <Dialog open={aiSuggestionOpen} onOpenChange={setAiSuggestionOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Sugestão Pediátrica por IA
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            {aiSuggestionLoading && !aiSuggestion ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Gerando sugestão pediátrica...</p>
+              </div>
+            ) : aiSuggestion ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <ReactMarkdown>{aiSuggestion}</ReactMarkdown>
+              </div>
+            ) : null}
+          </ScrollArea>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-xs text-muted-foreground">
+              ⚠️ Sugestão auxiliar. A decisão final é do profissional.
+            </p>
+            {aiSuggestion && !aiSuggestionLoading && (
+              <Button size="sm" variant="outline" onClick={() => {
+                setForm({ ...form, medications: form.medications.trim() ? `${form.medications}\n\n${aiSuggestion}` : aiSuggestion });
+                setAiSuggestionOpen(false);
+                toast.success("Sugestão adicionada à prescrição");
+              }}>
+                <Plus className="h-3.5 w-3.5 mr-1" />Usar na receita
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
