@@ -233,7 +233,81 @@ const Prescriptions = () => {
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
   const [pedCondition, setPedCondition] = useState("");
 
-  const addMedication = (med: { name: string; posology: string }) => {
+  const activeCatalog = isPediatric ? PEDIATRIC_CATALOG : ADULT_CATALOG;
+  const weightKg = parseFloat(childWeight) || 0;
+
+  const addMedicationWithCalc = (med: MedEntry) => {
+    if (isPediatric && weightKg > 0) {
+      const calc = calcPediatricDose(med.name, weightKg);
+      if (calc) {
+        const current = form.medications.trim();
+        const lines = current ? current.split("\n").filter(l => l.match(/^\d+\)/)) : [];
+        const nextNum = lines.length + 1;
+        const entry = `${nextNum}) ${med.name}\n   Peso: ${weightKg}kg → ${calc}\n   ${med.posology.replace(/___mL/g, calc.split("mL")[0].split("–").pop()?.trim() + "mL" || "___mL")}`;
+        const newMeds = current ? `${current}\n\n${entry}` : entry;
+        setForm({ ...form, medications: newMeds });
+        toast.success(`${med.name} adicionado com dose calculada`);
+        return;
+      }
+    }
+    addMedication(med);
+  };
+
+  const handleAiPedSuggestion = async () => {
+    if (!pedCondition.trim()) {
+      toast.error("Descreva a condição/sintomas da criança"); return;
+    }
+    setAiSuggestionLoading(true);
+    setAiSuggestionOpen(true);
+    setAiSuggestion(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-assistant", {
+        body: {
+          type: "prescription",
+          messages: [{
+            role: "user",
+            content: `Paciente pediátrico${childAge ? `, ${childAge}` : ""}${weightKg > 0 ? `, peso ${weightKg}kg` : ""}.\nCondição/sintomas: ${pedCondition}\n\nSugira prescrição pediátrica completa com medicamentos em suspensão/gotas, doses calculadas por peso quando possível, posologia e duração. Formate de forma clara e numerada, pronta para copiar na receita.`,
+          }],
+        },
+      });
+      if (error) throw error;
+
+      // Handle streaming response
+      const reader = data instanceof ReadableStream
+        ? data.getReader()
+        : null;
+      if (reader) {
+        const decoder = new TextDecoder();
+        let result = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n").filter(l => l.startsWith("data: "));
+          for (const line of lines) {
+            const json = line.replace("data: ", "");
+            if (json === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(json);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) { result += content; setAiSuggestion(result); }
+            } catch {}
+          }
+        }
+        if (!result) setAiSuggestion("Não foi possível gerar sugestão.");
+      } else if (typeof data === "string") {
+        setAiSuggestion(data);
+      } else {
+        setAiSuggestion(data?.error || "Resposta inesperada");
+      }
+    } catch (err) {
+      console.error("AI suggestion error:", err);
+      setAiSuggestion("Erro ao gerar sugestão. Tente novamente.");
+    } finally {
+      setAiSuggestionLoading(false);
+    }
+  };
+
     const current = form.medications.trim();
     const lines = current ? current.split("\n").filter(l => l.match(/^\d+\)/)) : [];
     const nextNum = lines.length + 1;
