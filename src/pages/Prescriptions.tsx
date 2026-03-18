@@ -407,6 +407,47 @@ const Prescriptions = () => {
                 <Input value={form.patientName} onChange={(e) => setForm({ ...form, patientName: e.target.value })} placeholder="Nome do paciente" />
               </div>
 
+              {/* Pediatric calculator */}
+              {isPediatric && (
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                      <Baby className="h-4 w-4" />
+                      Calculadora Pediátrica
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="grid gap-1">
+                        <Label className="text-xs">Peso (kg)</Label>
+                        <Input value={childWeight} onChange={(e) => setChildWeight(e.target.value)} placeholder="Ex: 12" type="number" min="0" step="0.1" className="h-8 text-sm" />
+                      </div>
+                      <div className="grid gap-1">
+                        <Label className="text-xs">Idade</Label>
+                        <Input value={childAge} onChange={(e) => setChildAge(e.target.value)} placeholder="Ex: 3 anos" className="h-8 text-sm" />
+                      </div>
+                    </div>
+                    {weightKg > 0 && (
+                      <div className="rounded-md bg-background p-2 text-xs space-y-1 border border-border">
+                        <p className="font-medium text-muted-foreground">Doses rápidas para {weightKg}kg:</p>
+                        <p>💊 Dipirona gotas: ~{weightKg} gotas/dose (6/6h)</p>
+                        <p>💊 Paracetamol gotas: ~{weightKg} gotas/dose (6/6h)</p>
+                        <p>💊 Ibuprofeno gotas: ~{weightKg} gotas/dose (6/6h)</p>
+                        <p>💊 Amoxicilina susp.: ~{(weightKg * 50 / 3 / 50).toFixed(1)}mL/dose (8/8h)</p>
+                      </div>
+                    )}
+                    <div className="grid gap-1">
+                      <Label className="text-xs">Sugestão IA — descreva condição/sintomas</Label>
+                      <div className="flex gap-2">
+                        <Input value={pedCondition} onChange={(e) => setPedCondition(e.target.value)} placeholder="Ex: otite média aguda, febre 38.5°C" className="h-8 text-sm" />
+                        <Button size="sm" variant="outline" className="gap-1 h-8 shrink-0" onClick={handleAiPedSuggestion} disabled={aiSuggestionLoading || !pedCondition.trim()}>
+                          {aiSuggestionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                          Sugerir
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Medication catalog */}
               <div className="grid gap-2">
                 <div className="flex items-center justify-between flex-wrap gap-2">
@@ -437,11 +478,15 @@ const Prescriptions = () => {
                               {meds.map((med) => (
                                 <button
                                   key={med.name}
-                                  onClick={() => addMedication(med)}
+                                  onClick={() => addMedicationWithCalc(med)}
                                   className="w-full text-left rounded-md px-3 py-2 text-sm hover:bg-primary/10 transition-colors"
                                 >
                                   <span className="font-medium">{med.name}</span>
-                                  <span className="block text-xs text-muted-foreground mt-0.5">{med.posology}</span>
+                                  <span className="block text-xs text-muted-foreground mt-0.5">
+                                    {isPediatric && weightKg > 0 && calcPediatricDose(med.name, weightKg)
+                                      ? `⚖️ ${calcPediatricDose(med.name, weightKg)} — ${med.posology}`
+                                      : med.posology}
+                                  </span>
                                 </button>
                               ))}
                             </CollapsibleContent>
