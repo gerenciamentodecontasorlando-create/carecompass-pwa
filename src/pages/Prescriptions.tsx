@@ -154,6 +154,61 @@ const PEDIATRIC_CATALOG: Record<string, MedEntry[]> = {
   ],
 };
 
+// Pediatric dose calculation rules: { concentration (mg/mL), dose range (mg/kg/day), doses per day, max single dose mg? }
+type DoseRule = { concMgPerMl: number; minDosePerKg: number; maxDosePerKg: number; dosesPerDay: number; maxSingleDoseMg?: number; unit: "mL" | "gotas"; dropMl?: number };
+const DOSE_RULES: Record<string, DoseRule> = {
+  "Amoxicilina Suspensão 250mg/5mL": { concMgPerMl: 50, minDosePerKg: 25, maxDosePerKg: 50, dosesPerDay: 3, unit: "mL" },
+  "Amoxicilina + Clavulanato Suspensão 250/62,5mg/5mL": { concMgPerMl: 50, minDosePerKg: 25, maxDosePerKg: 45, dosesPerDay: 3, unit: "mL" },
+  "Azitromicina Suspensão 200mg/5mL": { concMgPerMl: 40, minDosePerKg: 10, maxDosePerKg: 10, dosesPerDay: 1, unit: "mL" },
+  "Cefalexina Suspensão 250mg/5mL": { concMgPerMl: 50, minDosePerKg: 25, maxDosePerKg: 50, dosesPerDay: 4, unit: "mL" },
+  "Dipirona Gotas 500mg/mL": { concMgPerMl: 500, minDosePerKg: 10, maxDosePerKg: 25, dosesPerDay: 4, unit: "gotas", dropMl: 0.05, maxSingleDoseMg: 1000 },
+  "Paracetamol Gotas 200mg/mL": { concMgPerMl: 200, minDosePerKg: 10, maxDosePerKg: 15, dosesPerDay: 4, unit: "gotas", dropMl: 0.05, maxSingleDoseMg: 750 },
+  "Ibuprofeno Gotas 100mg/mL": { concMgPerMl: 100, minDosePerKg: 5, maxDosePerKg: 10, dosesPerDay: 3, unit: "gotas", dropMl: 0.05, maxSingleDoseMg: 400 },
+  "Ibuprofeno Suspensão 50mg/mL": { concMgPerMl: 50, minDosePerKg: 5, maxDosePerKg: 10, dosesPerDay: 3, unit: "mL" },
+  "Prednisolona Solução Oral 3mg/mL": { concMgPerMl: 3, minDosePerKg: 1, maxDosePerKg: 2, dosesPerDay: 1, unit: "mL" },
+  "Dexametasona Elixir 0,1mg/mL": { concMgPerMl: 0.1, minDosePerKg: 0.15, maxDosePerKg: 0.6, dosesPerDay: 1, unit: "mL" },
+  "Hidroxizina Xarope 2mg/mL (Hixizine)": { concMgPerMl: 2, minDosePerKg: 1, maxDosePerKg: 2, dosesPerDay: 3, unit: "mL" },
+  "Ondansetrona Xarope 0,8mg/mL (Vonau)": { concMgPerMl: 0.8, minDosePerKg: 0.15, maxDosePerKg: 0.15, dosesPerDay: 3, maxSingleDoseMg: 4, unit: "mL" },
+  "Domperidona Suspensão 1mg/mL (Motilium)": { concMgPerMl: 1, minDosePerKg: 0.25, maxDosePerKg: 0.25, dosesPerDay: 3, unit: "mL" },
+  "Sulfato Ferroso Gotas 125mg/mL (25mg Fe elem./mL)": { concMgPerMl: 25, minDosePerKg: 1, maxDosePerKg: 5, dosesPerDay: 1, unit: "gotas", dropMl: 0.05 },
+};
+
+function calcPediatricDose(medName: string, weightKg: number): string | null {
+  const rule = DOSE_RULES[medName];
+  if (!rule || weightKg <= 0) return null;
+  const dailyMin = rule.minDosePerKg * weightKg;
+  const dailyMax = rule.maxDosePerKg * weightKg;
+  const singleMin = dailyMin / rule.dosesPerDay;
+  const singleMax = dailyMax / rule.dosesPerDay;
+
+  if (rule.unit === "gotas" && rule.dropMl) {
+    const mgPerDrop = rule.concMgPerMl * rule.dropMl;
+    let dropsMin = Math.round(singleMin / mgPerDrop);
+    let dropsMax = Math.round(singleMax / mgPerDrop);
+    if (rule.maxSingleDoseMg) {
+      const maxDrops = Math.round(rule.maxSingleDoseMg / mgPerDrop);
+      dropsMin = Math.min(dropsMin, maxDrops);
+      dropsMax = Math.min(dropsMax, maxDrops);
+    }
+    return dropsMin === dropsMax
+      ? `${dropsMin} gotas/dose (${rule.dosesPerDay}x/dia)`
+      : `${dropsMin}–${dropsMax} gotas/dose (${rule.dosesPerDay}x/dia)`;
+  }
+
+  let mlMin = singleMin / rule.concMgPerMl;
+  let mlMax = singleMax / rule.concMgPerMl;
+  if (rule.maxSingleDoseMg) {
+    const maxMl = rule.maxSingleDoseMg / rule.concMgPerMl;
+    mlMin = Math.min(mlMin, maxMl);
+    mlMax = Math.min(mlMax, maxMl);
+  }
+  mlMin = Math.round(mlMin * 10) / 10;
+  mlMax = Math.round(mlMax * 10) / 10;
+  return mlMin === mlMax
+    ? `${mlMin}mL/dose (${rule.dosesPerDay}x/dia)`
+    : `${mlMin}–${mlMax}mL/dose (${rule.dosesPerDay}x/dia)`;
+}
+
 const MEDICATION_CATALOG = ADULT_CATALOG;
 
 const Prescriptions = () => {
