@@ -226,8 +226,12 @@ const Prescriptions = () => {
   const [receiptAmount, setReceiptAmount] = useState("");
   const [receiptDescription, setReceiptDescription] = useState("");
   const [isPediatric, setIsPediatric] = useState(false);
-
-  const activeCatalog = isPediatric ? PEDIATRIC_CATALOG : ADULT_CATALOG;
+  const [childWeight, setChildWeight] = useState("");
+  const [childAge, setChildAge] = useState("");
+  const [aiSuggestionLoading, setAiSuggestionLoading] = useState(false);
+  const [aiSuggestionOpen, setAiSuggestionOpen] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+  const [pedCondition, setPedCondition] = useState("");
 
   const addMedication = (med: { name: string; posology: string }) => {
     const current = form.medications.trim();
