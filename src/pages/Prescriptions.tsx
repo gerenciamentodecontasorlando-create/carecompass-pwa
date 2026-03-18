@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, MessageCircle, Receipt, Pencil } from "lucide-react";
+import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, MessageCircle, Receipt, Pencil, Calculator, Sparkles, Baby, Weight } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
@@ -154,6 +154,61 @@ const PEDIATRIC_CATALOG: Record<string, MedEntry[]> = {
   ],
 };
 
+// Pediatric dose calculation rules: { concentration (mg/mL), dose range (mg/kg/day), doses per day, max single dose mg? }
+type DoseRule = { concMgPerMl: number; minDosePerKg: number; maxDosePerKg: number; dosesPerDay: number; maxSingleDoseMg?: number; unit: "mL" | "gotas"; dropMl?: number };
+const DOSE_RULES: Record<string, DoseRule> = {
+  "Amoxicilina Suspensão 250mg/5mL": { concMgPerMl: 50, minDosePerKg: 25, maxDosePerKg: 50, dosesPerDay: 3, unit: "mL" },
+  "Amoxicilina + Clavulanato Suspensão 250/62,5mg/5mL": { concMgPerMl: 50, minDosePerKg: 25, maxDosePerKg: 45, dosesPerDay: 3, unit: "mL" },
+  "Azitromicina Suspensão 200mg/5mL": { concMgPerMl: 40, minDosePerKg: 10, maxDosePerKg: 10, dosesPerDay: 1, unit: "mL" },
+  "Cefalexina Suspensão 250mg/5mL": { concMgPerMl: 50, minDosePerKg: 25, maxDosePerKg: 50, dosesPerDay: 4, unit: "mL" },
+  "Dipirona Gotas 500mg/mL": { concMgPerMl: 500, minDosePerKg: 10, maxDosePerKg: 25, dosesPerDay: 4, unit: "gotas", dropMl: 0.05, maxSingleDoseMg: 1000 },
+  "Paracetamol Gotas 200mg/mL": { concMgPerMl: 200, minDosePerKg: 10, maxDosePerKg: 15, dosesPerDay: 4, unit: "gotas", dropMl: 0.05, maxSingleDoseMg: 750 },
+  "Ibuprofeno Gotas 100mg/mL": { concMgPerMl: 100, minDosePerKg: 5, maxDosePerKg: 10, dosesPerDay: 3, unit: "gotas", dropMl: 0.05, maxSingleDoseMg: 400 },
+  "Ibuprofeno Suspensão 50mg/mL": { concMgPerMl: 50, minDosePerKg: 5, maxDosePerKg: 10, dosesPerDay: 3, unit: "mL" },
+  "Prednisolona Solução Oral 3mg/mL": { concMgPerMl: 3, minDosePerKg: 1, maxDosePerKg: 2, dosesPerDay: 1, unit: "mL" },
+  "Dexametasona Elixir 0,1mg/mL": { concMgPerMl: 0.1, minDosePerKg: 0.15, maxDosePerKg: 0.6, dosesPerDay: 1, unit: "mL" },
+  "Hidroxizina Xarope 2mg/mL (Hixizine)": { concMgPerMl: 2, minDosePerKg: 1, maxDosePerKg: 2, dosesPerDay: 3, unit: "mL" },
+  "Ondansetrona Xarope 0,8mg/mL (Vonau)": { concMgPerMl: 0.8, minDosePerKg: 0.15, maxDosePerKg: 0.15, dosesPerDay: 3, maxSingleDoseMg: 4, unit: "mL" },
+  "Domperidona Suspensão 1mg/mL (Motilium)": { concMgPerMl: 1, minDosePerKg: 0.25, maxDosePerKg: 0.25, dosesPerDay: 3, unit: "mL" },
+  "Sulfato Ferroso Gotas 125mg/mL (25mg Fe elem./mL)": { concMgPerMl: 25, minDosePerKg: 1, maxDosePerKg: 5, dosesPerDay: 1, unit: "gotas", dropMl: 0.05 },
+};
+
+function calcPediatricDose(medName: string, weightKg: number): string | null {
+  const rule = DOSE_RULES[medName];
+  if (!rule || weightKg <= 0) return null;
+  const dailyMin = rule.minDosePerKg * weightKg;
+  const dailyMax = rule.maxDosePerKg * weightKg;
+  const singleMin = dailyMin / rule.dosesPerDay;
+  const singleMax = dailyMax / rule.dosesPerDay;
+
+  if (rule.unit === "gotas" && rule.dropMl) {
+    const mgPerDrop = rule.concMgPerMl * rule.dropMl;
+    let dropsMin = Math.round(singleMin / mgPerDrop);
+    let dropsMax = Math.round(singleMax / mgPerDrop);
+    if (rule.maxSingleDoseMg) {
+      const maxDrops = Math.round(rule.maxSingleDoseMg / mgPerDrop);
+      dropsMin = Math.min(dropsMin, maxDrops);
+      dropsMax = Math.min(dropsMax, maxDrops);
+    }
+    return dropsMin === dropsMax
+      ? `${dropsMin} gotas/dose (${rule.dosesPerDay}x/dia)`
+      : `${dropsMin}–${dropsMax} gotas/dose (${rule.dosesPerDay}x/dia)`;
+  }
+
+  let mlMin = singleMin / rule.concMgPerMl;
+  let mlMax = singleMax / rule.concMgPerMl;
+  if (rule.maxSingleDoseMg) {
+    const maxMl = rule.maxSingleDoseMg / rule.concMgPerMl;
+    mlMin = Math.min(mlMin, maxMl);
+    mlMax = Math.min(mlMax, maxMl);
+  }
+  mlMin = Math.round(mlMin * 10) / 10;
+  mlMax = Math.round(mlMax * 10) / 10;
+  return mlMin === mlMax
+    ? `${mlMin}mL/dose (${rule.dosesPerDay}x/dia)`
+    : `${mlMin}–${mlMax}mL/dose (${rule.dosesPerDay}x/dia)`;
+}
+
 const MEDICATION_CATALOG = ADULT_CATALOG;
 
 const Prescriptions = () => {
@@ -171,8 +226,87 @@ const Prescriptions = () => {
   const [receiptAmount, setReceiptAmount] = useState("");
   const [receiptDescription, setReceiptDescription] = useState("");
   const [isPediatric, setIsPediatric] = useState(false);
+  const [childWeight, setChildWeight] = useState("");
+  const [childAge, setChildAge] = useState("");
+  const [aiSuggestionLoading, setAiSuggestionLoading] = useState(false);
+  const [aiSuggestionOpen, setAiSuggestionOpen] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+  const [pedCondition, setPedCondition] = useState("");
 
   const activeCatalog = isPediatric ? PEDIATRIC_CATALOG : ADULT_CATALOG;
+  const weightKg = parseFloat(childWeight) || 0;
+
+  const addMedicationWithCalc = (med: MedEntry) => {
+    if (isPediatric && weightKg > 0) {
+      const calc = calcPediatricDose(med.name, weightKg);
+      if (calc) {
+        const current = form.medications.trim();
+        const lines = current ? current.split("\n").filter(l => l.match(/^\d+\)/)) : [];
+        const nextNum = lines.length + 1;
+        const entry = `${nextNum}) ${med.name}\n   Peso: ${weightKg}kg → ${calc}\n   ${med.posology.replace(/___mL/g, calc.split("mL")[0].split("–").pop()?.trim() + "mL" || "___mL")}`;
+        const newMeds = current ? `${current}\n\n${entry}` : entry;
+        setForm({ ...form, medications: newMeds });
+        toast.success(`${med.name} adicionado com dose calculada`);
+        return;
+      }
+    }
+    addMedication(med);
+  };
+
+  const handleAiPedSuggestion = async () => {
+    if (!pedCondition.trim()) {
+      toast.error("Descreva a condição/sintomas da criança"); return;
+    }
+    setAiSuggestionLoading(true);
+    setAiSuggestionOpen(true);
+    setAiSuggestion(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-assistant", {
+        body: {
+          type: "prescription",
+          messages: [{
+            role: "user",
+            content: `Paciente pediátrico${childAge ? `, ${childAge}` : ""}${weightKg > 0 ? `, peso ${weightKg}kg` : ""}.\nCondição/sintomas: ${pedCondition}\n\nSugira prescrição pediátrica completa com medicamentos em suspensão/gotas, doses calculadas por peso quando possível, posologia e duração. Formate de forma clara e numerada, pronta para copiar na receita.`,
+          }],
+        },
+      });
+      if (error) throw error;
+
+      // Handle streaming response
+      const reader = data instanceof ReadableStream
+        ? data.getReader()
+        : null;
+      if (reader) {
+        const decoder = new TextDecoder();
+        let result = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n").filter(l => l.startsWith("data: "));
+          for (const line of lines) {
+            const json = line.replace("data: ", "");
+            if (json === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(json);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) { result += content; setAiSuggestion(result); }
+            } catch {}
+          }
+        }
+        if (!result) setAiSuggestion("Não foi possível gerar sugestão.");
+      } else if (typeof data === "string") {
+        setAiSuggestion(data);
+      } else {
+        setAiSuggestion(data?.error || "Resposta inesperada");
+      }
+    } catch (err) {
+      console.error("AI suggestion error:", err);
+      setAiSuggestion("Erro ao gerar sugestão. Tente novamente.");
+    } finally {
+      setAiSuggestionLoading(false);
+    }
+  };
 
   const addMedication = (med: { name: string; posology: string }) => {
     const current = form.medications.trim();
@@ -273,6 +407,47 @@ const Prescriptions = () => {
                 <Input value={form.patientName} onChange={(e) => setForm({ ...form, patientName: e.target.value })} placeholder="Nome do paciente" />
               </div>
 
+              {/* Pediatric calculator */}
+              {isPediatric && (
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                      <Baby className="h-4 w-4" />
+                      Calculadora Pediátrica
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="grid gap-1">
+                        <Label className="text-xs">Peso (kg)</Label>
+                        <Input value={childWeight} onChange={(e) => setChildWeight(e.target.value)} placeholder="Ex: 12" type="number" min="0" step="0.1" className="h-8 text-sm" />
+                      </div>
+                      <div className="grid gap-1">
+                        <Label className="text-xs">Idade</Label>
+                        <Input value={childAge} onChange={(e) => setChildAge(e.target.value)} placeholder="Ex: 3 anos" className="h-8 text-sm" />
+                      </div>
+                    </div>
+                    {weightKg > 0 && (
+                      <div className="rounded-md bg-background p-2 text-xs space-y-1 border border-border">
+                        <p className="font-medium text-muted-foreground">Doses rápidas para {weightKg}kg:</p>
+                        <p>💊 Dipirona gotas: ~{weightKg} gotas/dose (6/6h)</p>
+                        <p>💊 Paracetamol gotas: ~{weightKg} gotas/dose (6/6h)</p>
+                        <p>💊 Ibuprofeno gotas: ~{weightKg} gotas/dose (6/6h)</p>
+                        <p>💊 Amoxicilina susp.: ~{(weightKg * 50 / 3 / 50).toFixed(1)}mL/dose (8/8h)</p>
+                      </div>
+                    )}
+                    <div className="grid gap-1">
+                      <Label className="text-xs">Sugestão IA — descreva condição/sintomas</Label>
+                      <div className="flex gap-2">
+                        <Input value={pedCondition} onChange={(e) => setPedCondition(e.target.value)} placeholder="Ex: otite média aguda, febre 38.5°C" className="h-8 text-sm" />
+                        <Button size="sm" variant="outline" className="gap-1 h-8 shrink-0" onClick={handleAiPedSuggestion} disabled={aiSuggestionLoading || !pedCondition.trim()}>
+                          {aiSuggestionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                          Sugerir
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Medication catalog */}
               <div className="grid gap-2">
                 <div className="flex items-center justify-between flex-wrap gap-2">
@@ -303,11 +478,15 @@ const Prescriptions = () => {
                               {meds.map((med) => (
                                 <button
                                   key={med.name}
-                                  onClick={() => addMedication(med)}
+                                  onClick={() => addMedicationWithCalc(med)}
                                   className="w-full text-left rounded-md px-3 py-2 text-sm hover:bg-primary/10 transition-colors"
                                 >
                                   <span className="font-medium">{med.name}</span>
-                                  <span className="block text-xs text-muted-foreground mt-0.5">{med.posology}</span>
+                                  <span className="block text-xs text-muted-foreground mt-0.5">
+                                    {isPediatric && weightKg > 0 && calcPediatricDose(med.name, weightKg)
+                                      ? `⚖️ ${calcPediatricDose(med.name, weightKg)} — ${med.posology}`
+                                      : med.posology}
+                                  </span>
                                 </button>
                               ))}
                             </CollapsibleContent>
@@ -503,6 +682,44 @@ const Prescriptions = () => {
           <p className="text-xs text-muted-foreground mt-2">
             ⚠️ Esta é uma análise assistida por IA. Sempre confirme com fontes oficiais antes de prescrever.
           </p>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Pediatric Suggestion Dialog */}
+      <Dialog open={aiSuggestionOpen} onOpenChange={setAiSuggestionOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Sugestão Pediátrica por IA
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            {aiSuggestionLoading && !aiSuggestion ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Gerando sugestão pediátrica...</p>
+              </div>
+            ) : aiSuggestion ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <ReactMarkdown>{aiSuggestion}</ReactMarkdown>
+              </div>
+            ) : null}
+          </ScrollArea>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-xs text-muted-foreground">
+              ⚠️ Sugestão auxiliar. A decisão final é do profissional.
+            </p>
+            {aiSuggestion && !aiSuggestionLoading && (
+              <Button size="sm" variant="outline" onClick={() => {
+                setForm({ ...form, medications: form.medications.trim() ? `${form.medications}\n\n${aiSuggestion}` : aiSuggestion });
+                setAiSuggestionOpen(false);
+                toast.success("Sugestão adicionada à prescrição");
+              }}>
+                <Plus className="h-3.5 w-3.5 mr-1" />Usar na receita
+              </Button>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
