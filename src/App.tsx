@@ -66,6 +66,7 @@ function AppRoutes() {
           <Route path="/importar-dados" element={<DataImport />} />
           <Route path="/consentimento" element={<InformedConsent />} />
           <Route path="/lixeira" element={<Trash />} />
+          <Route path="/admin" element={<AdminPanel />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

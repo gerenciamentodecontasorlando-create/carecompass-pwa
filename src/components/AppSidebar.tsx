@@ -26,6 +26,7 @@ const items = [
   { title: "Lixeira", url: "/lixeira", icon: Trash2 },
   { title: "Importar Dados", url: "/importar-dados", icon: Upload },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
+  { title: "Painel Admin", url: "/admin", icon: Crown },
 ];
 
 export function AppSidebar() {
