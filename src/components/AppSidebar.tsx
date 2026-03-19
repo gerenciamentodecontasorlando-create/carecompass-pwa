@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, CalendarDays, FileText, FileBadge,
   Smile, DollarSign, Package, Settings, Bot, StickyNote, LogOut,
-  Shield, Upload, ClipboardCheck, Trash2,
+  Shield, Upload, ClipboardCheck, Trash2, Crown,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,7 @@ const items = [
   { title: "Lixeira", url: "/lixeira", icon: Trash2 },
   { title: "Importar Dados", url: "/importar-dados", icon: Upload },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
+  { title: "Painel Admin", url: "/admin", icon: Crown },
 ];
 
 export function AppSidebar() {

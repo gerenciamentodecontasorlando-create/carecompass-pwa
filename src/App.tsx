@@ -24,6 +24,7 @@ import AuditLog from "./pages/AuditLog";
 import DataImport from "./pages/DataImport";
 import InformedConsent from "./pages/InformedConsent";
 import Trash from "./pages/Trash";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import PinLock from "./pages/PinLock";
 
@@ -65,6 +66,7 @@ function AppRoutes() {
           <Route path="/importar-dados" element={<DataImport />} />
           <Route path="/consentimento" element={<InformedConsent />} />
           <Route path="/lixeira" element={<Trash />} />
+          <Route path="/admin" element={<AdminPanel />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

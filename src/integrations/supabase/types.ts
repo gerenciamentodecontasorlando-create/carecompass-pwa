@@ -257,8 +257,11 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          max_patients: number
+          max_storage_mb: number
           name: string
           phone: string | null
+          plan: string
           updated_at: string
         }
         Insert: {
@@ -266,8 +269,11 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          max_patients?: number
+          max_storage_mb?: number
           name: string
           phone?: string | null
+          plan?: string
           updated_at?: string
         }
         Update: {
@@ -275,8 +281,11 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          max_patients?: number
+          max_storage_mb?: number
           name?: string
           phone?: string | null
+          plan?: string
           updated_at?: string
         }
         Relationships: []
@@ -563,6 +572,24 @@ export type Database = {
           },
         ]
       }
+      platform_admins: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       prescriptions: {
         Row: {
           clinic_id: string
@@ -712,6 +739,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_platform_stats: { Args: never; Returns: Json }
       get_user_clinic_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -720,6 +748,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "owner" | "admin" | "dentist" | "receptionist" | "assistant"
