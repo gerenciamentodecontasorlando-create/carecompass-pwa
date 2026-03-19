@@ -26,7 +26,6 @@ const items = [
   { title: "Lixeira", url: "/lixeira", icon: Trash2 },
   { title: "Importar Dados", url: "/importar-dados", icon: Upload },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
-  { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
 export function AppSidebar() {
