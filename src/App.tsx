@@ -24,6 +24,7 @@ import AuditLog from "./pages/AuditLog";
 import DataImport from "./pages/DataImport";
 import InformedConsent from "./pages/InformedConsent";
 import Trash from "./pages/Trash";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import PinLock from "./pages/PinLock";
 
