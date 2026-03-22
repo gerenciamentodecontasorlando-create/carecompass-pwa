@@ -27,6 +27,7 @@ import Trash from "./pages/Trash";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import PinLock from "./pages/PinLock";
+import { TrialGuard } from "@/components/TrialGuard";
 
 const queryClient = new QueryClient();
 
@@ -47,30 +48,32 @@ function AppRoutes() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/pacientes" element={<Patients />} />
-          <Route path="/pacientes/:id" element={<PatientProfile />} />
-          <Route path="/agenda" element={<Agenda />} />
-          <Route path="/receituario" element={<Prescriptions />} />
-          <Route path="/atestados" element={<Certificates />} />
-          <Route path="/odontograma" element={<OdontogramPage />} />
-          <Route path="/financeiro" element={<Financial />} />
-          <Route path="/materiais" element={<Materials />} />
-          <Route path="/assistente-ia" element={<AIAssistant />} />
-          <Route path="/notas" element={<NotePad />} />
-          <Route path="/configuracoes" element={<SettingsPage />} />
-          <Route path="/auditoria" element={<AuditLog />} />
-          <Route path="/importar-dados" element={<DataImport />} />
-          <Route path="/consentimento" element={<InformedConsent />} />
-          <Route path="/lixeira" element={<Trash />} />
-          <Route path="/admin" element={<AdminPanel />} />
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <TrialGuard>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/pacientes" element={<Patients />} />
+            <Route path="/pacientes/:id" element={<PatientProfile />} />
+            <Route path="/agenda" element={<Agenda />} />
+            <Route path="/receituario" element={<Prescriptions />} />
+            <Route path="/atestados" element={<Certificates />} />
+            <Route path="/odontograma" element={<OdontogramPage />} />
+            <Route path="/financeiro" element={<Financial />} />
+            <Route path="/materiais" element={<Materials />} />
+            <Route path="/assistente-ia" element={<AIAssistant />} />
+            <Route path="/notas" element={<NotePad />} />
+            <Route path="/configuracoes" element={<SettingsPage />} />
+            <Route path="/auditoria" element={<AuditLog />} />
+            <Route path="/importar-dados" element={<DataImport />} />
+            <Route path="/consentimento" element={<InformedConsent />} />
+            <Route path="/lixeira" element={<Trash />} />
+            <Route path="/admin" element={<AdminPanel />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TrialGuard>
   );
 }
 

@@ -262,6 +262,7 @@ export type Database = {
           name: string
           phone: string | null
           plan: string
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
@@ -274,6 +275,7 @@ export type Database = {
           name: string
           phone?: string | null
           plan?: string
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -286,6 +288,7 @@ export type Database = {
           name?: string
           phone?: string | null
           plan?: string
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: []
