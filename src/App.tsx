@@ -27,6 +27,7 @@ import Trash from "./pages/Trash";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import PinLock from "./pages/PinLock";
+import { TrialGuard } from "@/components/TrialGuard";
 
 const queryClient = new QueryClient();
 
