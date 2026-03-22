@@ -102,7 +102,7 @@ function TrialBanner({ daysLeft }: { daysLeft: number }) {
         <Progress value={progress} className="h-1.5" />
       </div>
       <a
-        href="https://wa.me/5500000000000?text=Quero%20assinar%20o%20Btx%20CliniCos"
+        href="https://wa.me/5591999873835?text=Quero%20assinar%20o%20Btx%20CliniCos"
         target="_blank"
         rel="noopener noreferrer"
         className="ml-2 underline font-bold"
@@ -197,7 +197,7 @@ function TrialExpiredScreen({ daysLeft }: { daysLeft: number }) {
                   ))}
                 </ul>
                 <a
-                  href={`https://wa.me/5500000000000?text=Quero%20assinar%20o%20plano%20${plan.name}%20do%20Btx%20CliniCos`}
+                  href={`https://wa.me/5591999873835?text=Quero%20assinar%20o%20plano%20${plan.name}%20do%20Btx%20CliniCos`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full block"
