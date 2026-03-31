@@ -668,14 +668,19 @@ const PatientProfile = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <Button variant="outline" onClick={() => setCameraOpen(true)}>
+                  <Camera className="h-4 w-4 mr-2" />Câmera
+                </Button>
                 <Button asChild>
                   <label className="cursor-pointer">
-                    <Plus className="h-4 w-4 mr-2" />Anexar
+                    <Plus className="h-4 w-4 mr-2" />Galeria
                     <input type="file" accept="image/*,.pdf,.doc,.docx" multiple className="sr-only" onChange={handleFileUpload} />
                   </label>
                 </Button>
               </div>
             </div>
+
+            <CameraCapture open={cameraOpen} onOpenChange={setCameraOpen} onCapture={handleCameraCapture} />
 
             {/* Category filter */}
             <div className="flex gap-2 flex-wrap">
@@ -693,7 +698,7 @@ const PatientProfile = () => {
               })}
             </div>
 
-            <p className="text-xs text-muted-foreground">Radiografias, exames laboratoriais, fotos clínicas, documentos (máx. 10MB).</p>
+            <p className="text-xs text-muted-foreground">📸 Fotos comprimidas automaticamente (~100KB). Imagens da galeria também são otimizadas.</p>
 
             {filteredFiles.length === 0 ? (
               <Card><CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground"><ImageIcon className="h-12 w-12 mb-4 opacity-40" /><p>Nenhum arquivo nesta categoria</p></CardContent></Card>
