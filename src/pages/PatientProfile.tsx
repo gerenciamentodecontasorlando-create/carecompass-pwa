@@ -96,7 +96,7 @@ const PatientProfile = () => {
   const [patientForm, setPatientForm] = useState(emptyPatientForm);
   const [savingPatient, setSavingPatient] = useState(false);
   const [evoSignature, setEvoSignature] = useState<string | null>(null);
-
+  const [cameraOpen, setCameraOpen] = useState(false);
   useEffect(() => {
     if (!patient) return;
     setPatientForm({
