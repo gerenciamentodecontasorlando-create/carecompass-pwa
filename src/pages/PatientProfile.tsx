@@ -21,7 +21,7 @@ import {
   ArrowLeft, Printer, Plus, Trash2, FileImage, ClipboardList,
   Stethoscope, Calendar, ImageIcon, Save, MessageCircle, Search,
   Brain, Loader2, ZoomIn, FlaskConical, X, AlertTriangle, ShieldAlert,
-  Download, Share2
+  Download, Share2, Camera
 } from "lucide-react";
 import { ConsultationRecorder } from "@/components/ConsultationRecorder";
 import { MedicalAlerts } from "@/components/MedicalAlerts";
