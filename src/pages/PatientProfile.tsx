@@ -21,11 +21,12 @@ import {
   ArrowLeft, Printer, Plus, Trash2, FileImage, ClipboardList,
   Stethoscope, Calendar, ImageIcon, Save, MessageCircle, Search,
   Brain, Loader2, ZoomIn, FlaskConical, X, AlertTriangle, ShieldAlert,
-  Download, Share2
+  Download, Share2, Camera
 } from "lucide-react";
 import { ConsultationRecorder } from "@/components/ConsultationRecorder";
 import { MedicalAlerts } from "@/components/MedicalAlerts";
 import { SignaturePad } from "@/components/SignaturePad";
+import { CameraCapture, compressImage } from "@/components/CameraCapture";
 
 type FileCategory = "radiografia" | "laboratorial" | "fotografia" | "documento" | "outro";
 const FILE_CATEGORIES: { value: FileCategory; label: string }[] = [
@@ -95,7 +96,7 @@ const PatientProfile = () => {
   const [patientForm, setPatientForm] = useState(emptyPatientForm);
   const [savingPatient, setSavingPatient] = useState(false);
   const [evoSignature, setEvoSignature] = useState<string | null>(null);
-
+  const [cameraOpen, setCameraOpen] = useState(false);
   useEffect(() => {
     if (!patient) return;
     setPatientForm({
@@ -238,20 +239,43 @@ const PatientProfile = () => {
       if (file.size > 10 * 1024 * 1024) {
         toast.error(`${file.name} excede 10MB.`); continue;
       }
-      const path = `${clinicId}/${id}/${crypto.randomUUID()}-${file.name}`;
-      const { error } = await supabase.storage.from("patient-files").upload(path, file);
-      if (error) { toast.error(`Erro ao enviar ${file.name}`); continue; }
+      // Compress images automatically
+      const isImage = file.type.startsWith("image/");
+      const processedFile = isImage ? await compressImage(file) : file;
+      
+      const path = `${clinicId}/${id}/${crypto.randomUUID()}-${processedFile.name}`;
+      const { error } = await supabase.storage.from("patient-files").upload(path, processedFile);
+      if (error) { toast.error(`Erro ao enviar ${processedFile.name}`); continue; }
       await insertFile({
         patient_id: id,
-        name: file.name,
-        type: file.type,
+        name: processedFile.name,
+        type: processedFile.type,
         storage_path: path,
         date: new Date().toISOString().slice(0, 10),
         description: `[${uploadCategory}]`,
       });
-      toast.success(`${file.name} anexado!`);
+      const sizeKB = (processedFile.size / 1024).toFixed(0);
+      toast.success(`${processedFile.name} anexado! (${sizeKB}KB)`);
     }
     e.target.value = "";
+    setTimeout(() => refreshSignedUrls(), 1000);
+  };
+
+  const handleCameraCapture = async (file: File) => {
+    if (!clinicId) return;
+    const path = `${clinicId}/${id}/${crypto.randomUUID()}-${file.name}`;
+    const { error } = await supabase.storage.from("patient-files").upload(path, file);
+    if (error) { toast.error("Erro ao enviar foto"); return; }
+    await insertFile({
+      patient_id: id,
+      name: file.name,
+      type: file.type,
+      storage_path: path,
+      date: new Date().toISOString().slice(0, 10),
+      description: `[${uploadCategory}]`,
+    });
+    const sizeKB = (file.size / 1024).toFixed(0);
+    toast.success(`Foto capturada! (${sizeKB}KB)`);
     setTimeout(() => refreshSignedUrls(), 1000);
   };
 
@@ -644,14 +668,19 @@ const PatientProfile = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <Button variant="outline" onClick={() => setCameraOpen(true)}>
+                  <Camera className="h-4 w-4 mr-2" />Câmera
+                </Button>
                 <Button asChild>
                   <label className="cursor-pointer">
-                    <Plus className="h-4 w-4 mr-2" />Anexar
+                    <Plus className="h-4 w-4 mr-2" />Galeria
                     <input type="file" accept="image/*,.pdf,.doc,.docx" multiple className="sr-only" onChange={handleFileUpload} />
                   </label>
                 </Button>
               </div>
             </div>
+
+            <CameraCapture open={cameraOpen} onOpenChange={setCameraOpen} onCapture={handleCameraCapture} />
 
             {/* Category filter */}
             <div className="flex gap-2 flex-wrap">
@@ -669,7 +698,7 @@ const PatientProfile = () => {
               })}
             </div>
 
-            <p className="text-xs text-muted-foreground">Radiografias, exames laboratoriais, fotos clínicas, documentos (máx. 10MB).</p>
+            <p className="text-xs text-muted-foreground">📸 Fotos comprimidas automaticamente (~100KB). Imagens da galeria também são otimizadas.</p>
 
             {filteredFiles.length === 0 ? (
               <Card><CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground"><ImageIcon className="h-12 w-12 mb-4 opacity-40" /><p>Nenhum arquivo nesta categoria</p></CardContent></Card>
