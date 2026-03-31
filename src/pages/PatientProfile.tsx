@@ -239,20 +239,43 @@ const PatientProfile = () => {
       if (file.size > 10 * 1024 * 1024) {
         toast.error(`${file.name} excede 10MB.`); continue;
       }
-      const path = `${clinicId}/${id}/${crypto.randomUUID()}-${file.name}`;
-      const { error } = await supabase.storage.from("patient-files").upload(path, file);
-      if (error) { toast.error(`Erro ao enviar ${file.name}`); continue; }
+      // Compress images automatically
+      const isImage = file.type.startsWith("image/");
+      const processedFile = isImage ? await compressImage(file) : file;
+      
+      const path = `${clinicId}/${id}/${crypto.randomUUID()}-${processedFile.name}`;
+      const { error } = await supabase.storage.from("patient-files").upload(path, processedFile);
+      if (error) { toast.error(`Erro ao enviar ${processedFile.name}`); continue; }
       await insertFile({
         patient_id: id,
-        name: file.name,
-        type: file.type,
+        name: processedFile.name,
+        type: processedFile.type,
         storage_path: path,
         date: new Date().toISOString().slice(0, 10),
         description: `[${uploadCategory}]`,
       });
-      toast.success(`${file.name} anexado!`);
+      const sizeKB = (processedFile.size / 1024).toFixed(0);
+      toast.success(`${processedFile.name} anexado! (${sizeKB}KB)`);
     }
     e.target.value = "";
+    setTimeout(() => refreshSignedUrls(), 1000);
+  };
+
+  const handleCameraCapture = async (file: File) => {
+    if (!clinicId) return;
+    const path = `${clinicId}/${id}/${crypto.randomUUID()}-${file.name}`;
+    const { error } = await supabase.storage.from("patient-files").upload(path, file);
+    if (error) { toast.error("Erro ao enviar foto"); return; }
+    await insertFile({
+      patient_id: id,
+      name: file.name,
+      type: file.type,
+      storage_path: path,
+      date: new Date().toISOString().slice(0, 10),
+      description: `[${uploadCategory}]`,
+    });
+    const sizeKB = (file.size / 1024).toFixed(0);
+    toast.success(`Foto capturada! (${sizeKB}KB)`);
     setTimeout(() => refreshSignedUrls(), 1000);
   };
 
