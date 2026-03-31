@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClinicData } from "@/hooks/useClinicData";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Search, UserRound, Trash2, Pencil } from "lucide-react";
+import { Plus, Search, UserRound, Trash2, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 export interface Patient {
@@ -22,20 +22,33 @@ export interface Patient {
   clinic_id: string;
 }
 
+const PAGE_SIZE = 50;
 const emptyForm = { name: "", phone: "", email: "", birth_date: "", cpf: "", address: "", notes: "" };
 
 const Patients = () => {
   const navigate = useNavigate();
-  const { data: patients, insert, update, remove } = useClinicData("patients");
+  const [page, setPage] = useState(0);
+  const { data: patients, insert, update, remove, totalCount } = useClinicData("patients", {
+    orderBy: "name",
+    orderAsc: true,
+    limit: PAGE_SIZE,
+    page,
+  });
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const filtered = patients.filter((p) =>
-    String(p.name).toLowerCase().includes(search.toLowerCase()) ||
-    String(p.cpf).includes(search)
-  );
+  const filtered = useMemo(() => {
+    if (!search.trim()) return patients;
+    const s = search.toLowerCase();
+    return patients.filter((p) =>
+      String(p.name).toLowerCase().includes(s) ||
+      String(p.cpf).includes(s)
+    );
+  }, [patients, search]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return; }
@@ -79,7 +92,10 @@ const Patients = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Pacientes</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Pacientes</h1>
+          <p className="text-sm text-muted-foreground">{totalCount} cadastrados</p>
+        </div>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setForm(emptyForm); setEditingId(null); } }}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Novo Paciente</Button>
@@ -164,6 +180,21 @@ const Patients = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 py-4">
+          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+            <ChevronLeft className="h-4 w-4 mr-1" />Anterior
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Página {page + 1} de {totalPages}
+          </span>
+          <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+            Próxima<ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
         </div>
       )}
     </div>

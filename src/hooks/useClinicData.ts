@@ -15,6 +15,8 @@ export function useClinicData(
     filter?: Record<string, string>;
     orderBy?: string;
     orderAsc?: boolean;
+    limit?: number;
+    page?: number;
   }
 ) {
   const { clinicId } = useAuth();
@@ -22,13 +24,16 @@ export function useClinicData(
   const isOnlineRef = useRef(isOnline);
   const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Keep ref in sync without triggering re-renders of fetchData
   useEffect(() => {
     isOnlineRef.current = isOnline;
   }, [isOnline]);
 
-  const cacheKey = `${table}:${clinicId}:${JSON.stringify(options?.filter)}`;
+  const pageSize = options?.limit || 0; // 0 = no pagination
+  const page = options?.page || 0;
+  const cacheKey = `${table}:${clinicId}:${JSON.stringify(options?.filter)}:${page}:${pageSize}`;
 
   const fetchData = useCallback(async () => {
     if (!clinicId) { setLoading(false); return; }
@@ -48,7 +53,7 @@ export function useClinicData(
 
     // Fetch from server
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query: any = supabase.from(table).select("*").eq("clinic_id", clinicId);
+    let query: any = supabase.from(table).select("*", { count: "exact" }).eq("clinic_id", clinicId);
     
     if (options?.filter) {
       Object.entries(options.filter).forEach(([key, value]) => {
@@ -59,16 +64,24 @@ export function useClinicData(
     if (options?.orderBy) {
       query = query.order(options.orderBy, { ascending: options.orderAsc ?? true });
     }
+
+    // Apply pagination
+    if (pageSize > 0) {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+    }
     
-    const { data: result, error } = await query;
+    const { data: result, error, count } = await query;
     if (error) {
       console.error(`Error fetching ${table}:`, error);
     } else {
       setData(result || []);
+      setTotalCount(count || result?.length || 0);
       await setCachedData(cacheKey, result || []);
     }
     setLoading(false);
-  }, [clinicId, table, cacheKey, options?.orderBy, options?.orderAsc]);
+  }, [clinicId, table, cacheKey, options?.orderBy, options?.orderAsc, pageSize, page]);
 
   useEffect(() => {
     fetchData();
@@ -159,5 +172,5 @@ export function useClinicData(
     return true;
   };
 
-  return { data, loading, refetch: fetchData, insert, update, remove };
+  return { data, loading, refetch: fetchData, insert, update, remove, totalCount };
 }
