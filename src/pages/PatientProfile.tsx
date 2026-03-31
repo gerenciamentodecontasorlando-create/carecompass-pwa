@@ -26,6 +26,7 @@ import {
 import { ConsultationRecorder } from "@/components/ConsultationRecorder";
 import { MedicalAlerts } from "@/components/MedicalAlerts";
 import { SignaturePad } from "@/components/SignaturePad";
+import { CameraCapture, compressImage } from "@/components/CameraCapture";
 
 type FileCategory = "radiografia" | "laboratorial" | "fotografia" | "documento" | "outro";
 const FILE_CATEGORIES: { value: FileCategory; label: string }[] = [
