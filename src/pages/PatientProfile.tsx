@@ -21,12 +21,11 @@ import {
   ArrowLeft, Printer, Plus, Trash2, FileImage, ClipboardList,
   Stethoscope, Calendar, ImageIcon, Save, MessageCircle, Search,
   Brain, Loader2, ZoomIn, FlaskConical, X, AlertTriangle, ShieldAlert,
-  Download, Share2, Camera
+  Download, Share2, Link, ExternalLink
 } from "lucide-react";
 import { ConsultationRecorder } from "@/components/ConsultationRecorder";
 import { MedicalAlerts } from "@/components/MedicalAlerts";
 import { SignaturePad } from "@/components/SignaturePad";
-import { CameraCapture, compressImage } from "@/components/CameraCapture";
 
 type FileCategory = "radiografia" | "laboratorial" | "fotografia" | "documento" | "outro";
 const FILE_CATEGORIES: { value: FileCategory; label: string }[] = [
