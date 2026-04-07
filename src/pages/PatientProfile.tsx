@@ -233,51 +233,24 @@ const PatientProfile = () => {
     setEvoOpen(true);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileList = e.target.files;
-    if (!fileList || !clinicId) return;
-    for (const file of Array.from(fileList)) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} excede 10MB.`); continue;
-      }
-      // Compress images automatically
-      const isImage = file.type.startsWith("image/");
-      const processedFile = isImage ? await compressImage(file) : file;
-      
-      const path = `${clinicId}/${id}/${crypto.randomUUID()}-${processedFile.name}`;
-      const { error } = await supabase.storage.from("patient-files").upload(path, processedFile);
-      if (error) { toast.error(`Erro ao enviar ${processedFile.name}`); continue; }
-      await insertFile({
-        patient_id: id,
-        name: processedFile.name,
-        type: processedFile.type,
-        storage_path: path,
-        date: new Date().toISOString().slice(0, 10),
-        description: `[${uploadCategory}]`,
-      });
-      const sizeKB = (processedFile.size / 1024).toFixed(0);
-      toast.success(`${processedFile.name} anexado! (${sizeKB}KB)`);
+  const handleAddExternalLink = async () => {
+    if (!newLinkUrl.trim()) {
+      toast.error("Cole o link do arquivo"); return;
     }
-    e.target.value = "";
-    setTimeout(() => refreshSignedUrls(), 1000);
-  };
-
-  const handleCameraCapture = async (file: File) => {
-    if (!clinicId) return;
-    const path = `${clinicId}/${id}/${crypto.randomUUID()}-${file.name}`;
-    const { error } = await supabase.storage.from("patient-files").upload(path, file);
-    if (error) { toast.error("Erro ao enviar foto"); return; }
+    const name = newLinkName.trim() || `Arquivo ${new Date().toLocaleDateString("pt-BR")}`;
     await insertFile({
       patient_id: id,
-      name: file.name,
-      type: file.type,
-      storage_path: path,
+      name,
+      type: "external_link",
+      storage_path: "",
+      external_url: newLinkUrl.trim(),
       date: new Date().toISOString().slice(0, 10),
       description: `[${uploadCategory}]`,
     });
-    const sizeKB = (file.size / 1024).toFixed(0);
-    toast.success(`Foto capturada! (${sizeKB}KB)`);
-    setTimeout(() => refreshSignedUrls(), 1000);
+    toast.success("Link adicionado ao prontuário!");
+    setNewLinkUrl("");
+    setNewLinkName("");
+    setLinkDialogOpen(false);
   };
 
   const handleDeleteFile = async (fileId: string, storagePath: string) => {
