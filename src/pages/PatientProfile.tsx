@@ -738,17 +738,6 @@ const PatientProfile = () => {
             )}
           </TabsContent>
 
-          {/* Image Viewer Dialog */}
-          <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
-            <DialogContent className="max-w-4xl max-h-[90vh] p-2">
-              <DialogHeader>
-                <DialogTitle className="text-sm">{viewingImage?.name}</DialogTitle>
-              </DialogHeader>
-              {viewingImage && (
-                <img src={viewingImage.url} alt={viewingImage.name} className="w-full h-auto max-h-[80vh] object-contain" />
-              )}
-            </DialogContent>
-          </Dialog>
 
           {/* PRINT TAB */}
           <TabsContent value="print" className="space-y-4 mt-4">
