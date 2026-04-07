@@ -21,12 +21,11 @@ import {
   ArrowLeft, Printer, Plus, Trash2, FileImage, ClipboardList,
   Stethoscope, Calendar, ImageIcon, Save, MessageCircle, Search,
   Brain, Loader2, ZoomIn, FlaskConical, X, AlertTriangle, ShieldAlert,
-  Download, Share2, Camera
+  Download, Share2, Link, ExternalLink
 } from "lucide-react";
 import { ConsultationRecorder } from "@/components/ConsultationRecorder";
 import { MedicalAlerts } from "@/components/MedicalAlerts";
 import { SignaturePad } from "@/components/SignaturePad";
-import { CameraCapture, compressImage } from "@/components/CameraCapture";
 
 type FileCategory = "radiografia" | "laboratorial" | "fotografia" | "documento" | "outro";
 const FILE_CATEGORIES: { value: FileCategory; label: string }[] = [
@@ -96,7 +95,9 @@ const PatientProfile = () => {
   const [patientForm, setPatientForm] = useState(emptyPatientForm);
   const [savingPatient, setSavingPatient] = useState(false);
   const [evoSignature, setEvoSignature] = useState<string | null>(null);
-  const [cameraOpen, setCameraOpen] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [newLinkUrl, setNewLinkUrl] = useState("");
+  const [newLinkName, setNewLinkName] = useState("");
   useEffect(() => {
     if (!patient) return;
     setPatientForm({
@@ -232,51 +233,24 @@ const PatientProfile = () => {
     setEvoOpen(true);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileList = e.target.files;
-    if (!fileList || !clinicId) return;
-    for (const file of Array.from(fileList)) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} excede 10MB.`); continue;
-      }
-      // Compress images automatically
-      const isImage = file.type.startsWith("image/");
-      const processedFile = isImage ? await compressImage(file) : file;
-      
-      const path = `${clinicId}/${id}/${crypto.randomUUID()}-${processedFile.name}`;
-      const { error } = await supabase.storage.from("patient-files").upload(path, processedFile);
-      if (error) { toast.error(`Erro ao enviar ${processedFile.name}`); continue; }
-      await insertFile({
-        patient_id: id,
-        name: processedFile.name,
-        type: processedFile.type,
-        storage_path: path,
-        date: new Date().toISOString().slice(0, 10),
-        description: `[${uploadCategory}]`,
-      });
-      const sizeKB = (processedFile.size / 1024).toFixed(0);
-      toast.success(`${processedFile.name} anexado! (${sizeKB}KB)`);
+  const handleAddExternalLink = async () => {
+    if (!newLinkUrl.trim()) {
+      toast.error("Cole o link do arquivo"); return;
     }
-    e.target.value = "";
-    setTimeout(() => refreshSignedUrls(), 1000);
-  };
-
-  const handleCameraCapture = async (file: File) => {
-    if (!clinicId) return;
-    const path = `${clinicId}/${id}/${crypto.randomUUID()}-${file.name}`;
-    const { error } = await supabase.storage.from("patient-files").upload(path, file);
-    if (error) { toast.error("Erro ao enviar foto"); return; }
+    const name = newLinkName.trim() || `Arquivo ${new Date().toLocaleDateString("pt-BR")}`;
     await insertFile({
       patient_id: id,
-      name: file.name,
-      type: file.type,
-      storage_path: path,
+      name,
+      type: "external_link",
+      storage_path: "",
+      external_url: newLinkUrl.trim(),
       date: new Date().toISOString().slice(0, 10),
       description: `[${uploadCategory}]`,
     });
-    const sizeKB = (file.size / 1024).toFixed(0);
-    toast.success(`Foto capturada! (${sizeKB}KB)`);
-    setTimeout(() => refreshSignedUrls(), 1000);
+    toast.success("Link adicionado ao prontuário!");
+    setNewLinkUrl("");
+    setNewLinkName("");
+    setLinkDialogOpen(false);
   };
 
   const handleDeleteFile = async (fileId: string, storagePath: string) => {
@@ -654,7 +628,7 @@ const PatientProfile = () => {
 
           {/* FILES TAB */}
           <TabsContent value="files" className="space-y-4 mt-4">
-            {/* Upload controls */}
+            {/* Link controls */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <h2 className="text-lg font-semibold">Exames e Arquivos</h2>
               <div className="flex items-center gap-2">
@@ -668,19 +642,30 @@ const PatientProfile = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={() => setCameraOpen(true)}>
-                  <Camera className="h-4 w-4 mr-2" />Câmera
-                </Button>
-                <Button asChild>
-                  <label className="cursor-pointer">
-                    <Plus className="h-4 w-4 mr-2" />Galeria
-                    <input type="file" accept="image/*,.pdf,.doc,.docx" multiple className="sr-only" onChange={handleFileUpload} />
-                  </label>
-                </Button>
+                <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button><Link className="h-4 w-4 mr-2" />Adicionar Link</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader><DialogTitle>Adicionar Link Externo</DialogTitle></DialogHeader>
+                    <p className="text-sm text-muted-foreground">Cole o link do Google Drive, OneDrive, Dropbox ou qualquer serviço de nuvem.</p>
+                    <div className="grid gap-4 py-2">
+                      <div className="grid gap-2">
+                        <Label>Nome do arquivo</Label>
+                        <Input placeholder="Ex: Radiografia panorâmica" value={newLinkName} onChange={(e) => setNewLinkName(e.target.value)} />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Link (URL)</Label>
+                        <Input placeholder="https://drive.google.com/..." value={newLinkUrl} onChange={(e) => setNewLinkUrl(e.target.value)} />
+                      </div>
+                      <Button onClick={handleAddExternalLink} disabled={!newLinkUrl.trim()}>
+                        <Link className="h-4 w-4 mr-2" />Salvar Link
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
-
-            <CameraCapture open={cameraOpen} onOpenChange={setCameraOpen} onCapture={handleCameraCapture} />
 
             {/* Category filter */}
             <div className="flex gap-2 flex-wrap">
@@ -698,83 +683,51 @@ const PatientProfile = () => {
               })}
             </div>
 
-            <p className="text-xs text-muted-foreground">📸 Fotos comprimidas automaticamente (~100KB). Imagens da galeria também são otimizadas.</p>
+            <p className="text-xs text-muted-foreground">🔗 Salve links do Google Drive, OneDrive ou Dropbox. Os arquivos ficam na sua nuvem, sem consumir espaço do sistema.</p>
 
             {filteredFiles.length === 0 ? (
               <Card><CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground"><ImageIcon className="h-12 w-12 mb-4 opacity-40" /><p>Nenhum arquivo nesta categoria</p></CardContent></Card>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {filteredFiles.map((f) => {
-                  const isImage = String(f.type).startsWith("image/");
-                  const url = f.storage_path ? getFileUrl(String(f.storage_path)) : "";
                   const fileId = String(f.id);
+                  const externalUrl = String(f.external_url || f.storage_path || "");
+                  const hasStoragePath = !!f.storage_path && String(f.storage_path).length > 0;
+                  const isLegacyFile = hasStoragePath && !f.external_url;
+                  const url = isLegacyFile ? getFileUrl(String(f.storage_path)) : externalUrl;
                   const category = getFileCategory(String(f.description || ""));
                   const catLabel = FILE_CATEGORIES.find((c) => c.value === category)?.label || "Outro";
                   const descText = String(f.description || "").replace(/\[\w+\]\s*/, "");
                   return (
-                    <Card key={fileId} className="overflow-hidden">
-                      <CardContent className="p-0">
-                        <div className="flex flex-col lg:flex-row">
-                          {/* Image / Preview side */}
-                          <div className="lg:w-1/2 relative">
-                            {isImage && url ? (
-                              <div className="relative group">
-                                <img src={url} alt={String(f.name)} className="w-full h-64 lg:h-80 object-contain bg-black/5 cursor-pointer" onClick={() => setViewingImage({ url, name: String(f.name) })} />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                  <ZoomIn className="h-8 w-8 text-white drop-shadow-lg" />
-                                </div>
+                    <Card key={fileId}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                              {isLegacyFile ? <FileImage className="h-5 w-5 text-muted-foreground" /> : <ExternalLink className="h-5 w-5 text-primary" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{String(f.name)}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <Badge variant="secondary" className="text-[10px]">{catLabel}</Badge>
+                                <span className="text-xs text-muted-foreground">{String(f.date).split("-").reverse().join("/")}</span>
+                                {isLegacyFile && <Badge variant="outline" className="text-[10px]">Arquivo local</Badge>}
                               </div>
-                            ) : (
-                              <div className="w-full h-64 lg:h-80 flex items-center justify-center bg-muted">
-                                <FileImage className="h-20 w-20 text-muted-foreground" />
-                              </div>
-                            )}
-                            <div className="absolute top-2 left-2">
-                              <Badge variant="secondary" className="text-xs">{catLabel}</Badge>
+                              {url && (
+                                <p className="text-xs text-muted-foreground truncate mt-1">{url.substring(0, 60)}...</p>
+                              )}
+                              {descText && <p className="text-xs mt-1">{descText}</p>}
                             </div>
                           </div>
-
-                          {/* Info + AI side */}
-                          <div className="lg:w-1/2 p-4 flex flex-col gap-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{String(f.name)}</p>
-                                <p className="text-xs text-muted-foreground">{String(f.date).split("-").reverse().join("/")}</p>
-                              </div>
-                              <div className="flex gap-1 shrink-0">
-                                {url && <Button variant="ghost" size="icon" onClick={() => window.open(url, "_blank")}><Search className="h-4 w-4" /></Button>}
-                                <Button variant="ghost" size="icon" onClick={() => handlePrint("file", fileId)}><Printer className="h-4 w-4" /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDeleteFile(fileId, String(f.storage_path || ""))}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                              </div>
-                            </div>
-
-                            <Input placeholder="Observações do profissional..." value={descText} onChange={(e) => updateFile(fileId, { description: `[${category}] ${e.target.value}` })} className="text-xs" />
-
-                            {/* AI Analysis */}
-                            <div className="border rounded-lg p-3 bg-muted/30 flex-1 flex flex-col gap-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-sm font-medium">
-                                  <Brain className="h-4 w-4 text-primary" />
-                                  Análise IA
-                                </div>
-                                <Button size="sm" variant="outline" disabled={aiLoading[fileId]} onClick={() => handleAiAnalysis(fileId, String(f.name), String(f.description || ""))}>
-                                  {aiLoading[fileId] ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Brain className="h-3 w-3 mr-1" />}
-                                  {aiLoading[fileId] ? "Analisando..." : "Analisar"}
-                                </Button>
-                              </div>
-                              {aiAnalysis[fileId] ? (
-                                <ScrollArea className="max-h-48 text-xs">
-                                  <div className="prose prose-xs max-w-none text-xs">
-                                    <ReactMarkdown>{aiAnalysis[fileId]}</ReactMarkdown>
-                                  </div>
-                                </ScrollArea>
-                              ) : (
-                                <p className="text-xs text-muted-foreground italic">Clique em "Analisar" para obter sugestões da IA sobre este exame.</p>
-                              )}
-                              {aiAnalysis[fileId] && (
-                                <p className="text-[10px] text-muted-foreground mt-1">⚠️ Análise auxiliar — decisão final é do profissional.</p>
-                              )}
-                            </div>
+                          <div className="flex gap-1 shrink-0">
+                            {url && (
+                              <Button variant="ghost" size="icon" onClick={() => window.open(url, "_blank")} title="Abrir">
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteFile(fileId, String(f.storage_path || ""))}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
@@ -785,17 +738,6 @@ const PatientProfile = () => {
             )}
           </TabsContent>
 
-          {/* Image Viewer Dialog */}
-          <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
-            <DialogContent className="max-w-4xl max-h-[90vh] p-2">
-              <DialogHeader>
-                <DialogTitle className="text-sm">{viewingImage?.name}</DialogTitle>
-              </DialogHeader>
-              {viewingImage && (
-                <img src={viewingImage.url} alt={viewingImage.name} className="w-full h-auto max-h-[80vh] object-contain" />
-              )}
-            </DialogContent>
-          </Dialog>
 
           {/* PRINT TAB */}
           <TabsContent value="print" className="space-y-4 mt-4">
