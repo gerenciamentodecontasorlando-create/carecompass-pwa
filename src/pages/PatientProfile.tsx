@@ -628,7 +628,7 @@ const PatientProfile = () => {
 
           {/* FILES TAB */}
           <TabsContent value="files" className="space-y-4 mt-4">
-            {/* Upload controls */}
+            {/* Link controls */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <h2 className="text-lg font-semibold">Exames e Arquivos</h2>
               <div className="flex items-center gap-2">
@@ -642,19 +642,30 @@ const PatientProfile = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={() => setCameraOpen(true)}>
-                  <Camera className="h-4 w-4 mr-2" />Câmera
-                </Button>
-                <Button asChild>
-                  <label className="cursor-pointer">
-                    <Plus className="h-4 w-4 mr-2" />Galeria
-                    <input type="file" accept="image/*,.pdf,.doc,.docx" multiple className="sr-only" onChange={handleFileUpload} />
-                  </label>
-                </Button>
+                <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button><Link className="h-4 w-4 mr-2" />Adicionar Link</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader><DialogTitle>Adicionar Link Externo</DialogTitle></DialogHeader>
+                    <p className="text-sm text-muted-foreground">Cole o link do Google Drive, OneDrive, Dropbox ou qualquer serviço de nuvem.</p>
+                    <div className="grid gap-4 py-2">
+                      <div className="grid gap-2">
+                        <Label>Nome do arquivo</Label>
+                        <Input placeholder="Ex: Radiografia panorâmica" value={newLinkName} onChange={(e) => setNewLinkName(e.target.value)} />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Link (URL)</Label>
+                        <Input placeholder="https://drive.google.com/..." value={newLinkUrl} onChange={(e) => setNewLinkUrl(e.target.value)} />
+                      </div>
+                      <Button onClick={handleAddExternalLink} disabled={!newLinkUrl.trim()}>
+                        <Link className="h-4 w-4 mr-2" />Salvar Link
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
-
-            <CameraCapture open={cameraOpen} onOpenChange={setCameraOpen} onCapture={handleCameraCapture} />
 
             {/* Category filter */}
             <div className="flex gap-2 flex-wrap">
