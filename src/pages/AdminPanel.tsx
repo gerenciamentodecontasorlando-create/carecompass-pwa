@@ -263,9 +263,8 @@ const AdminPanel = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="free">Gratuito</SelectItem>
-                          <SelectItem value="basic">Básico</SelectItem>
-                          <SelectItem value="pro">Profissional</SelectItem>
-                          <SelectItem value="enterprise">Enterprise</SelectItem>
+                          <SelectItem value="basic">Básico (R$ 59/mês)</SelectItem>
+                          <SelectItem value="enterprise">Enterprise (R$ 119/mês)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
