@@ -18,11 +18,20 @@ export function TrialGuard({ children }: { children: ReactNode }) {
   const { clinicId, user } = useAuth();
   const [trialInfo, setTrialInfo] = useState<TrialInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
 
   useEffect(() => {
-    if (!clinicId) return;
+    if (!clinicId || !user) return;
 
     const fetchTrial = async () => {
+      // Check if user is platform admin first
+      const { data: adminCheck } = await supabase.rpc("is_platform_admin", { _user_id: user.id });
+      if (adminCheck === true) {
+        setIsPlatformAdmin(true);
+        setLoading(false);
+        return;
+      }
+
       const { data } = await supabase
         .from("clinics")
         .select("trial_ends_at, plan")
@@ -49,7 +58,7 @@ export function TrialGuard({ children }: { children: ReactNode }) {
     };
 
     fetchTrial();
-  }, [clinicId]);
+  }, [clinicId, user]);
 
   if (loading) {
     return (
@@ -59,6 +68,11 @@ export function TrialGuard({ children }: { children: ReactNode }) {
     );
   }
 
+  // Platform admins always have full access
+  if (isPlatformAdmin) {
+    return <>{children}</>;
+  }
+
   // Paid plans always have access
   if (trialInfo && trialInfo.plan !== "free") {
     return <>{children}</>;
@@ -66,7 +80,7 @@ export function TrialGuard({ children }: { children: ReactNode }) {
 
   // Trial expired - block access
   if (trialInfo?.isExpired) {
-    return <TrialExpiredScreen daysLeft={0} />;
+    return <TrialExpiredScreen />;
   }
 
   // Trial active - show banner + allow access
@@ -113,47 +127,43 @@ function TrialBanner({ daysLeft }: { daysLeft: number }) {
   );
 }
 
-function TrialExpiredScreen({ daysLeft }: { daysLeft: number }) {
+function TrialExpiredScreen() {
   const plans = [
     {
       name: "Básico",
-      price: "R$ 89",
-      period: "/mês",
-      features: ["Até 200 pacientes", "Prontuário completo", "Receituário", "Atestados", "Agenda"],
-      highlight: false,
-    },
-    {
-      name: "Profissional",
-      price: "R$ 149",
+      price: "R$ 59",
       period: "/mês",
       features: [
         "Pacientes ilimitados",
-        "Tudo do Básico",
-        "Assistente IA (Nando)",
+        "Prontuário completo",
+        "Receituário",
+        "Atestados",
+        "Agenda",
         "Odontograma",
         "Financeiro",
-        "Exportação de dados",
       ],
-      highlight: true,
+      highlight: false,
     },
     {
-      name: "Clínica",
-      price: "R$ 249",
+      name: "Enterprise",
+      price: "R$ 119",
       period: "/mês",
       features: [
-        "Tudo do Profissional",
+        "Tudo do Básico",
+        "Assistente IA (Nando)",
         "Multi-usuários",
         "Backup prioritário",
         "Suporte dedicado",
         "Relatórios avançados",
+        "Exportação de dados",
       ],
-      highlight: false,
+      highlight: true,
     },
   ];
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full space-y-8">
+      <div className="max-w-3xl w-full space-y-8">
         <div className="text-center space-y-3">
           <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
             <Shield className="h-8 w-8 text-destructive" />
@@ -165,7 +175,7 @@ function TrialExpiredScreen({ daysLeft }: { daysLeft: number }) {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 max-w-2xl mx-auto">
           {plans.map((plan) => (
             <Card
               key={plan.name}

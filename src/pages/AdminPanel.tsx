@@ -34,11 +34,10 @@ interface PlatformStats {
   monthly_signups: { month: string; count: number }[] | null;
 }
 
-const PLAN_CONFIG: Record<string, { label: string; color: string; icon: typeof Crown; limits: { patients: number; storageMb: number } }> = {
-  free: { label: "Gratuito", color: "bg-muted text-muted-foreground", icon: Sparkles, limits: { patients: 50, storageMb: 100 } },
-  basic: { label: "Básico", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", icon: BarChart3, limits: { patients: 500, storageMb: 500 } },
-  pro: { label: "Profissional", color: "bg-primary/10 text-primary", icon: Crown, limits: { patients: 5000, storageMb: 2000 } },
-  enterprise: { label: "Enterprise", color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200", icon: Building2, limits: { patients: 99999, storageMb: 10000 } },
+const PLAN_CONFIG: Record<string, { label: string; price: string; color: string; icon: typeof Crown; limits: { patients: number; storageMb: number } }> = {
+  free: { label: "Gratuito", price: "R$ 0", color: "bg-muted text-muted-foreground", icon: Sparkles, limits: { patients: 50, storageMb: 100 } },
+  basic: { label: "Básico", price: "R$ 59/mês", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", icon: BarChart3, limits: { patients: 5000, storageMb: 2000 } },
+  enterprise: { label: "Enterprise", price: "R$ 119/mês", color: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200", icon: Building2, limits: { patients: 99999, storageMb: 10000 } },
 };
 
 const AdminPanel = () => {
@@ -264,9 +263,8 @@ const AdminPanel = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="free">Gratuito</SelectItem>
-                          <SelectItem value="basic">Básico</SelectItem>
-                          <SelectItem value="pro">Profissional</SelectItem>
-                          <SelectItem value="enterprise">Enterprise</SelectItem>
+                          <SelectItem value="basic">Básico (R$ 59/mês)</SelectItem>
+                          <SelectItem value="enterprise">Enterprise (R$ 119/mês)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
