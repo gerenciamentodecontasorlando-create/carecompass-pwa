@@ -1,26 +1,98 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Bot, Send, Loader2, Trash2, Pill, Stethoscope } from "lucide-react";
+import { Bot, Send, Loader2, Trash2, Pill, Stethoscope, Building2, User, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useClinicData } from "@/hooks/useClinicData";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type Msg = { role: "user" | "assistant"; content: string };
+type AssistantType = "diagnosis" | "prescription" | "clinic";
 
 const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
 
 const AIAssistant = () => {
+  const { clinicId } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [type, setType] = useState<"prescription" | "diagnosis">("diagnosis");
+  const [type, setType] = useState<AssistantType>("diagnosis");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Patient selection
+  const { data: patients } = useClinicData("patients", { orderBy: "name", orderAsc: true });
+  const [selectedPatient, setSelectedPatient] = useState<Record<string, unknown> | null>(null);
+  const [patientContext, setPatientContext] = useState<Record<string, unknown> | null>(null);
+  const [patientOpen, setPatientOpen] = useState(false);
+  const [loadingContext, setLoadingContext] = useState(false);
+
+  // Financial data for clinic mode
+  const { data: transactions } = useClinicData("transactions", { orderBy: "date", orderAsc: false, limit: 50 });
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Load full patient context when selected
+  useEffect(() => {
+    if (!selectedPatient?.id || !clinicId) {
+      setPatientContext(null);
+      return;
+    }
+
+    const loadContext = async () => {
+      setLoadingContext(true);
+      const patientId = String(selectedPatient.id);
+
+      const [recordRes, evoRes, filesRes, rxRes] = await Promise.all([
+        supabase.from("clinical_records").select("*").eq("patient_id", patientId).eq("clinic_id", clinicId).maybeSingle(),
+        supabase.from("evolutions").select("*").eq("patient_id", patientId).eq("clinic_id", clinicId).order("date", { ascending: false }).limit(10),
+        supabase.from("patient_files").select("*").eq("patient_id", patientId).eq("clinic_id", clinicId).order("created_at", { ascending: false }),
+        supabase.from("prescriptions").select("*").eq("clinic_id", clinicId).eq("patient_name", String(selectedPatient.name)).order("date", { ascending: false }).limit(5),
+      ]);
+
+      setPatientContext({
+        patient: selectedPatient,
+        clinicalRecord: recordRes.data || null,
+        evolutions: evoRes.data || [],
+        files: filesRes.data || [],
+        prescriptions: rxRes.data || [],
+      });
+      setLoadingContext(false);
+    };
+
+    loadContext();
+  }, [selectedPatient?.id, clinicId]);
+
+  // Build financial summary for clinic mode
+  const financialSummary = useMemo(() => {
+    if (type !== "clinic" || !transactions.length) return null;
+    const totalRevenue = transactions
+      .filter((t) => t.type === "receita")
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const totalExpenses = transactions
+      .filter((t) => t.type === "despesa")
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    return {
+      totalRevenue: totalRevenue.toFixed(2),
+      totalExpenses: totalExpenses.toFixed(2),
+      balance: (totalRevenue - totalExpenses).toFixed(2),
+      recentCount: transactions.length,
+    };
+  }, [type, transactions]);
 
   const sendMessage = async () => {
     const text = input.trim();
@@ -33,6 +105,15 @@ const AIAssistant = () => {
 
     let assistantSoFar = "";
 
+    // Build context payload
+    const contextPayload: Record<string, unknown> = {};
+    if (patientContext && type !== "clinic") {
+      Object.assign(contextPayload, patientContext);
+    }
+    if (type === "clinic" && financialSummary) {
+      contextPayload.financialSummary = financialSummary;
+    }
+
     try {
       const resp = await fetch(AI_URL, {
         method: "POST",
@@ -40,7 +121,11 @@ const AIAssistant = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMsg], type }),
+        body: JSON.stringify({
+          messages: [...messages, userMsg],
+          type,
+          patientContext: Object.keys(contextPayload).length > 0 ? contextPayload : undefined,
+        }),
       });
 
       if (!resp.ok) {
@@ -101,30 +186,101 @@ const AIAssistant = () => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
+  const getPlaceholder = () => {
+    if (type === "clinic") return "Pergunte sobre finanças, agenda, organização...";
+    if (type === "prescription") return selectedPatient ? `Prescrição para ${selectedPatient.name}...` : "Qual a situação clínica?";
+    return selectedPatient ? `Diagnóstico para ${selectedPatient.name}...` : "Descreva os sintomas...";
+  };
+
+  const getEmptyText = () => {
+    if (type === "clinic") return "Pergunte sobre finanças, gestão de agenda, organização da clínica ou análise de desempenho.";
+    if (selectedPatient && patientContext) {
+      const evoCount = (patientContext.evolutions as any[])?.length || 0;
+      const fileCount = (patientContext.files as any[])?.length || 0;
+      return `Paciente ${selectedPatient.name} carregado com ficha clínica${evoCount > 0 ? `, ${evoCount} evoluções` : ""}${fileCount > 0 ? `, ${fileCount} exames/arquivos` : ""}. Pergunte sobre diagnóstico diferencial, plano de tratamento ou análise dos exames.`;
+    }
+    if (type === "diagnosis") return "Selecione um paciente para análise contextualizada ou descreva os sinais e sintomas.";
+    return "Selecione um paciente ou informe o diagnóstico para sugestão de prescrição.";
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)]">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Bot className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Assistente IA</h1>
+      <div className="flex flex-col gap-3 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Bot className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Assistente IA</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Tabs value={type} onValueChange={(v) => { setType(v as AssistantType); setMessages([]); }}>
+              <TabsList>
+                <TabsTrigger value="diagnosis" className="text-xs">
+                  <Stethoscope className="h-3.5 w-3.5 mr-1" />Diagnóstico
+                </TabsTrigger>
+                <TabsTrigger value="prescription" className="text-xs">
+                  <Pill className="h-3.5 w-3.5 mr-1" />Prescrição
+                </TabsTrigger>
+                <TabsTrigger value="clinic" className="text-xs">
+                  <Building2 className="h-3.5 w-3.5 mr-1" />Gestão
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            {messages.length > 0 && (
+              <Button variant="ghost" size="icon" onClick={() => setMessages([])}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Tabs value={type} onValueChange={(v) => setType(v as any)}>
-            <TabsList>
-              <TabsTrigger value="diagnosis" className="text-xs">
-                <Stethoscope className="h-3.5 w-3.5 mr-1" />Diagnóstico
-              </TabsTrigger>
-              <TabsTrigger value="prescription" className="text-xs">
-                <Pill className="h-3.5 w-3.5 mr-1" />Prescrição
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          {messages.length > 0 && (
-            <Button variant="ghost" size="icon" onClick={() => setMessages([])}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+
+        {/* Patient selector - only for diagnosis/prescription modes */}
+        {type !== "clinic" && (
+          <div className="flex items-center gap-2">
+            <Popover open={patientOpen} onOpenChange={setPatientOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <User className="h-3.5 w-3.5" />
+                  {selectedPatient ? String(selectedPatient.name) : "Selecionar paciente"}
+                  {loadingContext && <Loader2 className="h-3 w-3 animate-spin" />}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-72" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar paciente..." />
+                  <CommandList>
+                    <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {patients.map((p) => (
+                        <CommandItem
+                          key={String(p.id)}
+                          onSelect={() => {
+                            setSelectedPatient(p);
+                            setPatientOpen(false);
+                            setMessages([]);
+                          }}
+                        >
+                          {String(p.name)}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {selectedPatient && (
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedPatient(null); setMessages([]); }}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            {selectedPatient && patientContext && (
+              <span className="text-xs text-muted-foreground">
+                {(patientContext.clinicalRecord as any) ? "✓ Ficha" : ""} 
+                {((patientContext.evolutions as any[])?.length || 0) > 0 ? ` • ${(patientContext.evolutions as any[]).length} evoluções` : ""}
+                {((patientContext.files as any[])?.length || 0) > 0 ? ` • ${(patientContext.files as any[]).length} arquivos` : ""}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <Card className="flex-1 overflow-hidden flex flex-col">
@@ -132,11 +288,7 @@ const AIAssistant = () => {
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
               <Bot className="h-16 w-16 opacity-30" />
-              <p className="text-center max-w-md">
-                {type === "diagnosis"
-                  ? "Descreva os sinais, sintomas ou achados clínicos para obter sugestões de diagnóstico."
-                  : "Informe o diagnóstico ou situação clínica para sugestão de prescrição medicamentosa."}
-              </p>
+              <p className="text-center max-w-md">{getEmptyText()}</p>
             </div>
           )}
           {messages.map((msg, i) => (
@@ -172,7 +324,7 @@ const AIAssistant = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={type === "diagnosis" ? "Descreva os sintomas..." : "Qual a situação clínica?"}
+              placeholder={getPlaceholder()}
               rows={2}
               className="resize-none"
               disabled={isLoading}
