@@ -47,6 +47,10 @@ const AIAssistant = () => {
 
   // Financial data for clinic mode
   const { data: transactions } = useClinicData("transactions", { orderBy: "date", orderAsc: false, limit: 50 });
+  // Appointments data for clinic mode (agenda)
+  const { data: appointments } = useClinicData("appointments", { orderBy: "date", orderAsc: true, limit: 100 });
+  // Certificates data
+  const { data: certificates } = useClinicData("certificates", { orderBy: "created_at", orderAsc: false, limit: 20 });
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -193,8 +197,11 @@ const AIAssistant = () => {
     if (patientContext && type !== "clinic") {
       Object.assign(contextPayload, patientContext);
     }
-    if (type === "clinic" && financialSummary) {
-      contextPayload.financialSummary = financialSummary;
+    if (type === "clinic") {
+      if (financialSummary) contextPayload.financialSummary = financialSummary;
+      if (appointments.length > 0) contextPayload.appointments = appointments;
+      if (transactions.length > 0) contextPayload.transactions = transactions;
+      if (certificates.length > 0) contextPayload.certificates = certificates;
     }
 
     try {

@@ -62,6 +62,24 @@ serve(async (req) => {
         const f = patientContext.financialSummary;
         parts.push(`## Resumo Financeiro da Clínica\n- Receita total: R$ ${f.totalRevenue}\n- Despesa total: R$ ${f.totalExpenses}\n- Saldo: R$ ${f.balance}\n- Transações recentes: ${f.recentCount}`);
       }
+      if (patientContext.transactions?.length > 0) {
+        const txText = patientContext.transactions.map((t: any) =>
+          `- ${t.date} | ${t.type} | R$ ${t.amount} | ${t.description}${t.category ? " (" + t.category + ")" : ""}`
+        ).join("\n");
+        parts.push(`## Transações Detalhadas (últimas ${patientContext.transactions.length})\n${txText}`);
+      }
+      if (patientContext.appointments?.length > 0) {
+        const apptText = patientContext.appointments.map((a: any) =>
+          `- ${a.date} ${a.time} | ${a.patient_name} | ${a.procedure || a.type || "Consulta"} | Status: ${a.status || "agendado"}${a.dentist ? " | Prof: " + a.dentist : ""}${a.notes ? " | Obs: " + a.notes : ""}`
+        ).join("\n");
+        parts.push(`## Agenda (${patientContext.appointments.length} compromissos)\n${apptText}`);
+      }
+      if (patientContext.certificates?.length > 0) {
+        const certText = patientContext.certificates.map((c: any) =>
+          `- ${c.date} | ${c.patient_name} | ${c.days || "1"} dia(s)${c.content ? " | " + c.content.substring(0, 100) : ""}`
+        ).join("\n");
+        parts.push(`## Atestados Recentes (${patientContext.certificates.length})\n${certText}`);
+      }
       if (parts.length > 0) {
         contextBlock = `\n\n--- CONTEXTO DO PACIENTE / CLÍNICA ---\n${parts.join("\n\n")}\n--- FIM DO CONTEXTO ---\n`;
       }
@@ -98,13 +116,15 @@ Responda em português brasileiro.${contextBlock}${imageInstruction}`,
 
       clinic: `Você é um consultor especializado em gestão de clínicas e consultórios de saúde.
 Ajude o profissional com:
-- Análise financeira (receitas, despesas, lucratividade)
-- Sugestões de otimização de agenda e fluxo de pacientes
+- Análise financeira DETALHADA (receitas, despesas, lucratividade, categorias de gasto, tendências)
+- Organização e otimização de agenda (identificar horários vagos, conflitos, sugerir redistribuição)
+- Localização de documentos (atestados, receitas, fichas de pacientes)
+- Revisão de prontuários e fichas clínicas
+- Controle de gastos com opinião e sugestões de economia
 - Estratégias para aumentar receita e reduzir custos
-- Organização administrativa
 - Gestão de estoque e materiais
 - Indicadores de desempenho da clínica
-${contextBlock ? "\nVocê tem acesso aos dados financeiros e operacionais da clínica abaixo. ANALISE-OS para fornecer recomendações específicas e acionáveis." : ""}
+${contextBlock ? "\nVocê tem acesso aos dados financeiros, agenda, atestados e operacionais da clínica abaixo. ANALISE-OS DETALHADAMENTE para fornecer recomendações específicas e acionáveis. Quando perguntarem sobre agenda, analise os compromissos e sugira otimizações. Quando perguntarem sobre gastos, detalhe cada transação relevante." : ""}
 Responda de forma prática e objetiva em português brasileiro.${contextBlock}`,
 
       jarvis: `Você é NANDO, um assistente virtual inteligente para clínicas e consultórios de saúde.
