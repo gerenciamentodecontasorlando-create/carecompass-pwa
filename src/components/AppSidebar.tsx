@@ -5,6 +5,8 @@ import {
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -26,11 +28,22 @@ const items = [
   { title: "Lixeira", url: "/lixeira", icon: Trash2 },
   { title: "Importar Dados", url: "/importar-dados", icon: Upload },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
-  { title: "Painel Admin", url: "/admin", icon: Crown },
 ];
 
 export function AppSidebar() {
-  const { signOut, profile } = useAuth();
+  const { signOut, user } = useAuth();
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.rpc("is_platform_admin", { _user_id: user.id }).then(({ data }) => {
+      setIsPlatformAdmin(data === true);
+    });
+  }, [user]);
+
+  const visibleItems = isPlatformAdmin
+    ? [...items, { title: "Painel Admin", url: "/admin", icon: Crown }]
+    : items;
 
   return (
     <Sidebar collapsible="icon">
@@ -47,7 +60,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink
