@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Bot, Send, Loader2, Trash2, Pill, Stethoscope, Building2, User, X } from "lucide-react";
+import { Bot, Send, Loader2, Trash2, Pill, Stethoscope, Building2, User, X, ImagePlus } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useClinicData } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> };
 type AssistantType = "diagnosis" | "prescription" | "clinic";
 
 const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
@@ -31,6 +31,12 @@ const AIAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [type, setType] = useState<AssistantType>("diagnosis");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Temp image state
+  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
+  const [tempImagePath, setTempImagePath] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Patient selection
   const { data: patients } = useClinicData("patients", { orderBy: "name", orderAsc: true });
@@ -94,13 +100,90 @@ const AIAssistant = () => {
     };
   }, [type, transactions]);
 
+  // Handle image upload (paste or file select)
+  const uploadTempImage = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Apenas imagens são aceitas");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Imagem muito grande (máx 10MB)");
+      return;
+    }
+
+    setUploadingImage(true);
+    const fileName = `temp_${Date.now()}_${Math.random().toString(36).slice(2)}.${file.type.split("/")[1] || "png"}`;
+
+    const { error } = await supabase.storage.from("temp-ai-images").upload(fileName, file, {
+      contentType: file.type,
+    });
+
+    if (error) {
+      toast.error("Erro ao enviar imagem");
+      setUploadingImage(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("temp-ai-images").getPublicUrl(fileName);
+    setTempImageUrl(urlData.publicUrl);
+    setTempImagePath(fileName);
+    setUploadingImage(false);
+
+    // Schedule auto-delete after 10 minutes
+    setTimeout(async () => {
+      await supabase.storage.from("temp-ai-images").remove([fileName]);
+    }, 10 * 60 * 1000);
+
+    toast.success("Imagem carregada! Será excluída em 10 min.");
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          uploadTempImage(file);
+          return;
+        }
+      }
+    }
+  };
+
+  const removeTempImage = async () => {
+    if (tempImagePath) {
+      await supabase.storage.from("temp-ai-images").remove([tempImagePath]);
+    }
+    setTempImageUrl(null);
+    setTempImagePath(null);
+  };
+
   const sendMessage = async () => {
     const text = input.trim();
-    if (!text || isLoading) return;
+    if ((!text && !tempImageUrl) || isLoading) return;
 
-    const userMsg: Msg = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    // Build user message content
+    let userContent: Msg["content"];
+    let displayText = text;
+
+    if (tempImageUrl) {
+      userContent = [];
+      if (text) userContent.push({ type: "text", text });
+      userContent.push({ type: "image_url", image_url: { url: tempImageUrl } });
+      displayText = text || "📷 Imagem enviada para análise";
+    } else {
+      userContent = text;
+    }
+
+    const userMsg: Msg = { role: "user", content: userContent };
+    // For display we use text version
+    const displayMsg: Msg = { role: "user", content: displayText + (tempImageUrl ? "\n📷 [Imagem anexada]" : "") };
+    setMessages((prev) => [...prev, displayMsg]);
     setInput("");
+    const sentImageUrl = tempImageUrl;
+    setTempImageUrl(null);
+    setTempImagePath(null);
     setIsLoading(true);
 
     let assistantSoFar = "";
@@ -115,6 +198,12 @@ const AIAssistant = () => {
     }
 
     try {
+      // Build messages for API - convert display messages to proper format
+      const apiMessages = [...messages, userMsg].map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
       const resp = await fetch(AI_URL, {
         method: "POST",
         headers: {
@@ -122,9 +211,10 @@ const AIAssistant = () => {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
-          messages: [...messages, userMsg],
+          messages: apiMessages,
           type,
           patientContext: Object.keys(contextPayload).length > 0 ? contextPayload : undefined,
+          imageUrl: sentImageUrl || undefined,
         }),
       });
 
@@ -189,7 +279,7 @@ const AIAssistant = () => {
   const getPlaceholder = () => {
     if (type === "clinic") return "Pergunte sobre finanças, agenda, organização...";
     if (type === "prescription") return selectedPatient ? `Prescrição para ${selectedPatient.name}...` : "Qual a situação clínica?";
-    return selectedPatient ? `Diagnóstico para ${selectedPatient.name}...` : "Descreva os sintomas...";
+    return selectedPatient ? `Diagnóstico para ${selectedPatient.name}...` : "Descreva os sintomas ou cole uma radiografia...";
   };
 
   const getEmptyText = () => {
@@ -197,10 +287,15 @@ const AIAssistant = () => {
     if (selectedPatient && patientContext) {
       const evoCount = (patientContext.evolutions as any[])?.length || 0;
       const fileCount = (patientContext.files as any[])?.length || 0;
-      return `Paciente ${selectedPatient.name} carregado com ficha clínica${evoCount > 0 ? `, ${evoCount} evoluções` : ""}${fileCount > 0 ? `, ${fileCount} exames/arquivos` : ""}. Pergunte sobre diagnóstico diferencial, plano de tratamento ou análise dos exames.`;
+      return `Paciente ${selectedPatient.name} carregado com ficha clínica${evoCount > 0 ? `, ${evoCount} evoluções` : ""}${fileCount > 0 ? `, ${fileCount} exames/arquivos` : ""}. Pergunte sobre diagnóstico diferencial, plano de tratamento ou cole uma radiografia para análise.`;
     }
-    if (type === "diagnosis") return "Selecione um paciente para análise contextualizada ou descreva os sinais e sintomas.";
+    if (type === "diagnosis") return "Selecione um paciente para análise contextualizada, descreva os sinais/sintomas ou cole uma radiografia (Ctrl+V) para análise.";
     return "Selecione um paciente ou informe o diagnóstico para sugestão de prescrição.";
+  };
+
+  const getDisplayContent = (msg: Msg): string => {
+    if (typeof msg.content === "string") return msg.content;
+    return msg.content.map((c) => c.text || "📷 [Imagem]").join("\n");
   };
 
   return (
@@ -300,10 +395,10 @@ const AIAssistant = () => {
               }`}>
                 {msg.role === "assistant" ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown>{getDisplayContent(msg)}</ReactMarkdown>
                   </div>
                 ) : (
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  <p className="whitespace-pre-wrap">{getDisplayContent(msg)}</p>
                 )}
               </div>
             </div>
@@ -319,22 +414,56 @@ const AIAssistant = () => {
         </CardContent>
 
         <div className="border-t p-4">
+          {/* Temp image preview */}
+          {tempImageUrl && (
+            <div className="mb-2 flex items-center gap-2 p-2 rounded-lg border bg-muted/50">
+              <img src={tempImageUrl} alt="Radiografia" className="h-16 w-16 object-cover rounded" />
+              <span className="text-xs text-muted-foreground flex-1">Imagem anexada (auto-exclui em 10 min)</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={removeTempImage}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
           <div className="flex gap-2">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={getPlaceholder()}
-              rows={2}
-              className="resize-none"
-              disabled={isLoading}
-            />
-            <Button onClick={sendMessage} disabled={isLoading || !input.trim()} size="icon" className="h-auto">
+            <div className="flex-1 relative">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                placeholder={getPlaceholder()}
+                rows={2}
+                className="resize-none pr-10"
+                disabled={isLoading}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadTempImage(file);
+                  e.target.value = "";
+                }}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 bottom-1 h-7 w-7"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || uploadingImage}
+                title="Anexar imagem (radiografia, exame)"
+              >
+                {uploadingImage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />}
+              </Button>
+            </div>
+            <Button onClick={sendMessage} disabled={isLoading || (!input.trim() && !tempImageUrl)} size="icon" className="h-auto">
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            ⚠️ As sugestões são auxiliares. A decisão clínica é sempre do profissional.
+            📷 Cole (Ctrl+V) ou anexe radiografias para análise. ⚠️ Sugestões são auxiliares.
           </p>
         </div>
       </Card>

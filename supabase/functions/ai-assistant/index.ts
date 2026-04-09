@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, type, patientContext } = await req.json();
+    const { messages, type, patientContext, imageUrl } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -67,6 +67,10 @@ serve(async (req) => {
       }
     }
 
+    const imageInstruction = imageUrl
+      ? "\n\nIMPORTANTE: O profissional anexou uma imagem (radiografia/exame). Analise a imagem detalhadamente, descreva os achados radiográficos/clínicos visíveis, sugira diagnósticos diferenciais e recomende condutas."
+      : "";
+
     const systemPrompts: Record<string, string> = {
       prescription: `Você é um assistente clínico especializado em prescrição medicamentosa, atendendo profissionais de diversas áreas da saúde (medicina, odontologia, fisioterapia, nutrição, estética, psicologia, etc.).
 Ajude o profissional a:
@@ -78,11 +82,11 @@ Ajude o profissional a:
 ${contextBlock ? "\nVocê tem acesso aos dados do paciente abaixo. USE-OS para personalizar suas sugestões, verificar alergias e interações." : ""}
 IMPORTANTE: Sempre lembre que suas sugestões devem ser validadas pelo profissional. 
 Formate as prescrições de forma clara e organizada.
-Responda em português brasileiro.${contextBlock}`,
+Responda em português brasileiro.${contextBlock}${imageInstruction}`,
       
       diagnosis: `Você é um assistente clínico especializado em diagnóstico e planejamento de tratamento, atendendo profissionais de diversas áreas da saúde.
 Ajude o profissional a:
-- Analisar sinais, sintomas e exames relatados
+- Analisar sinais, sintomas, exames e IMAGENS RADIOGRÁFICAS quando fornecidas
 - Sugerir diagnósticos diferenciais com raciocínio clínico
 - Recomendar exames complementares quando necessário
 - Classificar a urgência do caso
@@ -90,7 +94,7 @@ Ajude o profissional a:
 - Considerar o histórico completo do paciente (alergias, medicamentos, comorbidades)
 ${contextBlock ? "\nVocê tem acesso à ficha clínica, evoluções, exames e prescrições do paciente abaixo. ANALISE-OS detalhadamente para fornecer recomendações personalizadas." : ""}
 IMPORTANTE: Sempre lembre que suas sugestões são auxiliares e a decisão final é do profissional.
-Responda em português brasileiro.${contextBlock}`,
+Responda em português brasileiro.${contextBlock}${imageInstruction}`,
 
       clinic: `Você é um consultor especializado em gestão de clínicas e consultórios de saúde.
 Ajude o profissional com:
@@ -108,7 +112,7 @@ Seu tom deve ser educado, profissional, eficiente e amigável.
 Você atende profissionais de DIVERSAS áreas da saúde: medicina, odontologia, fisioterapia, nutrição, estética, psicologia, fonoaudiologia e outras.
 Você ajuda o profissional com:
 - Dúvidas clínicas da área de atuação (diagnósticos, tratamentos, medicamentos)
-- Análise de exames e achados clínicos quando dados do paciente estão disponíveis
+- Análise de exames, radiografias e achados clínicos quando imagens são fornecidas
 - Sugestões de planos de tratamento personalizados
 - Diagnóstico diferencial baseado em sinais e sintomas
 - Orientações sobre materiais e insumos
@@ -118,10 +122,28 @@ ${contextBlock ? "\nVocê tem acesso aos dados do paciente/clínica abaixo. Use-
 Responda de forma CONCISA e DIRETA, pois suas respostas serão lidas em voz alta.
 Limite respostas a no máximo 3-4 frases quando possível.
 Responda em português brasileiro.
-IMPORTANTE: Suas sugestões clínicas são auxiliares. A decisão final é sempre do profissional.${contextBlock}`,
+IMPORTANTE: Suas sugestões clínicas são auxiliares. A decisão final é sempre do profissional.${contextBlock}${imageInstruction}`,
     };
 
     const systemContent = systemPrompts[type] || systemPrompts.diagnosis;
+
+    // Use a vision-capable model when image is present
+    const model = imageUrl ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
+
+    // Build the last user message with image if provided
+    const apiMessages = [...messages];
+    if (imageUrl && apiMessages.length > 0) {
+      const lastMsg = apiMessages[apiMessages.length - 1];
+      if (lastMsg.role === "user") {
+        // If the last message already has multimodal content, keep it
+        if (typeof lastMsg.content === "string") {
+          lastMsg.content = [
+            { type: "text", text: lastMsg.content || "Analise esta imagem" },
+            { type: "image_url", image_url: { url: imageUrl } },
+          ];
+        }
+      }
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -130,10 +152,10 @@ IMPORTANTE: Suas sugestões clínicas são auxiliares. A decisão final é sempr
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model,
         messages: [
           { role: "system", content: systemContent },
-          ...messages,
+          ...apiMessages,
         ],
         stream: true,
       }),
