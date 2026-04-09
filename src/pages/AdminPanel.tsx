@@ -71,9 +71,15 @@ const AdminPanel = () => {
   };
 
   const handlePlanChange = async (clinicId: string, newPlan: string) => {
+    const planLimits: Record<string, { max_patients: number; max_storage_mb: number }> = {
+      free: { max_patients: 50, max_storage_mb: 100 },
+      basic: { max_patients: 5000, max_storage_mb: 2000 },
+      enterprise: { max_patients: 99999, max_storage_mb: 10000 },
+    };
+    const limits = planLimits[newPlan] || planLimits.free;
     const { error } = await supabase
       .from("clinics")
-      .update({ plan: newPlan } as never)
+      .update({ plan: newPlan, max_patients: limits.max_patients, max_storage_mb: limits.max_storage_mb })
       .eq("id", clinicId);
     if (error) {
       toast.error("Erro ao alterar plano");
