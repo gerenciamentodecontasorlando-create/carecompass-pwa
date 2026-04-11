@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 interface Profile {
   id: string;
@@ -23,6 +22,7 @@ interface AuthContextType {
 }
 
 const AUTH_CACHE_KEY = "clinicapro-auth-cache";
+const CACHE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function saveAuthCache(user: User, profile: Profile) {
   try {
@@ -35,8 +35,7 @@ function loadAuthCache(): { user: User; profile: Profile } | null {
     const raw = localStorage.getItem(AUTH_CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    // Cache valid for 30 days
-    if (Date.now() - parsed.ts > 30 * 24 * 60 * 60 * 1000) return null;
+    if (Date.now() - parsed.ts > CACHE_MAX_AGE_MS) return null;
     return { user: parsed.user, profile: parsed.profile };
   } catch {
     return null;
@@ -45,6 +44,10 @@ function loadAuthCache(): { user: User; profile: Profile } | null {
 
 function clearAuthCache() {
   localStorage.removeItem(AUTH_CACHE_KEY);
+}
+
+function isNavigatorOnline(): boolean {
+  return typeof navigator === "undefined" ? true : navigator.onLine;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -58,13 +61,11 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const isOnline = useOnlineStatus();
-  
-  // Initialize from cache immediately for faster/offline load
   const cached = loadAuthCache();
   const [user, setUser] = useState<User | null>(cached?.user ?? null);
   const [profile, setProfile] = useState<Profile | null>(cached?.profile ?? null);
-  const [loading, setLoading] = useState(!cached); // Not loading if we have cache
+  const [loading, setLoading] = useState(!cached);
+  const explicitSignOutRef = useRef(false);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -76,9 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data) {
         const p = data as Profile;
         setProfile(p);
-        // Update cache with fresh profile
-        const currentUser = user;
-        if (currentUser) saveAuthCache(currentUser, p);
+        const cachedNow = loadAuthCache();
+        if (cachedNow?.user) saveAuthCache(cachedNow.user, p);
       }
     } catch (e) {
       console.warn("Could not fetch profile (possibly offline):", e);
@@ -86,21 +86,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        if (currentUser) {
-          setTimeout(() => fetchProfile(currentUser.id), 0);
-        } else if (event === "SIGNED_OUT") {
-          setProfile(null);
-          clearAuthCache();
+        if (event === "SIGNED_OUT") {
+          // Only clear if it was an explicit sign-out, not a network failure
+          if (explicitSignOutRef.current) {
+            setUser(null);
+            setProfile(null);
+            clearAuthCache();
+            explicitSignOutRef.current = false;
+          }
+          // If not explicit and we're offline, keep cached state
+          setLoading(false);
+          return;
         }
+
+        const currentUser = session?.user ?? null;
+        if (currentUser) {
+          setUser(currentUser);
+          setTimeout(() => fetchProfile(currentUser.id), 0);
+        }
+        // If currentUser is null but event is not SIGNED_OUT (e.g. TOKEN_REFRESHED failure),
+        // keep cached state when offline
         setLoading(false);
       }
     );
 
-    // Try to get session from Supabase (works online)
+    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       const currentUser = session?.user ?? null;
       if (currentUser) {
@@ -123,22 +136,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Save to cache whenever both user and profile are available
+  // Persist cache whenever user+profile are available
   useEffect(() => {
     if (user && profile) {
       saveAuthCache(user, profile);
     }
   }, [user, profile]);
 
+  // When coming back online, try to refresh session silently
+  useEffect(() => {
+    const handleOnline = () => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          setUser(session.user);
+          fetchProfile(session.user.id);
+        }
+      }).catch(() => {});
+    };
+
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const signOut = async () => {
+    explicitSignOutRef.current = true;
     clearAuthCache();
+    setUser(null);
+    setProfile(null);
     try {
       await supabase.auth.signOut();
     } catch { /* offline */ }
-    setUser(null);
-    setProfile(null);
   };
 
   return (

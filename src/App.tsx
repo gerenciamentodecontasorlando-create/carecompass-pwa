@@ -77,15 +77,26 @@ function AppRoutes() {
   );
 }
 
-const PIN_SESSION_KEY = "clinicapro-pin-unlocked";
+const PIN_STORAGE_KEY = "clinicapro-pin-unlocked";
+const PIN_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function isPinValid(): boolean {
+  try {
+    const raw = localStorage.getItem(PIN_STORAGE_KEY);
+    if (!raw) return false;
+    const ts = parseInt(raw, 10);
+    if (isNaN(ts)) return false;
+    return Date.now() - ts < PIN_MAX_AGE_MS;
+  } catch {
+    return false;
+  }
+}
 
 const App = () => {
-  const [pinUnlocked, setPinUnlocked] = useState(() => {
-    return sessionStorage.getItem(PIN_SESSION_KEY) === "true";
-  });
+  const [pinUnlocked, setPinUnlocked] = useState(() => isPinValid());
 
   const handleUnlock = () => {
-    sessionStorage.setItem(PIN_SESSION_KEY, "true");
+    localStorage.setItem(PIN_STORAGE_KEY, String(Date.now()));
     setPinUnlocked(true);
   };
 
