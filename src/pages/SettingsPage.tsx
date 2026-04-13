@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Save, LogOut, Volume2 } from "lucide-react";
+import { Save, LogOut, Volume2, RefreshCw } from "lucide-react";
 
 const SettingsPage = () => {
   const { signOut, profile } = useAuth();
