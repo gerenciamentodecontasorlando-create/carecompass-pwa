@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Save, LogOut, Volume2 } from "lucide-react";
+import { Save, LogOut, Volume2, RefreshCw } from "lucide-react";
 
 const SettingsPage = () => {
   const { signOut, profile } = useAuth();
@@ -206,6 +206,38 @@ const SettingsPage = () => {
 
           <Button variant="outline" className="w-full" onClick={handleTestVoice}>
             <Volume2 className="h-4 w-4 mr-2" />Testar Voz
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Atualizar App */}
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <h2 className="text-lg font-semibold">Atualização</h2>
+          <p className="text-sm text-muted-foreground">
+            Se o app estiver com comportamento estranho ou voltando à versão antiga, clique para forçar a atualização.
+          </p>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={async () => {
+              try {
+                if ("serviceWorker" in navigator) {
+                  const registrations = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(registrations.map((r) => r.unregister()));
+                }
+                if ("caches" in window) {
+                  const keys = await caches.keys();
+                  await Promise.all(keys.map((k) => caches.delete(k)));
+                }
+                toast.success("Cache limpo! Recarregando...");
+                setTimeout(() => window.location.reload(), 800);
+              } catch {
+                window.location.reload();
+              }
+            }}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />Atualizar App
           </Button>
         </CardContent>
       </Card>
