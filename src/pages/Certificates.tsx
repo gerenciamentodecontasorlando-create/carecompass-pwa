@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Printer, Plus, Trash2, MessageCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Printer, Plus, Trash2, MessageCircle, Stamp } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { SignaturePad } from "@/components/SignaturePad";
+import { ProfessionalStamp } from "@/components/ProfessionalStamp";
 
 const Certificates = () => {
   const { data: settingsArr } = useClinicData("clinic_settings");
@@ -19,6 +21,7 @@ const Certificates = () => {
   const [form, setForm, clearDraft] = useFormDraft("certificates-form", { patientName: "", content: "", days: "1" });
   const [previewId, setPreviewId] = useFormDraft<string | null>("certificates-preview", null);
   const [patientSignature, setPatientSignature] = useState<string | null>(null);
+  const [showStamp, setShowStamp] = useState(true);
 
   const handleSave = async () => {
     if (!form.patientName.trim()) { toast.error("Preencha o nome do paciente"); return; }
@@ -92,6 +95,10 @@ const Certificates = () => {
 
         <div>
           <div className="flex justify-end gap-2 mb-2 no-print">
+            <div className="flex items-center gap-2 mr-auto">
+              <Switch id="stamp-toggle" checked={showStamp} onCheckedChange={setShowStamp} />
+              <Label htmlFor="stamp-toggle" className="text-xs text-muted-foreground flex items-center gap-1"><Stamp className="h-3 w-3" />Carimbo</Label>
+            </div>
             <Button variant="outline" size="sm" disabled={!previewCert} onClick={() => {
               if (!previewCert) return;
               const matchedP = patients.find(p => String(p.name).toLowerCase() === String(previewCert.patient_name).toLowerCase());
@@ -131,11 +138,14 @@ const Certificates = () => {
                   <img src={patientSignature} alt="Assinatura do paciente" className="mx-auto max-h-20 border-b border-foreground" />
                 </div>
               )}
-              <div className="border-t-2 border-primary/30 pt-4 mt-8 text-center space-y-1">
-                <div className="w-48 border-t border-foreground mx-auto mb-2 mt-12" />
-                <p className="text-sm font-semibold">{String(settings.professional_name || "Assinatura")}</p>
-                <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
-                <p className="text-xs text-muted-foreground mt-3">{String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}</p>
+              <div className="border-t-2 border-primary/30 pt-4 mt-8">
+                <ProfessionalStamp
+                  name={String(settings.professional_name || "")}
+                  specialty={String(settings.specialty || "")}
+                  registrationNumber={String(settings.registration_number || "")}
+                  showStamp={showStamp}
+                />
+                <p className="text-xs text-muted-foreground mt-3 text-center">{String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}</p>
               </div>
             </div>
           </div>
