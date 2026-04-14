@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Printer } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Printer, Stamp } from "lucide-react";
 import { format } from "date-fns";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { SignaturePad } from "@/components/SignaturePad";
+import { ProfessionalStamp } from "@/components/ProfessionalStamp";
 
 const DEFAULT_CONSENT_TEXT = `Eu, abaixo identificado(a) e firmado(a), declaro para os devidos fins que fui devidamente informado(a) pelo(a) profissional responsável sobre:
 
