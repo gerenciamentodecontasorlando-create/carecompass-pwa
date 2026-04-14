@@ -18,7 +18,7 @@ export function ProfessionalStamp({ name, specialty, registrationNumber, showSta
         <div
           className="mx-auto mb-1 px-4 py-2 rounded-sm inline-block"
           style={{
-            border: "1.5px solid hsl(var(--primary) / 0.35)",
+            border: "1.5px solid hsl(var(--foreground))",
             backgroundColor: "hsl(var(--primary) / 0.03)",
             minWidth: "180px",
             maxWidth: "240px",
