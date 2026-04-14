@@ -150,7 +150,7 @@ function TrialExpiredScreen() {
       period: "/mês",
       features: [
         "Tudo do Básico",
-        "Assistente IA (Nando)",
+        "Assistente IA (Roma)",
         "Multi-usuários",
         "Backup prioritário",
         "Suporte dedicado",
