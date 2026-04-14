@@ -33,6 +33,7 @@ const InformedConsent = () => {
     consentText: DEFAULT_CONSENT_TEXT,
   });
   const [patientSignature, setPatientSignature] = useState<string | null>(null);
+  const [showStamp, setShowStamp] = useState(true);
 
   return (
     <div className="space-y-6">
@@ -82,7 +83,11 @@ const InformedConsent = () => {
 
         {/* Preview & Print */}
         <div>
-          <div className="flex justify-end mb-2 no-print">
+          <div className="flex justify-end gap-2 mb-2 no-print">
+            <div className="flex items-center gap-2 mr-auto">
+              <Switch id="stamp-toggle" checked={showStamp} onCheckedChange={setShowStamp} />
+              <Label htmlFor="stamp-toggle" className="text-xs text-muted-foreground flex items-center gap-1"><Stamp className="h-3 w-3" />Carimbo</Label>
+            </div>
             <Button variant="outline" size="sm" onClick={() => window.print()} disabled={!form.patientName}>
               <Printer className="h-4 w-4 mr-2" />Imprimir
             </Button>
@@ -126,10 +131,12 @@ const InformedConsent = () => {
 
                   {/* Professional signature */}
                   <div className="flex-1 text-center">
-                    <div className="mt-12" />
-                    <div className="w-full mx-auto mb-1" style={{ borderTop: "1px solid hsl(var(--foreground))" }} />
-                    <p className="text-sm font-medium">{String(settings.professional_name || "Profissional")}</p>
-                    <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro")}</p>
+                    <ProfessionalStamp
+                      name={String(settings.professional_name || "")}
+                      specialty={String(settings.specialty || "")}
+                      registrationNumber={String(settings.registration_number || "")}
+                      showStamp={showStamp}
+                    />
                   </div>
                 </div>
               </div>
