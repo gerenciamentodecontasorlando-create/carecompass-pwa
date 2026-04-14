@@ -580,6 +580,10 @@ const Prescriptions = () => {
 
         <div>
           <div className="flex justify-end gap-2 mb-2 no-print">
+            <div className="flex items-center gap-2 mr-auto">
+              <Switch id="stamp-toggle-rx" checked={showStamp} onCheckedChange={setShowStamp} />
+              <Label htmlFor="stamp-toggle-rx" className="text-xs text-muted-foreground flex items-center gap-1"><Stamp className="h-3 w-3" />Carimbo</Label>
+            </div>
             <Button variant="outline" size="sm" disabled={!previewPrescription} onClick={() => {
               if (!previewPrescription) return;
               const matchedP = patients.find(p => String(p.name).toLowerCase() === String(previewPrescription.patient_name).toLowerCase());
