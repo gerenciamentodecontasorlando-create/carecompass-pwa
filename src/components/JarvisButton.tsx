@@ -43,8 +43,8 @@ export function JarvisButton() {
     if (isProcessing) return "Processando...";
     if (isSpeaking) return "Falando...";
     if (isListening) return "Ouvindo...";
-    if (isActive) return "Nando ativo — toque para falar";
-    return "Toque para ativar Nando";
+    if (isActive) return "Roma ativo — toque para falar";
+    return "Toque para ativar Roma";
   };
 
   const getStatusIcon = () => {
@@ -76,7 +76,7 @@ export function JarvisButton() {
             )}
             {lastResponse && (
               <div>
-                <p className="text-xs text-muted-foreground font-medium">Nando:</p>
+                <p className="text-xs text-muted-foreground font-medium">Roma:</p>
                 <p className="text-sm text-foreground line-clamp-6">{lastResponse.replace(/[#*_`]/g, "")}</p>
               </div>
             )}
@@ -100,7 +100,7 @@ export function JarvisButton() {
             <button
               onClick={deactivate}
               className="w-10 h-10 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity"
-              title="Desativar Nando"
+              title="Desativar Roma"
             >
               <Power className="h-4 w-4" />
             </button>
@@ -118,7 +118,7 @@ export function JarvisButton() {
                   : "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground"
             )}
-            title={isActive ? "Falar com Nando" : "Ativar Nando"}
+            title={isActive ? "Falar com Roma" : "Ativar Roma"}
           >
             {getStatusIcon()}
           </button>

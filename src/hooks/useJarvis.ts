@@ -69,23 +69,40 @@ function getVoiceByGender(gender: "male" | "female"): SpeechSynthesisVoice | nul
   const ptVoices = voices.filter((v) => v.lang.startsWith("pt"));
   const allPt = ptBrVoices.length > 0 ? ptBrVoices : ptVoices;
 
-  const maleKeywords = ["male", "masculin", "daniel", "ricardo", "marcos", "paulo", "jorge", "pedro", "google brasil", "microsoft daniel"];
-  const femaleKeywords = ["female", "femin", "maria", "luciana", "francisca", "vitoria", "microsoft maria"];
+  // Log available voices for debugging
+  console.log("[Roma] Vozes disponíveis pt:", allPt.map(v => `${v.name} (${v.lang})`));
+
+  const femaleKeywords = ["female", "femin", "maria", "luciana", "francisca", "vitoria", "microsoft maria", "google português do brasil"];
+  const maleKeywords = ["male", "masculin", "daniel", "ricardo", "marcos", "paulo", "jorge", "pedro", "microsoft daniel"];
 
   if (gender === "male") {
+    // First try explicit male voices
     for (const keyword of maleKeywords) {
       const found = allPt.find((v) => v.name.toLowerCase().includes(keyword));
-      if (found) return found;
+      if (found) {
+        console.log("[Roma] Voz masculina encontrada:", found.name);
+        return found;
+      }
     }
+    // Then filter out any voice that matches female keywords
     const nonFemale = allPt.filter((v) => {
       const n = v.name.toLowerCase();
       return !femaleKeywords.some((k) => n.includes(k));
     });
-    return nonFemale[0] || allPt[0] || voices[0] || null;
+    if (nonFemale.length > 0) {
+      console.log("[Roma] Voz não-feminina selecionada:", nonFemale[0].name);
+      return nonFemale[0];
+    }
+    // Last resort: use any pt voice but warn
+    console.warn("[Roma] Nenhuma voz masculina encontrada, usando fallback:", allPt[0]?.name);
+    return allPt[0] || voices[0] || null;
   } else {
     for (const keyword of femaleKeywords) {
       const found = allPt.find((v) => v.name.toLowerCase().includes(keyword));
-      if (found) return found;
+      if (found) {
+        console.log("[Roma] Voz feminina encontrada:", found.name);
+        return found;
+      }
     }
     return allPt[0] || voices[0] || null;
   }
@@ -159,7 +176,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     const greeting = getGreeting();
     const name = professionalName || "Doutor";
     const title = name.toLowerCase().startsWith("dr") ? name : `Dr. ${name}`;
-    const text = `${greeting}, ${title}. Sou o Nando, seu assistente. Vamos começar?`;
+    const text = `${greeting}, ${title}. Sou o Roma, seu assistente. Vamos começar?`;
 
     speak(text, onGreetingDone);
   }, [professionalName, speak, onGreetingDone]);
