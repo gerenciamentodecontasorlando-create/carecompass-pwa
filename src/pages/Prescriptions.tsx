@@ -622,11 +622,14 @@ const Prescriptions = () => {
                     <p className="text-center text-muted-foreground py-20">Selecione ou crie um receituário.</p>
                   )}
                 </div>
-                <div className="text-center space-y-1 mt-12" style={{ borderTop: "2px solid hsl(var(--primary) / 0.25)", paddingTop: "1.5rem" }}>
-                  <div className="w-48 mx-auto mb-2 mt-8" style={{ borderTop: "1px solid hsl(var(--foreground))" }} />
-                  <p className="text-sm font-semibold">{String(settings.professional_name || "Assinatura")}</p>
-                  <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
-                  <p className="text-xs text-muted-foreground mt-3">{String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}</p>
+                <div className="mt-12" style={{ borderTop: "2px solid hsl(var(--primary) / 0.25)", paddingTop: "1.5rem" }}>
+                  <ProfessionalStamp
+                    name={String(settings.professional_name || "")}
+                    specialty={String(settings.specialty || "")}
+                    registrationNumber={String(settings.registration_number || "")}
+                    showStamp={showStamp}
+                  />
+                  <p className="text-xs text-muted-foreground mt-3 text-center">{String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}</p>
                 </div>
               </div>
             </div>
@@ -650,10 +653,13 @@ const Prescriptions = () => {
                     <p className="mt-4">Data: {format(new Date(), "dd/MM/yyyy")}</p>
                   </div>
                 </div>
-                <div className="text-center space-y-1 mt-12" style={{ borderTop: "2px solid hsl(var(--primary) / 0.25)", paddingTop: "1.5rem" }}>
-                  <div className="w-48 mx-auto mb-2 mt-8" style={{ borderTop: "1px solid hsl(var(--foreground))" }} />
-                  <p className="text-sm font-semibold">{String(settings.professional_name || "Assinatura")}</p>
-                  <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
+                <div className="mt-12" style={{ borderTop: "2px solid hsl(var(--primary) / 0.25)", paddingTop: "1.5rem" }}>
+                  <ProfessionalStamp
+                    name={String(settings.professional_name || "")}
+                    specialty={String(settings.specialty || "")}
+                    registrationNumber={String(settings.registration_number || "")}
+                    showStamp={showStamp}
+                  />
                 </div>
               </div>
             </div>
