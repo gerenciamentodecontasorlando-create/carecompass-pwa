@@ -9,13 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, MessageCircle, Receipt, Pencil, Calculator, Sparkles, Baby, Weight } from "lucide-react";
+import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, MessageCircle, Receipt, Pencil, Calculator, Sparkles, Baby, Weight, Stamp } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ReactMarkdown from "react-markdown";
+import { Switch } from "@/components/ui/switch";
+import { ProfessionalStamp } from "@/components/ProfessionalStamp";
 
 type MedEntry = { name: string; posology: string };
 
@@ -223,6 +225,7 @@ const Prescriptions = () => {
   const [aiReviewLoading, setAiReviewLoading] = useState(false);
   const [aiReviewOpen, setAiReviewOpen] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [showStamp, setShowStamp] = useState(true);
   const [receiptAmount, setReceiptAmount] = useState("");
   const [receiptDescription, setReceiptDescription] = useState("");
   const [isPediatric, setIsPediatric] = useState(false);
