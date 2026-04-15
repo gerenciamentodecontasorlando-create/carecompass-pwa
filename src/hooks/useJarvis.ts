@@ -49,6 +49,9 @@ const NAVIGATION_MAP: Record<string, string> = {
   configuracoes: "/configuracoes",
   configurações: "/configuracoes",
   config: "/configuracoes",
+  orcamento: "/orcamento",
+  orçamento: "/orcamento",
+  "orçamento personalizado": "/orcamento",
 };
 
 const NAV_TRIGGERS = [
