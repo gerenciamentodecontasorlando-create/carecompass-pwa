@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, CalendarDays, FileText, FileBadge,
   Smile, DollarSign, Package, Settings, Bot, StickyNote, LogOut,
-  Shield, Upload, ClipboardCheck, Trash2, Crown,
+  Shield, Upload, ClipboardCheck, Trash2, Crown, Calculator,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,7 @@ const items = [
   { title: "Receituário", url: "/receituario", icon: FileText },
   { title: "Atestados", url: "/atestados", icon: FileBadge },
   { title: "Consentimento (TCLE)", url: "/consentimento", icon: ClipboardCheck },
+  { title: "Orçamento", url: "/orcamento", icon: Calculator },
   { title: "Odontograma (Odonto)", url: "/odontograma", icon: Smile },
   { title: "Assistente IA", url: "/assistente-ia", icon: Bot },
   { title: "Notas", url: "/notas", icon: StickyNote },
