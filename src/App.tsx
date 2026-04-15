@@ -23,6 +23,7 @@ import NotePad from "./pages/NotePad";
 import AuditLog from "./pages/AuditLog";
 import DataImport from "./pages/DataImport";
 import InformedConsent from "./pages/InformedConsent";
+import Orcamento from "./pages/Orcamento";
 import Trash from "./pages/Trash";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
@@ -67,6 +68,7 @@ function AppRoutes() {
             <Route path="/auditoria" element={<AuditLog />} />
             <Route path="/importar-dados" element={<DataImport />} />
             <Route path="/consentimento" element={<InformedConsent />} />
+            <Route path="/orcamento" element={<Orcamento />} />
             <Route path="/lixeira" element={<Trash />} />
             <Route path="/admin" element={<AdminPanel />} />
           </Route>
