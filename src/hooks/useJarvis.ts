@@ -152,11 +152,14 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "pt-BR";
     utterance.rate = vs.speed;
-    utterance.pitch = vs.pitch;
     utterance.volume = vs.volume;
     
-    const voice = getVoiceByGender(vs.voiceGender);
+    const { voice, isForcedMale } = getVoiceByGender(vs.voiceGender);
     if (voice) utterance.voice = voice;
+    // When no native male voice exists, lower pitch significantly to simulate male timbre
+    if (isForcedMale) {
+      utterance.pitch = Math.min(vs.pitch, 0.4);
+    }
 
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => {
