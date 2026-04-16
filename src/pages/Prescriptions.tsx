@@ -261,6 +261,7 @@ const Prescriptions = () => {
     try {
       const { data, error } = await supabase.functions.invoke("ai-assistant", {
         body: {
+          language: localStorage.getItem("btx-language") || "pt",
           type: "prescription",
           messages: [{
             role: "user",
@@ -348,6 +349,7 @@ const Prescriptions = () => {
       }
       const { data, error } = await supabase.functions.invoke("review-prescription", {
         body: {
+          language: localStorage.getItem("btx-language") || "pt",
           medications: form.medications,
           allergies,
           medicalHistory,

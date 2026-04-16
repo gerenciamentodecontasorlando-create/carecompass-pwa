@@ -9,7 +9,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, type, patientContext, imageUrl } = await req.json();
+    const { messages, type, patientContext, imageUrl, language } = await req.json();
+    const lang = language === "es" ? "es" : "pt";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -89,59 +90,35 @@ serve(async (req) => {
       ? "\n\nIMPORTANTE: O profissional anexou uma imagem (radiografia/exame). Analise a imagem detalhadamente, descreva os achados radiográficos/clínicos visíveis, sugira diagnósticos diferenciais e recomende condutas."
       : "";
 
+    const langInstruction = lang === "es"
+      ? "Responda en español."
+      : "Responda em português brasileiro.";
+
     const systemPrompts: Record<string, string> = {
-      prescription: `Você é um assistente clínico especializado em prescrição medicamentosa, atendendo profissionais de diversas áreas da saúde (medicina, odontologia, fisioterapia, nutrição, estética, psicologia, etc.).
-Ajude o profissional a:
-- Sugerir medicamentos adequados para cada situação clínica
-- Informar posologia, dosagem e duração do tratamento
-- Alertar sobre contraindicações e interações medicamentosas
-- Considerar alergias do paciente quando informadas
-- Sugerir alternativas quando necessário
-${contextBlock ? "\nVocê tem acesso aos dados do paciente abaixo. USE-OS para personalizar suas sugestões, verificar alergias e interações." : ""}
-IMPORTANTE: Sempre lembre que suas sugestões devem ser validadas pelo profissional. 
-Formate as prescrições de forma clara e organizada.
-Responda em português brasileiro.${contextBlock}${imageInstruction}`,
+      prescription: `Você é um assistente clínico especializado em prescrição medicamentosa, atendendo profissionais de diversas áreas da saúde.
+Ajude o profissional a sugerir medicamentos, posologia, alertar sobre contraindicações e interações.
+${contextBlock ? "\nVocê tem acesso aos dados do paciente abaixo. USE-OS para personalizar suas sugestões." : ""}
+IMPORTANTE: Sempre lembre que suas sugestões devem ser validadas pelo profissional.
+${langInstruction}${contextBlock}${imageInstruction}`,
       
-      diagnosis: `Você é um assistente clínico especializado em diagnóstico e planejamento de tratamento, atendendo profissionais de diversas áreas da saúde.
-Ajude o profissional a:
-- Analisar sinais, sintomas, exames e IMAGENS RADIOGRÁFICAS quando fornecidas
-- Sugerir diagnósticos diferenciais com raciocínio clínico
-- Recomendar exames complementares quando necessário
-- Classificar a urgência do caso
-- Sugerir plano de tratamento baseado no diagnóstico
-- Considerar o histórico completo do paciente (alergias, medicamentos, comorbidades)
-${contextBlock ? "\nVocê tem acesso à ficha clínica, evoluções, exames e prescrições do paciente abaixo. ANALISE-OS detalhadamente para fornecer recomendações personalizadas." : ""}
-IMPORTANTE: Sempre lembre que suas sugestões são auxiliares e a decisão final é do profissional.
-Responda em português brasileiro.${contextBlock}${imageInstruction}`,
+      diagnosis: `Você é um assistente clínico especializado em diagnóstico e planejamento de tratamento.
+Ajude com análise de sinais, sintomas, exames e imagens. Sugira diagnósticos diferenciais e planos de tratamento.
+${contextBlock ? "\nVocê tem acesso à ficha clínica do paciente abaixo. ANALISE-OS detalhadamente." : ""}
+IMPORTANTE: Suas sugestões são auxiliares e a decisão final é do profissional.
+${langInstruction}${contextBlock}${imageInstruction}`,
 
       clinic: `Você é um consultor especializado em gestão de clínicas e consultórios de saúde.
-Ajude o profissional com:
-- Análise financeira DETALHADA (receitas, despesas, lucratividade, categorias de gasto, tendências)
-- Organização e otimização de agenda (identificar horários vagos, conflitos, sugerir redistribuição)
-- Localização de documentos (atestados, receitas, fichas de pacientes)
-- Revisão de prontuários e fichas clínicas
-- Controle de gastos com opinião e sugestões de economia
-- Estratégias para aumentar receita e reduzir custos
-- Gestão de estoque e materiais
-- Indicadores de desempenho da clínica
-${contextBlock ? "\nVocê tem acesso aos dados financeiros, agenda, atestados e operacionais da clínica abaixo. ANALISE-OS DETALHADAMENTE para fornecer recomendações específicas e acionáveis. Quando perguntarem sobre agenda, analise os compromissos e sugira otimizações. Quando perguntarem sobre gastos, detalhe cada transação relevante." : ""}
-Responda de forma prática e objetiva em português brasileiro.${contextBlock}`,
+Ajude com análise financeira, organização de agenda, controle de estoque e indicadores de desempenho.
+${contextBlock ? "\nVocê tem acesso aos dados da clínica abaixo. ANALISE-OS DETALHADAMENTE." : ""}
+${langInstruction}${contextBlock}`,
 
       jarvis: `Você é ROMA, um assistente virtual inteligente para clínicas e consultórios de saúde.
 Seu tom deve ser educado, profissional, eficiente e amigável.
-Você atende profissionais de DIVERSAS áreas da saúde: medicina, odontologia, fisioterapia, nutrição, estética, psicologia, fonoaudiologia e outras.
-Você ajuda o profissional com:
-- Dúvidas clínicas da área de atuação (diagnósticos, tratamentos, medicamentos)
-- Análise de exames, radiografias e achados clínicos quando imagens são fornecidas
-- Sugestões de planos de tratamento personalizados
-- Diagnóstico diferencial baseado em sinais e sintomas
-- Orientações sobre materiais e insumos
-- Gestão financeira e organização da clínica
-- Navegação no sistema (se pedirem, oriente sobre as seções disponíveis: Dashboard, Pacientes, Agenda, Receituário, Atestados, Odontograma, Notas, Financeiro, Materiais, Configurações)
-${contextBlock ? "\nVocê tem acesso aos dados do paciente/clínica abaixo. Use-os para dar respostas mais precisas e contextualizadas." : ""}
+Você ajuda com dúvidas clínicas, análise de exames, gestão da clínica e navegação no sistema.
+${contextBlock ? "\nVocê tem acesso aos dados do paciente/clínica abaixo." : ""}
 Responda de forma CONCISA e DIRETA, pois suas respostas serão lidas em voz alta.
 Limite respostas a no máximo 3-4 frases quando possível.
-Responda em português brasileiro.
+${langInstruction}
 IMPORTANTE: Suas sugestões clínicas são auxiliares. A decisão final é sempre do profissional.${contextBlock}${imageInstruction}`,
     };
 

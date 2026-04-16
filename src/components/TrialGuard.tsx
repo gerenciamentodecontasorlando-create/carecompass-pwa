@@ -1,5 +1,6 @@
 import { useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, Clock, Crown, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const WHATSAPP_NUMBER = "5591999873835";
 
 export function TrialGuard({ children }: { children: ReactNode }) {
   const { clinicId, user } = useAuth();
+  const { t } = useTranslation();
   const [trialInfo, setTrialInfo] = useState<TrialInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
@@ -64,7 +66,7 @@ export function TrialGuard({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Verificando assinatura...</div>
+        <div className="animate-pulse text-muted-foreground">{t("common.loading")}</div>
       </div>
     );
   }
@@ -82,7 +84,12 @@ export function TrialGuard({ children }: { children: ReactNode }) {
 }
 
 function TrialBadge({ daysLeft }: { daysLeft: number }) {
+  const { t } = useTranslation();
   const urgent = daysLeft <= 3;
+
+  const label = urgent
+    ? t("trial.lastDays", { days: daysLeft })
+    : t("trial.freeDays", { days: daysLeft });
 
   return (
     <div
@@ -99,44 +106,36 @@ function TrialBadge({ daysLeft }: { daysLeft: number }) {
       }
     >
       <Clock className="h-3.5 w-3.5" />
-      <span>
-        {daysLeft === 0
-          ? "Último dia grátis!"
-          : `Grátis por ${daysLeft} dia${daysLeft > 1 ? "s" : ""}`}
-      </span>
+      <span>{label}</span>
     </div>
   );
 }
 
 function TrialExpiredScreen() {
+  const { t } = useTranslation();
+
   const plans = [
     {
-      name: "Básico",
+      name: t("trial.basic"),
       price: "R$ 59",
       period: "/mês",
       features: [
-        "Pacientes ilimitados",
-        "Prontuário completo",
-        "Receituário",
-        "Atestados",
-        "Agenda",
-        "Odontograma",
-        "Financeiro",
+        t("trial.features.basicPatients"),
+        t("trial.features.basicStorage"),
+        t("trial.features.basicModules"),
+        t("trial.features.basicSupport"),
       ],
       highlight: false,
     },
     {
-      name: "Enterprise",
+      name: t("trial.enterprise"),
       price: "R$ 119",
       period: "/mês",
       features: [
-        "Tudo do Básico",
-        "Assistente IA (Roma)",
-        "Multi-usuários",
-        "Backup prioritário",
-        "Suporte dedicado",
-        "Relatórios avançados",
-        "Exportação de dados",
+        t("trial.features.enterprisePatients"),
+        t("trial.features.enterpriseStorage"),
+        t("trial.features.enterpriseAI"),
+        t("trial.features.enterprisePriority"),
       ],
       highlight: true,
     },
@@ -149,11 +148,8 @@ function TrialExpiredScreen() {
           <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
             <Shield className="h-8 w-8 text-destructive" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Período gratuito encerrado</h1>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Seus {TRIAL_DAYS} dias de teste terminaram. Escolha um plano para continuar usando o Btx CliniCos
-            e manter todos os seus dados seguros.
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">{t("trial.expired")}</h1>
+          <p className="text-muted-foreground max-w-md mx-auto">{t("trial.expiredDesc")}</p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 max-w-2xl mx-auto">
@@ -168,7 +164,7 @@ function TrialExpiredScreen() {
             >
               {plan.highlight && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-                  <Crown className="h-3 w-3" /> Mais popular
+                  <Crown className="h-3 w-3" /> Popular
                 </div>
               )}
               <CardHeader className="text-center pb-2">
@@ -193,22 +189,15 @@ function TrialExpiredScreen() {
                   rel="noopener noreferrer"
                   className="w-full block"
                 >
-                  <Button
-                    className="w-full"
-                    variant={plan.highlight ? "default" : "outline"}
-                  >
+                  <Button className="w-full" variant={plan.highlight ? "default" : "outline"}>
                     <MessageCircle className="h-4 w-4 mr-2" />
-                    Assinar via WhatsApp
+                    {t("trial.hireWhatsApp")}
                   </Button>
                 </a>
               </CardContent>
             </Card>
           ))}
         </div>
-
-        <p className="text-center text-xs text-muted-foreground">
-          Seus dados estão seguros e serão mantidos. Ao assinar, você terá acesso imediato.
-        </p>
       </div>
     </div>
   );

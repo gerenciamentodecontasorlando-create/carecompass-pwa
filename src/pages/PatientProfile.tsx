@@ -383,6 +383,7 @@ const PatientProfile = () => {
       const category = getFileCategory(description);
       const { data, error } = await supabase.functions.invoke("analyze-exam", {
         body: {
+          language: localStorage.getItem("btx-language") || "pt",
           description,
           fileName,
           category: FILE_CATEGORIES.find((c) => c.value === category)?.label || category,

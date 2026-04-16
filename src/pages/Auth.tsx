@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Lock, UserPlus, LogIn, Shield } from "lucide-react";
+import { Lock, UserPlus, LogIn, Shield, Globe } from "lucide-react";
 
 const PRIVACY_POLICY = `POLÍTICA DE PRIVACIDADE — Btx CliniCos
 
@@ -70,6 +71,7 @@ O Btx CliniCos não se responsabiliza por:
 Todo o software, marca, interface e algoritmos são protegidos por direitos autorais. Registro INPI em andamento.`;
 
 const Auth = () => {
+  const { t, i18n } = useTranslation();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -78,13 +80,20 @@ const Auth = () => {
   const [lgpdConsent, setLgpdConsent] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const currentLang = i18n.language?.startsWith("es") ? "es" : "pt";
+
+  const toggleLanguage = () => {
+    const newLang = currentLang === "pt" ? "es" : "pt";
+    i18n.changeLanguage(newLang);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast.error(error.message === "Invalid login credentials"
-        ? "Email ou senha incorretos"
+        ? t("auth.errors.wrongCredentials")
         : error.message);
     }
     setLoading(false);
@@ -92,9 +101,9 @@ const Auth = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim()) { toast.error("Nome é obrigatório"); return; }
-    if (password.length < 6) { toast.error("Senha deve ter no mínimo 6 caracteres"); return; }
-    if (!lgpdConsent) { toast.error("Você precisa aceitar os Termos de Uso e Política de Privacidade"); return; }
+    if (!fullName.trim()) { toast.error(t("auth.errors.nameRequired")); return; }
+    if (password.length < 6) { toast.error(t("auth.errors.shortPassword")); return; }
+    if (!lgpdConsent) { toast.error(t("auth.errors.acceptTerms")); return; }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
@@ -107,7 +116,7 @@ const Auth = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Conta criada! Verifique seu email para confirmar o cadastro.");
+      toast.success(t("auth.accountCreated"));
       setMode("login");
     }
     setLoading(false);
@@ -115,15 +124,24 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      {/* Language Toggle - Top Right */}
+      <button
+        onClick={toggleLanguage}
+        className="fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-sm font-medium transition-all hover:scale-105 shadow-sm border border-border"
+      >
+        <Globe className="h-4 w-4" />
+        <span>{currentLang === "pt" ? "🇧🇷 PT" : "🇪🇸 ES"}</span>
+      </button>
+
       <div className="w-full max-w-md space-y-6">
         <div className="flex flex-col items-center gap-3">
           <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
             <Lock className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold">Btx CliniCos</h1>
-          <p className="text-xs text-muted-foreground mb-1">Sistema de gestão para clínicas e consultórios</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("auth.title")}</p>
           <p className="text-sm text-muted-foreground">
-            {mode === "login" ? "Acesse sua conta" : "Crie sua conta e clínica"}
+            {mode === "login" ? t("auth.login") : t("auth.signup")}
           </p>
         </div>
 
@@ -133,73 +151,46 @@ const Auth = () => {
               {mode === "signup" && (
                 <>
                   <div className="grid gap-2">
-                    <Label>Nome completo *</Label>
-                    <Input
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Dr(a). João Silva"
-                      required
-                    />
+                    <Label>{t("auth.fullName")}</Label>
+                    <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("auth.fullNamePlaceholder")} required />
                   </div>
                   <div className="grid gap-2">
-                    <Label>Nome da clínica / consultório</Label>
-                    <Input
-                      value={clinicName}
-                      onChange={(e) => setClinicName(e.target.value)}
-                      placeholder="Clínica Saúde Total"
-                    />
+                    <Label>{t("auth.clinicName")}</Label>
+                    <Input value={clinicName} onChange={(e) => setClinicName(e.target.value)} placeholder={t("auth.clinicNamePlaceholder")} />
                   </div>
                 </>
               )}
               <div className="grid gap-2">
-                <Label>Email *</Label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  required
-                />
+                <Label>{t("auth.email")}</Label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("auth.emailPlaceholder")} required />
               </div>
               <div className="grid gap-2">
-                <Label>Senha *</Label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                />
+                <Label>{t("auth.password")}</Label>
+                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.passwordPlaceholder")} required minLength={6} />
               </div>
 
               {mode === "signup" && (
                 <div className="space-y-3">
                   <div className="flex items-start space-x-2">
-                    <Checkbox
-                      id="lgpd-consent"
-                      checked={lgpdConsent}
-                      onCheckedChange={(checked) => setLgpdConsent(checked === true)}
-                      className="mt-1"
-                    />
+                    <Checkbox id="lgpd-consent" checked={lgpdConsent} onCheckedChange={(checked) => setLgpdConsent(checked === true)} className="mt-1" />
                     <label htmlFor="lgpd-consent" className="text-xs text-muted-foreground leading-relaxed">
-                      Li e aceito os{" "}
+                      {t("auth.lgpdAccept")}{" "}
                       <Dialog>
                         <DialogTrigger asChild>
-                          <button type="button" className="text-primary underline hover:no-underline">Termos de Uso</button>
+                          <button type="button" className="text-primary underline hover:no-underline">{t("auth.termsOfUse")}</button>
                         </DialogTrigger>
                         <DialogContent className="max-w-lg">
-                          <DialogHeader><DialogTitle>Termos de Uso</DialogTitle></DialogHeader>
+                          <DialogHeader><DialogTitle>{t("auth.termsOfUse")}</DialogTitle></DialogHeader>
                           <ScrollArea className="h-[400px] pr-4"><pre className="whitespace-pre-wrap text-sm">{TERMS_OF_USE}</pre></ScrollArea>
                         </DialogContent>
                       </Dialog>
-                      {" "}e a{" "}
+                      {" "}{t("auth.and")}{" "}
                       <Dialog>
                         <DialogTrigger asChild>
-                          <button type="button" className="text-primary underline hover:no-underline">Política de Privacidade (LGPD)</button>
+                          <button type="button" className="text-primary underline hover:no-underline">{t("auth.privacyPolicy")}</button>
                         </DialogTrigger>
                         <DialogContent className="max-w-lg">
-                          <DialogHeader><DialogTitle>Política de Privacidade</DialogTitle></DialogHeader>
+                          <DialogHeader><DialogTitle>{t("auth.privacyPolicy")}</DialogTitle></DialogHeader>
                           <ScrollArea className="h-[400px] pr-4"><pre className="whitespace-pre-wrap text-sm">{PRIVACY_POLICY}</pre></ScrollArea>
                         </DialogContent>
                       </Dialog>
@@ -207,29 +198,23 @@ const Auth = () => {
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Shield className="h-3.5 w-3.5" />
-                    <span>Seus dados são protegidos pela LGPD (Lei nº 13.709/2018)</span>
+                    <span>{t("auth.lgpdShield")}</span>
                   </div>
                 </div>
               )}
 
               <Button type="submit" className="w-full h-12" disabled={loading || (mode === "signup" && !lgpdConsent)}>
                 {mode === "login" ? (
-                  <><LogIn className="h-4 w-4 mr-2" />Entrar</>
+                  <><LogIn className="h-4 w-4 mr-2" />{t("auth.loginBtn")}</>
                 ) : (
-                  <><UserPlus className="h-4 w-4 mr-2" />Criar Conta</>
+                  <><UserPlus className="h-4 w-4 mr-2" />{t("auth.signupBtn")}</>
                 )}
               </Button>
             </form>
 
             <div className="mt-4 text-center">
-              <button
-                type="button"
-                className="text-sm text-primary hover:underline"
-                onClick={() => setMode(mode === "login" ? "signup" : "login")}
-              >
-                {mode === "login"
-                  ? "Não tem conta? Cadastre-se"
-                  : "Já tem conta? Faça login"}
+              <button type="button" className="text-sm text-primary hover:underline" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
+                {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
               </button>
             </div>
           </CardContent>
@@ -237,7 +222,7 @@ const Auth = () => {
 
         <p className="text-center text-xs text-muted-foreground">
           <Shield className="h-3 w-3 inline mr-1" />
-          Protegido pela LGPD — Lei Geral de Proteção de Dados
+          {t("auth.lgpdProtected")}
         </p>
       </div>
     </div>

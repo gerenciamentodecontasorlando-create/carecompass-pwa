@@ -6,33 +6,16 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const items = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Pacientes", url: "/pacientes", icon: Users },
-  { title: "Agenda", url: "/agenda", icon: CalendarDays },
-  { title: "Receituário", url: "/receituario", icon: FileText },
-  { title: "Atestados", url: "/atestados", icon: FileBadge },
-  { title: "Consentimento (TCLE)", url: "/consentimento", icon: ClipboardCheck },
-  { title: "Orçamento", url: "/orcamento", icon: Calculator },
-  { title: "Odontograma (Odonto)", url: "/odontograma", icon: Smile },
-  { title: "Assistente IA", url: "/assistente-ia", icon: Bot },
-  { title: "Notas", url: "/notas", icon: StickyNote },
-  { title: "Financeiro", url: "/financeiro", icon: DollarSign },
-  { title: "Materiais", url: "/materiais", icon: Package },
-  { title: "Auditoria", url: "/auditoria", icon: Shield },
-  { title: "Lixeira", url: "/lixeira", icon: Trash2 },
-  { title: "Importar Dados", url: "/importar-dados", icon: Upload },
-  { title: "Configurações", url: "/configuracoes", icon: Settings },
-];
-
 export function AppSidebar() {
   const { signOut, user } = useAuth();
+  const { t } = useTranslation();
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
 
   useEffect(() => {
@@ -42,8 +25,27 @@ export function AppSidebar() {
     });
   }, [user]);
 
+  const items = [
+    { title: t("menu.dashboard"), url: "/", icon: LayoutDashboard },
+    { title: t("menu.patients"), url: "/pacientes", icon: Users },
+    { title: t("menu.schedule"), url: "/agenda", icon: CalendarDays },
+    { title: t("menu.prescriptions"), url: "/receituario", icon: FileText },
+    { title: t("menu.certificates"), url: "/atestados", icon: FileBadge },
+    { title: t("menu.consent"), url: "/consentimento", icon: ClipboardCheck },
+    { title: t("menu.budget"), url: "/orcamento", icon: Calculator },
+    { title: t("menu.odontogram"), url: "/odontograma", icon: Smile },
+    { title: t("menu.aiAssistant"), url: "/assistente-ia", icon: Bot },
+    { title: t("menu.notes"), url: "/notas", icon: StickyNote },
+    { title: t("menu.financial"), url: "/financeiro", icon: DollarSign },
+    { title: t("menu.materials"), url: "/materiais", icon: Package },
+    { title: t("menu.audit"), url: "/auditoria", icon: Shield },
+    { title: t("menu.trash"), url: "/lixeira", icon: Trash2 },
+    { title: t("menu.importData"), url: "/importar-dados", icon: Upload },
+    { title: t("menu.settings"), url: "/configuracoes", icon: Settings },
+  ];
+
   const visibleItems = isPlatformAdmin
-    ? [...items, { title: "Painel Admin", url: "/admin", icon: Crown }]
+    ? [...items, { title: t("menu.adminPanel"), url: "/admin", icon: Crown }]
     : items;
 
   return (
@@ -58,11 +60,11 @@ export function AppSidebar() {
           </span>
         </div>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("menu.label")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink
                       to={item.url}
@@ -85,12 +87,12 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  tooltip="Sair"
+                  tooltip={t("menu.logout")}
                   onClick={signOut}
                   className="flex items-center gap-3 text-destructive hover:text-destructive"
                 >
                   <LogOut className="h-4 w-4 shrink-0" />
-                  <span>Sair</span>
+                  <span>{t("menu.logout")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

@@ -9,11 +9,16 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { medications, allergies, medicalHistory, currentMedications, patientName } = await req.json();
+    const { medications, allergies, medicalHistory, currentMedications, patientName, language } = await req.json();
+    const lang = language === "es" ? "es" : "pt";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Você é um farmacêutico clínico especialista em revisão de prescrições médicas e odontológicas.
+    const langInstruction = lang === "es" ? "Responda en español." : "Responda em português do Brasil.";
+    const systemPrompt = `Você é um farmacêutico clínico especialista em revisão de prescrições.
+Identifique CONTRAINDICAÇÕES, INTERAÇÕES MEDICAMENTOSAS e RISCOS.
+Classifique: 🔴 GRAVE, 🟡 MODERADO, 🟢 LEVE. Sugira alternativas quando houver contraindicação.
+${langInstruction}`;
 Sua função é revisar a prescrição abaixo e identificar CONTRAINDICAÇÕES, INTERAÇÕES MEDICAMENTOSAS e RISCOS baseados nas condições do paciente.
 
 REGRAS:
