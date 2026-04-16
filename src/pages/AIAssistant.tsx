@@ -222,6 +222,7 @@ const AIAssistant = () => {
           type,
           patientContext: Object.keys(contextPayload).length > 0 ? contextPayload : undefined,
           imageUrl: sentImageUrl || undefined,
+          language: localStorage.getItem("btx-language") || "pt",
         }),
       });
 
