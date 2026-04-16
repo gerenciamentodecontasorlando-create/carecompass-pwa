@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
 
@@ -139,6 +140,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   const navigate = useNavigate();
   const hasGreetedRef = useRef(false);
   const voiceSettingsRef = useRef<JarvisVoiceSettings>(voiceSettings || DEFAULT_VOICE);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Keep ref in sync with latest props
   useEffect(() => {
@@ -147,35 +149,79 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     }
   }, [voiceSettings]);
 
-  const speak = useCallback((text: string, onEnd?: () => void) => {
-    window.speechSynthesis.cancel();
-    
-    const vs = voiceSettingsRef.current;
+  const speakWithElevenLabs = useCallback(async (text: string, speed: number, onEnd?: () => void) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts-speak`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text, speed }),
+        }
+      );
 
+      if (!response.ok) throw new Error("TTS failed");
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.onplay = () => setIsSpeaking(true);
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
+        onEnd?.();
+      };
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
+        onEnd?.();
+      };
+
+      audioRef.current = audio;
+      await audio.play();
+    } catch (e) {
+      console.warn("[Roma] ElevenLabs TTS falhou, usando voz do navegador:", e);
+      speakWithBrowser(text, onEnd);
+    }
+  }, []);
+
+  const speakWithBrowser = useCallback((text: string, onEnd?: () => void) => {
+    window.speechSynthesis.cancel();
+    const vs = voiceSettingsRef.current;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "pt-BR";
     utterance.rate = vs.speed;
     utterance.volume = vs.volume;
+    utterance.pitch = vs.pitch;
     
-    const { voice, isForcedMale } = getVoiceByGender(vs.voiceGender);
+    const { voice } = getVoiceByGender(vs.voiceGender);
     if (voice) utterance.voice = voice;
-    // When no native male voice exists, lower pitch significantly to simulate male timbre
-    if (isForcedMale) {
-      utterance.pitch = Math.min(vs.pitch, 0.4);
-    }
 
     utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      onEnd?.();
-    };
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      onEnd?.();
-    };
-
+    utterance.onend = () => { setIsSpeaking(false); onEnd?.(); };
+    utterance.onerror = () => { setIsSpeaking(false); onEnd?.(); };
     window.speechSynthesis.speak(utterance);
   }, []);
+
+  const speak = useCallback((text: string, onEnd?: () => void) => {
+    window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    
+    const vs = voiceSettingsRef.current;
+    
+    if (vs.voiceGender === "male") {
+      speakWithElevenLabs(text, vs.speed, onEnd);
+    } else {
+      speakWithBrowser(text, onEnd);
+    }
+  }, [speakWithElevenLabs, speakWithBrowser]);
 
   const greet = useCallback(() => {
     if (hasGreetedRef.current) return;
@@ -353,6 +399,10 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   const deactivate = useCallback(() => {
     stopListening();
     window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
     setIsActive(false);
     setIsSpeaking(false);
     hasGreetedRef.current = false;
