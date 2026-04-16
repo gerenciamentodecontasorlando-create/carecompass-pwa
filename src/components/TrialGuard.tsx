@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Shield, Clock, Crown, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 
 interface TrialInfo {
   trialEndsAt: string | null;
@@ -13,6 +12,9 @@ interface TrialInfo {
   isExpired: boolean;
   isActive: boolean;
 }
+
+const TRIAL_DAYS = 14;
+const WHATSAPP_NUMBER = "5591999873835";
 
 export function TrialGuard({ children }: { children: ReactNode }) {
   const { clinicId, user } = useAuth();
@@ -24,7 +26,6 @@ export function TrialGuard({ children }: { children: ReactNode }) {
     if (!clinicId || !user) return;
 
     const fetchTrial = async () => {
-      // Check if user is platform admin first
       const { data: adminCheck } = await supabase.rpc("is_platform_admin", { _user_id: user.id });
       if (adminCheck === true) {
         setIsPlatformAdmin(true);
@@ -68,61 +69,41 @@ export function TrialGuard({ children }: { children: ReactNode }) {
     );
   }
 
-  // Platform admins always have full access
-  if (isPlatformAdmin) {
-    return <>{children}</>;
-  }
+  if (isPlatformAdmin) return <>{children}</>;
+  if (trialInfo && trialInfo.plan !== "free") return <>{children}</>;
+  if (trialInfo?.isExpired) return <TrialExpiredScreen />;
 
-  // Paid plans always have access
-  if (trialInfo && trialInfo.plan !== "free") {
-    return <>{children}</>;
-  }
-
-  // Trial expired - block access
-  if (trialInfo?.isExpired) {
-    return <TrialExpiredScreen />;
-  }
-
-  // Trial active - show banner + allow access
   return (
     <>
-      {trialInfo && trialInfo.daysLeft <= 15 && (
-        <TrialBanner daysLeft={trialInfo.daysLeft} />
-      )}
+      {trialInfo && <TrialBadge daysLeft={trialInfo.daysLeft} />}
       {children}
     </>
   );
 }
 
-function TrialBanner({ daysLeft }: { daysLeft: number }) {
-  const progress = ((15 - daysLeft) / 15) * 100;
+function TrialBadge({ daysLeft }: { daysLeft: number }) {
   const urgent = daysLeft <= 3;
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 z-[60] px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2 no-print ${
+      className={`fixed top-3 right-3 z-[60] px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 text-xs font-semibold no-print cursor-pointer transition-all hover:scale-105 ${
         urgent
-          ? "bg-destructive text-destructive-foreground"
-          : "bg-primary/10 text-primary border-b border-primary/20"
+          ? "bg-destructive text-destructive-foreground animate-pulse"
+          : "bg-primary text-primary-foreground"
       }`}
+      onClick={() =>
+        window.open(
+          `https://wa.me/${WHATSAPP_NUMBER}?text=Quero%20assinar%20o%20Btx%20CliniCos`,
+          "_blank"
+        )
+      }
     >
-      <Clock className="h-4 w-4" />
+      <Clock className="h-3.5 w-3.5" />
       <span>
         {daysLeft === 0
-          ? "Último dia do período gratuito!"
-          : `${daysLeft} dia${daysLeft > 1 ? "s" : ""} restante${daysLeft > 1 ? "s" : ""} do teste gratuito`}
+          ? "Último dia grátis!"
+          : `Grátis por ${daysLeft} dia${daysLeft > 1 ? "s" : ""}`}
       </span>
-      <div className="w-20 hidden sm:block">
-        <Progress value={progress} className="h-1.5" />
-      </div>
-      <a
-        href="https://wa.me/5591999873835?text=Quero%20assinar%20o%20Btx%20CliniCos"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="ml-2 underline font-bold"
-      >
-        Assinar agora
-      </a>
     </div>
   );
 }
@@ -170,7 +151,7 @@ function TrialExpiredScreen() {
           </div>
           <h1 className="text-3xl font-bold text-foreground">Período gratuito encerrado</h1>
           <p className="text-muted-foreground max-w-md mx-auto">
-            Seus 15 dias de teste terminaram. Escolha um plano para continuar usando o Btx CliniCos
+            Seus {TRIAL_DAYS} dias de teste terminaram. Escolha um plano para continuar usando o Btx CliniCos
             e manter todos os seus dados seguros.
           </p>
         </div>
@@ -207,7 +188,7 @@ function TrialExpiredScreen() {
                   ))}
                 </ul>
                 <a
-                  href={`https://wa.me/5591999873835?text=Quero%20assinar%20o%20plano%20${plan.name}%20do%20Btx%20CliniCos`}
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=Quero%20assinar%20o%20plano%20${plan.name}%20do%20Btx%20CliniCos`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full block"
