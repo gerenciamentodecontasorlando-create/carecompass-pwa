@@ -9,15 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, MessageCircle, Pencil, Calculator, Sparkles, Baby, Weight, Stamp } from "lucide-react";
+import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, MessageCircle, Pencil, Calculator, Sparkles, Baby, Weight } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ReactMarkdown from "react-markdown";
-import { Switch } from "@/components/ui/switch";
-import { ProfessionalStamp } from "@/components/ProfessionalStamp";
 
 type MedEntry = { name: string; posology: string };
 
@@ -224,7 +222,7 @@ const Prescriptions = () => {
   const [aiReview, setAiReview] = useState<string | null>(null);
   const [aiReviewLoading, setAiReviewLoading] = useState(false);
   const [aiReviewOpen, setAiReviewOpen] = useState(false);
-  const [showStamp, setShowStamp] = useState(true);
+  
   const [isPediatric, setIsPediatric] = useState(false);
   const [childWeight, setChildWeight] = useState("");
   const [childAge, setChildAge] = useState("");
@@ -551,10 +549,6 @@ const Prescriptions = () => {
 
         <div>
           <div className="flex justify-end gap-2 mb-2 no-print">
-            <div className="flex items-center gap-2 mr-auto">
-              <Switch id="stamp-toggle-rx" checked={showStamp} onCheckedChange={setShowStamp} />
-              <Label htmlFor="stamp-toggle-rx" className="text-xs text-muted-foreground flex items-center gap-1"><Stamp className="h-3 w-3" />Carimbo</Label>
-            </div>
             <Button variant="outline" size="sm" disabled={!previewPrescription} onClick={() => {
               if (!previewPrescription) return;
               const matchedP = patients.find(p => String(p.name).toLowerCase() === String(previewPrescription.patient_name).toLowerCase());
@@ -597,12 +591,11 @@ const Prescriptions = () => {
                   )}
                 </div>
                 <div className="mt-12" style={{ borderTop: "2px solid hsl(var(--primary) / 0.25)", paddingTop: "1.5rem" }}>
-                  <ProfessionalStamp
-                    name={String(settings.professional_name || "")}
-                    specialty={String(settings.specialty || "")}
-                    registrationNumber={String(settings.registration_number || "")}
-                    showStamp={showStamp}
-                  />
+                  <div className="text-center">
+                    <div className="w-48 mx-auto mb-2" style={{ borderTop: "1px solid hsl(var(--foreground))" }} />
+                    <p className="text-sm font-semibold text-primary">{String(settings.professional_name || "Assinatura")}</p>
+                    <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-3 text-center">{String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}</p>
                 </div>
               </div>
