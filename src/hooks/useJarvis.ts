@@ -399,6 +399,10 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   const deactivate = useCallback(() => {
     stopListening();
     window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
     setIsActive(false);
     setIsSpeaking(false);
     hasGreetedRef.current = false;
