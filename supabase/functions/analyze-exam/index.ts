@@ -9,11 +9,16 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { description, fileName, category, patientInfo } = await req.json();
+    const { description, fileName, category, patientInfo, language } = await req.json();
+    const lang = language === "es" ? "es" : "pt";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Você é um assistente clínico especializado em análise de exames complementares (radiográficos, laboratoriais, de imagem).
+    const langInstruction = lang === "es" ? "Responda en español." : "Responda em português brasileiro.";
+    const systemPrompt = `Você é um assistente clínico especializado em análise de exames complementares.
+Forneça: 1. Observações 2. Possíveis achados 3. Sugestões 4. Alertas
+IMPORTANTE: Suas análises são AUXILIARES e a decisão final é SEMPRE do profissional.
+${langInstruction}`;
 Seu papel é auxiliar o profissional de saúde na interpretação dos resultados.
 
 Com base nas informações fornecidas sobre o exame, forneça:
