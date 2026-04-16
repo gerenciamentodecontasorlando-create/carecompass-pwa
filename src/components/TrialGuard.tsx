@@ -86,7 +86,7 @@ function TrialBadge({ daysLeft }: { daysLeft: number }) {
 
   return (
     <div
-      className={`fixed top-3 right-3 z-[60] px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 text-xs font-semibold no-print cursor-pointer transition-all hover:scale-105 ${
+      className={`fixed bottom-20 right-3 z-[50] px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 text-xs font-semibold no-print cursor-pointer transition-all hover:scale-105 ${
         urgent
           ? "bg-destructive text-destructive-foreground animate-pulse"
           : "bg-primary text-primary-foreground"
