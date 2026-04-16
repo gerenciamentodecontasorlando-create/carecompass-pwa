@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useClinicData } from "@/hooks/useClinicData";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,13 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Save, LogOut, Volume2, RefreshCw } from "lucide-react";
+import { Save, LogOut, Volume2, RefreshCw, Globe } from "lucide-react";
 
 const SettingsPage = () => {
+  const { t, i18n } = useTranslation();
   const { signOut, profile } = useAuth();
   const { data: settingsArr, update } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
   const settingsId = String(settings.id || "");
+
+  const currentLang = i18n.language?.startsWith("es") ? "es" : "pt";
 
   const [form, setForm] = useState({
     professional_name: "",
@@ -59,103 +63,106 @@ const SettingsPage = () => {
 
   const handleTestVoice = () => {
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance("Olá, eu sou o Roma, seu assistente virtual.");
-    utterance.lang = "pt-BR";
+    const testText = currentLang === "es"
+      ? "Hola, soy Roma, su asistente virtual."
+      : "Olá, eu sou o Roma, seu assistente virtual.";
+    const utterance = new SpeechSynthesisUtterance(testText);
+    utterance.lang = currentLang === "es" ? "es-ES" : "pt-BR";
     utterance.rate = jarvisForm.jarvis_speed;
     utterance.pitch = jarvisForm.jarvis_pitch;
     utterance.volume = jarvisForm.jarvis_volume;
     const voices = window.speechSynthesis.getVoices();
-    const ptVoices = voices.filter((v) => v.lang.startsWith("pt"));
-    const maleKeywords = ["male", "masculin", "daniel", "ricardo", "marcos", "paulo", "jorge", "pedro", "google brasil", "microsoft daniel"];
-    const femaleKeywords = ["female", "femin", "maria", "luciana", "francisca", "vitoria", "microsoft maria"];
-
-    if (jarvisForm.jarvis_voice_gender === "male") {
-      let voice: SpeechSynthesisVoice | undefined;
-      for (const keyword of maleKeywords) {
-        voice = ptVoices.find((v) => v.name.toLowerCase().includes(keyword));
-        if (voice) break;
-      }
-      if (!voice) {
-        const nonFemale = ptVoices.filter((v) => !femaleKeywords.some((k) => v.name.toLowerCase().includes(k)));
-        voice = nonFemale[0] || ptVoices[0];
-      }
-      if (voice) utterance.voice = voice;
-    } else {
-      let voice: SpeechSynthesisVoice | undefined;
-      for (const keyword of femaleKeywords) {
-        voice = ptVoices.find((v) => v.name.toLowerCase().includes(keyword));
-        if (voice) break;
-      }
-      if (!voice) voice = ptVoices[0];
-      if (voice) utterance.voice = voice;
-    }
+    const langVoices = voices.filter((v) => v.lang.startsWith(currentLang === "es" ? "es" : "pt"));
+    if (langVoices[0]) utterance.voice = langVoices[0];
     window.speechSynthesis.speak(utterance);
   };
 
   const handleSave = async () => {
     if (!settingsId) return;
     await update(settingsId, { ...form, ...jarvisForm });
-    toast.success("Configurações salvas!");
+    toast.success(t("settings.saved"));
   };
 
   const handleLogout = async () => {
     await signOut();
-    toast.success("Sessão encerrada");
+    toast.success(t("settings.loggedOut"));
+  };
+
+  const toggleLanguage = () => {
+    const newLang = currentLang === "pt" ? "es" : "pt";
+    i18n.changeLanguage(newLang);
   };
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold">Configurações</h1>
+      <h1 className="text-2xl font-bold">{t("settings.title")}</h1>
+
+      {/* Idioma */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Globe className="h-5 w-5 text-primary" />
+              <div>
+                <h2 className="text-lg font-semibold">{t("settings.language")}</h2>
+              </div>
+            </div>
+            <Button variant="outline" onClick={toggleLanguage} className="flex items-center gap-2">
+              {currentLang === "pt" ? "🇧🇷 Português" : "🇪🇸 Español"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Dados do Profissional */}
       <Card>
         <CardContent className="p-6 space-y-6">
           <div>
-            <h2 className="text-lg font-semibold mb-4">Dados do Profissional</h2>
+            <h2 className="text-lg font-semibold mb-4">{t("settings.professionalData")}</h2>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label>Nome completo</Label>
-                <Input value={form.professional_name} onChange={(e) => setForm({ ...form, professional_name: e.target.value })} placeholder="Dr(a). João Silva" />
+                <Label>{t("settings.fullName")}</Label>
+                <Input value={form.professional_name} onChange={(e) => setForm({ ...form, professional_name: e.target.value })} placeholder={t("settings.fullNamePlaceholder")} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label>Especialidade</Label>
-                  <Input value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} placeholder="Ex: Odontologia, Dermatologia, Clínica Geral..." />
+                  <Label>{t("settings.specialty")}</Label>
+                  <Input value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} placeholder={t("settings.specialtyPlaceholder")} />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Registro Profissional</Label>
-                  <Input value={form.registration_number} onChange={(e) => setForm({ ...form, registration_number: e.target.value })} placeholder="CRO, CRM, CRP, CREFITO..." />
+                  <Label>{t("settings.registration")}</Label>
+                  <Input value={form.registration_number} onChange={(e) => setForm({ ...form, registration_number: e.target.value })} placeholder={t("settings.registrationPlaceholder")} />
                 </div>
               </div>
             </div>
           </div>
 
           <div className="border-t pt-6">
-            <h2 className="text-lg font-semibold mb-4">Dados da Clínica</h2>
+            <h2 className="text-lg font-semibold mb-4">{t("settings.clinicData")}</h2>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label>Nome da clínica</Label>
-                <Input value={form.clinic_name} onChange={(e) => setForm({ ...form, clinic_name: e.target.value })} placeholder="Clínica Sorriso" />
+                <Label>{t("settings.clinicName")}</Label>
+                <Input value={form.clinic_name} onChange={(e) => setForm({ ...form, clinic_name: e.target.value })} placeholder={t("settings.clinicNamePlaceholder")} />
               </div>
               <div className="grid gap-2">
-                <Label>Endereço</Label>
-                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rua Exemplo, 123" />
+                <Label>{t("settings.address")}</Label>
+                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder={t("settings.addressPlaceholder")} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label>Telefone</Label>
-                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(11) 99999-9999" />
+                  <Label>{t("settings.phone")}</Label>
+                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder={t("settings.phonePlaceholder")} />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Email</Label>
-                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="contato@clinica.com" />
+                  <Label>{t("settings.email")}</Label>
+                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder={t("settings.emailPlaceholder")} />
                 </div>
               </div>
             </div>
           </div>
 
           <Button onClick={handleSave} className="w-full">
-            <Save className="h-4 w-4 mr-2" />Salvar Configurações
+            <Save className="h-4 w-4 mr-2" />{t("settings.save")}
           </Button>
         </CardContent>
       </Card>
@@ -164,10 +171,10 @@ const SettingsPage = () => {
       <Card>
         <CardContent className="p-6 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Assistente Roma</h2>
+            <h2 className="text-lg font-semibold">{t("settings.roma")}</h2>
             <div className="flex items-center gap-2">
               <Label htmlFor="jarvis-toggle" className="text-sm text-muted-foreground">
-                {jarvisForm.jarvis_enabled ? "Ativado" : "Desativado"}
+                {jarvisForm.jarvis_enabled ? t("settings.enabled") : t("settings.disabled")}
               </Label>
               <Switch id="jarvis-toggle" checked={jarvisForm.jarvis_enabled} onCheckedChange={(checked) => setJarvisForm({ ...jarvisForm, jarvis_enabled: checked })} />
             </div>
@@ -175,37 +182,37 @@ const SettingsPage = () => {
 
           <div className="grid gap-5">
             <div className="grid gap-2">
-              <div className="flex items-center justify-between"><Label>Velocidade</Label><span className="text-sm text-muted-foreground">{jarvisForm.jarvis_speed.toFixed(1)}x</span></div>
+              <div className="flex items-center justify-between"><Label>{t("settings.speed")}</Label><span className="text-sm text-muted-foreground">{jarvisForm.jarvis_speed.toFixed(1)}x</span></div>
               <Slider value={[jarvisForm.jarvis_speed]} onValueChange={([v]) => setJarvisForm({ ...jarvisForm, jarvis_speed: v })} min={0.5} max={2.0} step={0.1} />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center justify-between"><Label>Tom (grave ↔ agudo)</Label><span className="text-sm text-muted-foreground">{jarvisForm.jarvis_pitch.toFixed(1)}</span></div>
+              <div className="flex items-center justify-between"><Label>{t("settings.pitch")}</Label><span className="text-sm text-muted-foreground">{jarvisForm.jarvis_pitch.toFixed(1)}</span></div>
               <Slider value={[jarvisForm.jarvis_pitch]} onValueChange={([v]) => setJarvisForm({ ...jarvisForm, jarvis_pitch: v })} min={0.3} max={1.5} step={0.1} />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center justify-between"><Label>Volume</Label><span className="text-sm text-muted-foreground">{Math.round(jarvisForm.jarvis_volume * 100)}%</span></div>
+              <div className="flex items-center justify-between"><Label>{t("settings.volume")}</Label><span className="text-sm text-muted-foreground">{Math.round(jarvisForm.jarvis_volume * 100)}%</span></div>
               <Slider value={[jarvisForm.jarvis_volume]} onValueChange={([v]) => setJarvisForm({ ...jarvisForm, jarvis_volume: v })} min={0.1} max={1.0} step={0.05} />
             </div>
           </div>
 
           <div className="grid gap-2">
-            <Label>Estilo de Voz</Label>
+            <Label>{t("settings.voiceStyle")}</Label>
             <div className="flex gap-3">
-              <Button variant={jarvisForm.jarvis_voice_gender === "male" ? "default" : "outline"} className="flex-1" onClick={() => setJarvisForm({ ...jarvisForm, jarvis_voice_gender: "male" })}>🧑 Masculina</Button>
-              <Button variant={jarvisForm.jarvis_voice_gender === "female" ? "default" : "outline"} className="flex-1" onClick={() => setJarvisForm({ ...jarvisForm, jarvis_voice_gender: "female" })}>👩 Feminina</Button>
+              <Button variant={jarvisForm.jarvis_voice_gender === "male" ? "default" : "outline"} className="flex-1" onClick={() => setJarvisForm({ ...jarvisForm, jarvis_voice_gender: "male" })}>{t("settings.male")}</Button>
+              <Button variant={jarvisForm.jarvis_voice_gender === "female" ? "default" : "outline"} className="flex-1" onClick={() => setJarvisForm({ ...jarvisForm, jarvis_voice_gender: "female" })}>{t("settings.female")}</Button>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="always-listening">Escuta contínua</Label>
-              <p className="text-xs text-muted-foreground">Roma fica ouvindo permanentemente</p>
+              <Label htmlFor="always-listening">{t("settings.continuousListening")}</Label>
+              <p className="text-xs text-muted-foreground">{t("settings.continuousListeningDesc")}</p>
             </div>
             <Switch id="always-listening" checked={jarvisForm.jarvis_always_listening} onCheckedChange={(checked) => setJarvisForm({ ...jarvisForm, jarvis_always_listening: checked })} />
           </div>
 
           <Button variant="outline" className="w-full" onClick={handleTestVoice}>
-            <Volume2 className="h-4 w-4 mr-2" />Testar Voz
+            <Volume2 className="h-4 w-4 mr-2" />{t("settings.testVoice")}
           </Button>
         </CardContent>
       </Card>
@@ -213,10 +220,8 @@ const SettingsPage = () => {
       {/* Atualizar App */}
       <Card>
         <CardContent className="p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Atualização</h2>
-          <p className="text-sm text-muted-foreground">
-            Se o app estiver com comportamento estranho ou voltando à versão antiga, clique para forçar a atualização.
-          </p>
+          <h2 className="text-lg font-semibold">{t("settings.update")}</h2>
+          <p className="text-sm text-muted-foreground">{t("settings.updateDesc")}</p>
           <Button
             variant="outline"
             className="w-full"
@@ -230,14 +235,14 @@ const SettingsPage = () => {
                   const keys = await caches.keys();
                   await Promise.all(keys.map((k) => caches.delete(k)));
                 }
-                toast.success("Cache limpo! Recarregando...");
+                toast.success(t("settings.cacheCleared"));
                 setTimeout(() => window.location.reload(), 800);
               } catch {
                 window.location.reload();
               }
             }}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />Atualizar App
+            <RefreshCw className="h-4 w-4 mr-2" />{t("settings.updateBtn")}
           </Button>
         </CardContent>
       </Card>
@@ -245,12 +250,12 @@ const SettingsPage = () => {
       {/* Conta */}
       <Card>
         <CardContent className="p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Conta</h2>
+          <h2 className="text-lg font-semibold">{t("settings.account")}</h2>
           <p className="text-sm text-muted-foreground">
-            Logado como: {profile?.full_name || "Usuário"}
+            {t("settings.loggedAs")} {profile?.full_name || t("common.user")}
           </p>
           <Button variant="destructive" onClick={handleLogout} className="w-full">
-            <LogOut className="h-4 w-4 mr-2" />Sair da Conta
+            <LogOut className="h-4 w-4 mr-2" />{t("settings.logoutBtn")}
           </Button>
         </CardContent>
       </Card>

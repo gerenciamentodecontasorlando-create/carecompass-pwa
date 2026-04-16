@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, CalendarDays, DollarSign, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR, es as esLocale } from "date-fns/locale";
 
 interface DashboardStats {
   patientCount: number;
@@ -15,6 +16,7 @@ interface DashboardStats {
 
 const Dashboard = () => {
   const { clinicId } = useAuth();
+  const { t, i18n } = useTranslation();
   const [stats, setStats] = useState<DashboardStats>({
     patientCount: 0,
     todayAppointments: [],
@@ -22,6 +24,8 @@ const Dashboard = () => {
     lowStockMaterials: [],
   });
   const [loading, setLoading] = useState(true);
+
+  const dateLocale = i18n.language?.startsWith("es") ? esLocale : ptBR;
 
   useEffect(() => {
     if (!clinicId) return;
@@ -33,13 +37,9 @@ const Dashboard = () => {
       const monthEnd = format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), "yyyy-MM-dd");
 
       const [patientsRes, apptRes, transRes, matsRes] = await Promise.all([
-        // Count patients (not fetch all)
         supabase.from("patients").select("id", { count: "exact", head: true }).eq("clinic_id", clinicId),
-        // Only today's appointments
         supabase.from("appointments").select("*").eq("clinic_id", clinicId).eq("date", today).order("time", { ascending: true }),
-        // Only this month's income
         supabase.from("transactions").select("amount").eq("clinic_id", clinicId).eq("type", "income").gte("date", monthStart).lte("date", monthEnd),
-        // Only low stock materials
         supabase.from("materials").select("id, name, quantity, min_quantity").eq("clinic_id", clinicId),
       ]);
 
@@ -59,18 +59,18 @@ const Dashboard = () => {
   }, [clinicId]);
 
   const statCards = [
-    { label: "Pacientes", value: stats.patientCount, icon: Users, color: "text-primary" },
-    { label: "Consultas Hoje", value: stats.todayAppointments.length, icon: CalendarDays, color: "text-accent-foreground" },
-    { label: "Receita do Mês", value: `R$ ${stats.monthIncome.toFixed(2)}`, icon: DollarSign, color: "text-success" },
-    { label: "Estoque Baixo", value: stats.lowStockMaterials.length, icon: AlertTriangle, color: "text-warning" },
+    { label: t("dashboard.patients"), value: stats.patientCount, icon: Users, color: "text-primary" },
+    { label: t("dashboard.todayAppointments"), value: stats.todayAppointments.length, icon: CalendarDays, color: "text-accent-foreground" },
+    { label: t("dashboard.monthRevenue"), value: `R$ ${stats.monthIncome.toFixed(2)}`, icon: DollarSign, color: "text-success" },
+    { label: t("dashboard.lowStock"), value: stats.lowStockMaterials.length, icon: AlertTriangle, color: "text-warning" },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold">{t("dashboard.title")}</h1>
         <p className="text-muted-foreground">
-          {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+          {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: dateLocale })}
         </p>
       </div>
 
@@ -90,10 +90,10 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader><CardTitle className="text-lg">Consultas de Hoje</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">{t("dashboard.todayAppointmentsTitle")}</CardTitle></CardHeader>
           <CardContent>
             {stats.todayAppointments.length === 0 ? (
-              <p className="text-muted-foreground text-sm">Nenhuma consulta agendada para hoje.</p>
+              <p className="text-muted-foreground text-sm">{t("dashboard.noAppointments")}</p>
             ) : (
               <div className="space-y-3">
                 {stats.todayAppointments.map((a) => (
@@ -111,10 +111,10 @@ const Dashboard = () => {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-lg">Alertas de Estoque</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">{t("dashboard.stockAlerts")}</CardTitle></CardHeader>
           <CardContent>
             {stats.lowStockMaterials.length === 0 ? (
-              <p className="text-muted-foreground text-sm">Todos os materiais estão em estoque adequado.</p>
+              <p className="text-muted-foreground text-sm">{t("dashboard.stockOk")}</p>
             ) : (
               <div className="space-y-3">
                 {stats.lowStockMaterials.map((m) => (
