@@ -140,6 +140,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   const navigate = useNavigate();
   const hasGreetedRef = useRef(false);
   const voiceSettingsRef = useRef<JarvisVoiceSettings>(voiceSettings || DEFAULT_VOICE);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Keep ref in sync with latest props
   useEffect(() => {
