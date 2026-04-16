@@ -77,17 +77,17 @@ const AdminPanel = () => {
       enterprise: { max_patients: 99999, max_storage_mb: 10000 },
     };
     const limits = planLimits[newPlan] || planLimits.free;
-    const { error, count } = await supabase
+    const { error, data } = await supabase
       .from("clinics")
       .update({ plan: newPlan, max_patients: limits.max_patients, max_storage_mb: limits.max_storage_mb })
       .eq("id", clinicId)
-      .select("id", { count: "exact" });
+      .select();
     if (error) {
       console.error("Plan update error:", error);
       toast.error("Erro ao alterar plano: " + error.message);
       return;
     }
-    if (count === 0) {
+    if (!data || data.length === 0) {
       toast.error("Falha: nenhum registro atualizado. Verifique permissões de administrador.");
       return;
     }
