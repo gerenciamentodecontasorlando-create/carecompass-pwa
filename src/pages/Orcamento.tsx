@@ -6,9 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { ProfessionalStamp } from "@/components/ProfessionalStamp";
-import { Printer, Plus, Trash2, MessageCircle, FileText, Stamp, Mail } from "lucide-react";
+import { Printer, Plus, Trash2, MessageCircle, FileText, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -30,7 +28,7 @@ const Orcamento = () => {
     { id: crypto.randomUUID(), description: "", quantity: 1, unitPrice: "" },
   ]);
   const [notes, setNotes] = useState("");
-  const [showStamp, setShowStamp] = useState(true);
+  
   const [validity, setValidity] = useState("30");
 
   const addItem = () => {
@@ -191,13 +189,6 @@ const Orcamento = () => {
         {/* Preview & actions */}
         <div>
           <div className="flex justify-end gap-2 mb-2 no-print flex-wrap">
-            <div className="flex items-center gap-2 mr-auto">
-              <Switch id="stamp-orc" checked={showStamp} onCheckedChange={setShowStamp} />
-              <Label htmlFor="stamp-orc" className="text-xs text-muted-foreground flex items-center gap-1">
-                <Stamp className="h-3 w-3" />
-                Carimbo
-              </Label>
-            </div>
             <Button variant="outline" size="sm" onClick={handleWhatsApp} disabled={!isValid}>
               <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
               WhatsApp
@@ -288,12 +279,11 @@ const Orcamento = () => {
 
               {/* Footer */}
               <div className="mt-12" style={{ borderTop: "2px solid hsl(var(--primary) / 0.25)", paddingTop: "1.5rem" }}>
-                <ProfessionalStamp
-                  name={String(settings.professional_name || "")}
-                  specialty={String(settings.specialty || "")}
-                  registrationNumber={String(settings.registration_number || "")}
-                  showStamp={showStamp}
-                />
+                <div className="text-center">
+                  <div className="w-48 mx-auto mb-2" style={{ borderTop: "1px solid hsl(var(--foreground))" }} />
+                  <p className="text-sm font-semibold text-primary">{String(settings.professional_name || "Assinatura")}</p>
+                  <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
+                </div>
                 <p className="text-xs text-muted-foreground mt-3 text-center">
                   {String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}
                 </p>
