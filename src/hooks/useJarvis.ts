@@ -227,10 +227,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     if (hasGreetedRef.current) return;
     hasGreetedRef.current = true;
 
-    const greeting = getGreeting();
-    const name = professionalName || "Doutor";
-    const title = name.toLowerCase().startsWith("dr") ? name : `Dr. ${name}`;
-    const text = `${greeting}, ${title}. Sou o Roma, seu assistente. Vamos começar?`;
+    const text = `Bom dia doutor, abençoado e produtivo seja seu dia de trabalho. Estou aqui para ajudar.`;
 
     speak(text, onGreetingDone);
   }, [professionalName, speak, onGreetingDone]);
