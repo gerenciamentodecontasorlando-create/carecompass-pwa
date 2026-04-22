@@ -118,7 +118,10 @@ const SettingsPage = () => {
       <Card>
         <CardContent className="p-6 space-y-6">
           <div>
-            <h2 className="text-lg font-semibold mb-4">{t("settings.professionalData")}</h2>
+            <h2 className="text-lg font-semibold mb-2">{t("settings.professionalData")}</h2>
+            <p className="text-xs text-muted-foreground mb-4 p-3 rounded-md bg-muted/50 border border-border">
+              {t("settings.multiSpecialtyNote")}
+            </p>
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label>{t("settings.fullName")}</Label>
