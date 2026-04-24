@@ -280,6 +280,25 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
 
   const isProcessing = isTranscribing || isGeneratingSoap;
 
+  if (!hasAIAccess) {
+    return (
+      <Card className="border-warning/30 bg-warning/5">
+        <CardContent className="p-4 flex items-center gap-3">
+          <Mic className="h-5 w-5 text-warning shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-foreground">Transcrição de Consulta com IA</p>
+            <p className="text-xs text-muted-foreground">Recurso disponível apenas no plano Enterprise.</p>
+          </div>
+          <Button asChild size="sm" variant="outline">
+            <a href="https://wa.me/5591999873835?text=Olá!%20Quero%20fazer%20upgrade%20para%20o%20plano%20Enterprise" target="_blank" rel="noopener noreferrer">
+              Upgrade
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="pb-3">
