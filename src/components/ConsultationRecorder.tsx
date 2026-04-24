@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Mic, Square, Pause, Play, Loader2, FileText, Clock, Shield } from "lucide-react";
+import { useAIAccess } from "@/hooks/useAIAccess";
 
 const RECORDING_CONSENT_TEXT = `TERMO DE CONSENTIMENTO LIVRE E ESCLARECIDO — GRAVAÇÃO DE CONSULTA
 
