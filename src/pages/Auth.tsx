@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Lock, UserPlus, LogIn, Shield, Globe } from "lucide-react";
+import { Lock, UserPlus, LogIn, Shield, Globe, Phone, Mail, MessageCircle } from "lucide-react";
 
 const PRIVACY_POLICY = `POLÍTICA DE PRIVACIDADE — Btx CliniCos
 
@@ -224,6 +224,41 @@ const Auth = () => {
           <Shield className="h-3 w-3 inline mr-1" />
           {t("auth.lgpdProtected")}
         </p>
+
+        <Card className="border-primary/20 bg-card/60 backdrop-blur-sm">
+          <CardContent className="p-4 space-y-2.5">
+            <p className="text-xs font-semibold text-center text-foreground/80 mb-2">
+              {currentLang === "pt" ? "Suporte e Contato" : "Soporte y Contacto"}
+            </p>
+            <a
+              href="https://wa.me/559199987335"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              <MessageCircle className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="font-medium">WhatsApp:</span>
+              <span>(91) 99998-7335</span>
+            </a>
+            <a
+              href="https://wa.me/5591992980333"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Phone className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="font-medium">Tel:</span>
+              <span>(91) 99298-0333</span>
+            </a>
+            <a
+              href="mailto:orlandoprogramador80@gmail.com"
+              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors break-all"
+            >
+              <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span>orlandoprogramador80@gmail.com</span>
+            </a>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
