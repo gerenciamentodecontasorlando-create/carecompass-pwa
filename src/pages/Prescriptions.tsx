@@ -13,6 +13,7 @@ import { Printer, Plus, Trash2, Pill, ChevronDown, ShieldCheck, Loader2, Message
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
+import { useAIAccess } from "@/hooks/useAIAccess";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ReactMarkdown from "react-markdown";
