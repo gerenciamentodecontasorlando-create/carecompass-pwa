@@ -332,6 +332,10 @@ const Prescriptions = () => {
     if (!form.medications.trim()) {
       toast.error("Adicione medicamentos antes de revisar"); return;
     }
+    if (!hasAIAccess) {
+      toast.error("Recurso disponível apenas no plano Enterprise. Faça upgrade para liberar a IA.");
+      return;
+    }
     setAiReviewLoading(true);
     setAiReviewOpen(true);
     setAiReview(null);
