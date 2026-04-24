@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useJarvis, type JarvisVoiceSettings } from "@/hooks/useJarvis";
 import { useClinicData } from "@/hooks/useClinicData";
+import { useAIAccess } from "@/hooks/useAIAccess";
 import { Mic, MicOff, Volume2, Loader2, Power } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function JarvisButton() {
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
+  const { hasAIAccess } = useAIAccess();
 
   const professionalName = String(settings.professional_name || "");
   const jarvisEnabled = settings.jarvis_enabled !== false;
@@ -37,7 +39,7 @@ export function JarvisButton() {
     if (lastResponse) setShowPanel(true);
   }, [lastResponse]);
 
-  if (!jarvisEnabled) return null;
+  if (!jarvisEnabled || !hasAIAccess) return null;
 
   const getStatusText = () => {
     if (isProcessing) return "Processando...";
