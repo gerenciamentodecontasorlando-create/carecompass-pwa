@@ -214,6 +214,7 @@ const MEDICATION_CATALOG = ADULT_CATALOG;
 
 const Prescriptions = () => {
   const { clinicId } = useAuth();
+  const { hasAIAccess } = useAIAccess();
   const { data: settingsArr } = useClinicData("clinic_settings");
   const settings = settingsArr[0] || {};
   const { data: prescriptions, insert, remove, update: updatePrescription } = useClinicData("prescriptions");
@@ -255,6 +256,10 @@ const Prescriptions = () => {
   const handleAiPedSuggestion = async () => {
     if (!pedCondition.trim()) {
       toast.error("Descreva a condição/sintomas da criança"); return;
+    }
+    if (!hasAIAccess) {
+      toast.error("Recurso disponível apenas no plano Enterprise. Faça upgrade para liberar a IA.");
+      return;
     }
     setAiSuggestionLoading(true);
     setAiSuggestionOpen(true);
