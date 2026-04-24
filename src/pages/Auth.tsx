@@ -231,14 +231,14 @@ const Auth = () => {
               {currentLang === "pt" ? "Suporte e Contato" : "Soporte y Contacto"}
             </p>
             <a
-              href="https://wa.me/559199987335"
+              href="https://wa.me/5591999873835"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
             >
               <MessageCircle className="h-3.5 w-3.5 text-primary shrink-0" />
               <span className="font-medium">WhatsApp:</span>
-              <span>(91) 99998-7335</span>
+              <span>(91) 99987-3835</span>
             </a>
             <a
               href="https://wa.me/5591992980333"
