@@ -309,6 +309,18 @@ const AIAssistant = () => {
     return msg.content.map((c) => c.text || "📷 [Imagem]").join("\n");
   };
 
+  if (!aiLoading && !hasAIAccess) {
+    return (
+      <div className="max-w-3xl mx-auto py-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Bot className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold">Assistente IA</h1>
+        </div>
+        <AIUpgradeBlock feature="O Assistente IA" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)]">
       <div className="flex flex-col gap-3 mb-4">
