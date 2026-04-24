@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { useAIAccess } from "@/hooks/useAIAccess";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -17,6 +18,7 @@ export function AppSidebar() {
   const { signOut, user } = useAuth();
   const { t } = useTranslation();
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
+  const { hasAIAccess } = useAIAccess();
 
   useEffect(() => {
     if (!user) return;
@@ -34,7 +36,7 @@ export function AppSidebar() {
     { title: t("menu.consent"), url: "/consentimento", icon: ClipboardCheck },
     { title: t("menu.budget"), url: "/orcamento", icon: Calculator },
     { title: t("menu.odontogram"), url: "/odontograma", icon: Smile },
-    { title: t("menu.aiAssistant"), url: "/assistente-ia", icon: Bot },
+    ...(hasAIAccess ? [{ title: t("menu.aiAssistant"), url: "/assistente-ia", icon: Bot }] : []),
     { title: t("menu.notes"), url: "/notas", icon: StickyNote },
     { title: t("menu.financial"), url: "/financeiro", icon: DollarSign },
     { title: t("menu.materials"), url: "/materiais", icon: Package },
