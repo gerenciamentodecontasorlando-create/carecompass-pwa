@@ -9,6 +9,8 @@ import ReactMarkdown from "react-markdown";
 import { useClinicData } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAIAccess } from "@/hooks/useAIAccess";
+import { AIUpgradeBlock } from "@/components/AIUpgradeBlock";
 import {
   Command,
   CommandEmpty,
@@ -26,6 +28,7 @@ const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
 
 const AIAssistant = () => {
   const { clinicId } = useAuth();
+  const { hasAIAccess, loading: aiLoading } = useAIAccess();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
