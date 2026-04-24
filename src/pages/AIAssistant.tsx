@@ -9,6 +9,8 @@ import ReactMarkdown from "react-markdown";
 import { useClinicData } from "@/hooks/useClinicData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAIAccess } from "@/hooks/useAIAccess";
+import { AIUpgradeBlock } from "@/components/AIUpgradeBlock";
 import {
   Command,
   CommandEmpty,
@@ -26,6 +28,7 @@ const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
 
 const AIAssistant = () => {
   const { clinicId } = useAuth();
+  const { hasAIAccess, loading: aiLoading } = useAIAccess();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -305,6 +308,18 @@ const AIAssistant = () => {
     if (typeof msg.content === "string") return msg.content;
     return msg.content.map((c) => c.text || "📷 [Imagem]").join("\n");
   };
+
+  if (!aiLoading && !hasAIAccess) {
+    return (
+      <div className="max-w-3xl mx-auto py-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Bot className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold">Assistente IA</h1>
+        </div>
+        <AIUpgradeBlock feature="O Assistente IA" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)]">

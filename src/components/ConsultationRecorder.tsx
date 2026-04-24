@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Mic, Square, Pause, Play, Loader2, FileText, Clock, Shield } from "lucide-react";
+import { useAIAccess } from "@/hooks/useAIAccess";
 
 const RECORDING_CONSENT_TEXT = `TERMO DE CONSENTIMENTO LIVRE E ESCLARECIDO — GRAVAÇÃO DE CONSULTA
 
@@ -53,6 +54,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export function ConsultationRecorder({ patientName, onSoapGenerated }: ConsultationRecorderProps) {
+  const { hasAIAccess } = useAIAccess();
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -277,6 +279,25 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
   };
 
   const isProcessing = isTranscribing || isGeneratingSoap;
+
+  if (!hasAIAccess) {
+    return (
+      <Card className="border-warning/30 bg-warning/5">
+        <CardContent className="p-4 flex items-center gap-3">
+          <Mic className="h-5 w-5 text-warning shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-foreground">Transcrição de Consulta com IA</p>
+            <p className="text-xs text-muted-foreground">Recurso disponível apenas no plano Enterprise.</p>
+          </div>
+          <Button asChild size="sm" variant="outline">
+            <a href="https://wa.me/5591999873835?text=Olá!%20Quero%20fazer%20upgrade%20para%20o%20plano%20Enterprise" target="_blank" rel="noopener noreferrer">
+              Upgrade
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
