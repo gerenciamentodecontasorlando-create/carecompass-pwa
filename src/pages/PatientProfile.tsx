@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useClinicData } from "@/hooks/useClinicData";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAIAccess } from "@/hooks/useAIAccess";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -61,6 +62,7 @@ const PatientProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { clinicId } = useAuth();
+  const { hasAIAccess } = useAIAccess();
   const printRef = useRef<HTMLDivElement>(null);
 
   const { data: patients, loading: patientsLoading, update: updatePatient } = useClinicData("patients");
@@ -378,6 +380,10 @@ const PatientProfile = () => {
   };
 
   const handleAiAnalysis = async (fileId: string, fileName: string, description: string) => {
+    if (!hasAIAccess) {
+      toast.error("Análise por IA disponível apenas no plano Enterprise. Faça upgrade para liberar.");
+      return;
+    }
     setAiLoading((prev) => ({ ...prev, [fileId]: true }));
     try {
       const category = getFileCategory(description);
