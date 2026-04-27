@@ -122,7 +122,21 @@ const Auth = () => {
     setLoading(false);
   };
 
-  return (
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) { toast.error(t("auth.errors.emailRequired") || "Informe seu email"); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Enviamos um link de recuperação para seu email. Verifique sua caixa de entrada e spam.");
+      setMode("login");
+    }
+  };
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       {/* Language Toggle - Top Right */}
       <button
