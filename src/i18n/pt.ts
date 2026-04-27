@@ -42,7 +42,7 @@ const pt = {
       certificates: "Atestados",
       consent: "Consentimento (TCLE)",
       budget: "Orçamento",
-      odontogram: "Odontograma (Odonto)",
+      odontogram: "Odontologia",
       aiAssistant: "Assistente IA",
       notes: "Notas",
       financial: "Financeiro",
