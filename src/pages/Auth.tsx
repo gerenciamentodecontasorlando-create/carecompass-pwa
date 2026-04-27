@@ -137,6 +137,8 @@ const Auth = () => {
       setMode("login");
     }
   };
+
+  return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       {/* Language Toggle - Top Right */}
       <button
