@@ -47,7 +47,7 @@ export function TrialGuard({ children }: { children: ReactNode }) {
         const daysLeft = trialEnd
           ? Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
           : 0;
-        const isPaid = data.plan !== "free";
+        const isPaid = data.plan !== "free" && data.plan !== null;
 
         setTrialInfo({
           trialEndsAt: data.trial_ends_at,
