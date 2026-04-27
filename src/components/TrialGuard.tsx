@@ -116,28 +116,25 @@ function TrialExpiredScreen() {
 
   const plans = [
     {
-      name: t("trial.basic"),
-      price: "R$ 59",
+      name: "Estudante",
+      price: "R$ 25",
       period: "/mês",
-      features: [
-        t("trial.features.basicPatients"),
-        t("trial.features.basicStorage"),
-        t("trial.features.basicModules"),
-        t("trial.features.basicSupport"),
-      ],
+      features: ["Até 200 pacientes", "500 MB de armazenamento", "Todos os módulos clínicos", "Sem IA"],
       highlight: false,
     },
     {
-      name: t("trial.enterprise"),
-      price: "R$ 119",
+      name: "Profissional",
+      price: "R$ 49,90",
       period: "/mês",
-      features: [
-        t("trial.features.enterprisePatients"),
-        t("trial.features.enterpriseStorage"),
-        t("trial.features.enterpriseAI"),
-        t("trial.features.enterprisePriority"),
-      ],
+      features: ["Pacientes ilimitados (5.000)", "2 GB de armazenamento", "Todos os módulos", "Sem IA"],
       highlight: true,
+    },
+    {
+      name: "Enterprise + IA",
+      price: "R$ 199",
+      period: "/mês",
+      features: ["Tudo do Profissional", "Assistente Roma (IA)", "Análise de exames por IA", "Suporte prioritário"],
+      highlight: false,
     },
   ];
 
@@ -152,7 +149,7 @@ function TrialExpiredScreen() {
           <p className="text-muted-foreground max-w-md mx-auto">{t("trial.expiredDesc")}</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 max-w-2xl mx-auto">
+        <div className="grid gap-6 md:grid-cols-3 max-w-4xl mx-auto">
           {plans.map((plan) => (
             <Card
               key={plan.name}
