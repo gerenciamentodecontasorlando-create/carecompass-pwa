@@ -157,7 +157,7 @@ const Auth = () => {
           <h1 className="text-2xl font-bold">Btx CliniCos</h1>
           <p className="text-xs text-muted-foreground mb-1">{t("auth.title")}</p>
           <p className="text-sm text-muted-foreground">
-            {mode === "login" ? t("auth.login") : t("auth.signup")}
+            {mode === "login" ? t("auth.login") : mode === "signup" ? t("auth.signup") : "Recuperar senha"}
           </p>
         </div>
 
