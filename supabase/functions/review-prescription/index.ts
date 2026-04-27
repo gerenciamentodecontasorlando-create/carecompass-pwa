@@ -1,14 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { checkAiAccess, corsHeaders } from "../_shared/aiGuard.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const guard = await checkAiAccess(req);
+    if (!guard.ok) return guard.response;
+
     const { medications, allergies, medicalHistory, currentMedications, patientName, language } = await req.json();
     const lang = language === "es" ? "es" : "pt";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -16,19 +15,14 @@ serve(async (req) => {
 
     const langInstruction = lang === "es" ? "Responda en español." : "Responda em português do Brasil.";
     const systemPrompt = `Você é um farmacêutico clínico especialista em revisão de prescrições.
-Identifique CONTRAINDICAÇÕES, INTERAÇÕES MEDICAMENTOSAS e RISCOS.
-Classifique: 🔴 GRAVE, 🟡 MODERADO, 🟢 LEVE. Sugira alternativas quando houver contraindicação.
-${langInstruction}`;
-Sua função é revisar a prescrição abaixo e identificar CONTRAINDICAÇÕES, INTERAÇÕES MEDICAMENTOSAS e RISCOS baseados nas condições do paciente.
+Identifique CONTRAINDICAÇÕES, INTERAÇÕES MEDICAMENTOSAS e RISCOS baseados nas condições do paciente.
 
 REGRAS:
-- Baseie-se em evidências científicas (bulas oficiais ANVISA, UpToDate, Micromedex, Drug Interactions Checker)
-- Seja objetivo e direto
-- Para cada problema encontrado, cite a fonte/referência científica
-- Classifique cada alerta como: 🔴 GRAVE (contraindicação absoluta), 🟡 MODERADO (requer ajuste ou monitoramento), 🟢 LEVE (atenção mas aceitável)
-- Se não houver problemas, diga claramente "✅ Prescrição sem contraindicações identificadas"
-- Sempre sugira alternativas quando houver contraindicação
-- Responda em português do Brasil`;
+- Baseie-se em evidências (bulas ANVISA, UpToDate, Micromedex)
+- Classifique cada alerta como: 🔴 GRAVE, 🟡 MODERADO, 🟢 LEVE
+- Sugira alternativas quando houver contraindicação
+- Se não houver problemas, diga: "✅ Prescrição sem contraindicações identificadas"
+${langInstruction}`;
 
     const userPrompt = `PACIENTE: ${patientName || "Não informado"}
 
@@ -41,7 +35,7 @@ MEDICAMENTOS EM USO: ${currentMedications || "Nenhum registrado"}
 PRESCRIÇÃO A REVISAR:
 ${medications}
 
-Analise esta prescrição considerando as condições do paciente e identifique possíveis contraindicações, interações medicamentosas e riscos.`;
+Analise esta prescrição considerando as condições do paciente.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -60,7 +54,7 @@ Analise esta prescrição considerando as condições do paciente e identifique 
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido, tente novamente em alguns minutos." }), {
+        return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

@@ -1,37 +1,29 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { checkAiAccess, corsHeaders } from "../_shared/aiGuard.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const guard = await checkAiAccess(req);
+    if (!guard.ok) return guard.response;
+
     const { description, fileName, category, patientInfo, language } = await req.json();
     const lang = language === "es" ? "es" : "pt";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const langInstruction = lang === "es" ? "Responda en español." : "Responda em português brasileiro.";
-    const systemPrompt = `Você é um assistente clínico especializado em análise de exames complementares.
-Forneça: 1. Observações 2. Possíveis achados 3. Sugestões 4. Alertas
-IMPORTANTE: Suas análises são AUXILIARES e a decisão final é SEMPRE do profissional.
-${langInstruction}`;
-Seu papel é auxiliar o profissional de saúde na interpretação dos resultados.
+    const systemPrompt = `Você é um assistente clínico especializado em análise de exames complementares. Auxilie o profissional de saúde na interpretação dos resultados.
 
-Com base nas informações fornecidas sobre o exame, forneça:
+Forneça:
 1. **Observações**: O que se pode inferir das informações disponíveis
-2. **Possíveis achados**: Achados clínicos que devem ser investigados
+2. **Possíveis achados**: Achados clínicos a investigar
 3. **Sugestões**: Recomendações de conduta ou exames complementares
 4. **Alertas**: Valores ou achados que merecem atenção imediata
 
-IMPORTANTE: 
-- Suas análises são AUXILIARES e a decisão final é SEMPRE do profissional.
-- Seja objetivo e conciso.
-- Use terminologia técnica adequada à área de atuação do profissional.
-- Responda em português brasileiro.`;
+IMPORTANTE: Suas análises são AUXILIARES. A decisão final é SEMPRE do profissional. Seja objetivo e use terminologia técnica.
+${langInstruction}`;
 
     const userMessage = `Analise o seguinte exame:
 - Arquivo: ${fileName}
