@@ -163,7 +163,7 @@ const Auth = () => {
 
         <Card>
           <CardContent className="p-6">
-            <form onSubmit={mode === "login" ? handleLogin : handleSignup} className="space-y-4">
+            <form onSubmit={mode === "login" ? handleLogin : mode === "signup" ? handleSignup : handleForgot} className="space-y-4">
               {mode === "signup" && (
                 <>
                   <div className="grid gap-2">
@@ -180,10 +180,20 @@ const Auth = () => {
                 <Label>{t("auth.email")}</Label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("auth.emailPlaceholder")} required />
               </div>
-              <div className="grid gap-2">
-                <Label>{t("auth.password")}</Label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.passwordPlaceholder")} required minLength={6} />
-              </div>
+              {mode !== "forgot" && (
+                <div className="grid gap-2">
+                  <Label>{t("auth.password")}</Label>
+                  <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.passwordPlaceholder")} required minLength={6} />
+                </div>
+              )}
+
+              {mode === "login" && (
+                <div className="text-right">
+                  <button type="button" className="text-xs text-primary hover:underline" onClick={() => setMode("forgot")}>
+                    Esqueci minha senha
+                  </button>
+                </div>
+              )}
 
               {mode === "signup" && (
                 <div className="space-y-3">
@@ -222,16 +232,24 @@ const Auth = () => {
               <Button type="submit" className="w-full h-12" disabled={loading || (mode === "signup" && !lgpdConsent)}>
                 {mode === "login" ? (
                   <><LogIn className="h-4 w-4 mr-2" />{t("auth.loginBtn")}</>
-                ) : (
+                ) : mode === "signup" ? (
                   <><UserPlus className="h-4 w-4 mr-2" />{t("auth.signupBtn")}</>
+                ) : (
+                  <><Lock className="h-4 w-4 mr-2" />{loading ? "Enviando..." : "Enviar link de recuperação"}</>
                 )}
               </Button>
             </form>
 
-            <div className="mt-4 text-center">
-              <button type="button" className="text-sm text-primary hover:underline" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
-                {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
-              </button>
+            <div className="mt-4 text-center space-y-2">
+              {mode === "forgot" ? (
+                <button type="button" className="text-sm text-primary hover:underline" onClick={() => setMode("login")}>
+                  Voltar ao login
+                </button>
+              ) : (
+                <button type="button" className="text-sm text-primary hover:underline" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
+                  {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
+                </button>
+              )}
             </div>
           </CardContent>
         </Card>
