@@ -72,7 +72,7 @@ Todo o software, marca, interface e algoritmos são protegidos por direitos auto
 
 const Auth = () => {
   const { t, i18n } = useTranslation();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -122,6 +122,22 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) { toast.error(t("auth.errors.emailRequired") || "Informe seu email"); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Enviamos um link de recuperação para seu email. Verifique sua caixa de entrada e spam.");
+      setMode("login");
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       {/* Language Toggle - Top Right */}
@@ -141,13 +157,13 @@ const Auth = () => {
           <h1 className="text-2xl font-bold">Btx CliniCos</h1>
           <p className="text-xs text-muted-foreground mb-1">{t("auth.title")}</p>
           <p className="text-sm text-muted-foreground">
-            {mode === "login" ? t("auth.login") : t("auth.signup")}
+            {mode === "login" ? t("auth.login") : mode === "signup" ? t("auth.signup") : "Recuperar senha"}
           </p>
         </div>
 
         <Card>
           <CardContent className="p-6">
-            <form onSubmit={mode === "login" ? handleLogin : handleSignup} className="space-y-4">
+            <form onSubmit={mode === "login" ? handleLogin : mode === "signup" ? handleSignup : handleForgot} className="space-y-4">
               {mode === "signup" && (
                 <>
                   <div className="grid gap-2">
@@ -164,10 +180,20 @@ const Auth = () => {
                 <Label>{t("auth.email")}</Label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("auth.emailPlaceholder")} required />
               </div>
-              <div className="grid gap-2">
-                <Label>{t("auth.password")}</Label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.passwordPlaceholder")} required minLength={6} />
-              </div>
+              {mode !== "forgot" && (
+                <div className="grid gap-2">
+                  <Label>{t("auth.password")}</Label>
+                  <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.passwordPlaceholder")} required minLength={6} />
+                </div>
+              )}
+
+              {mode === "login" && (
+                <div className="text-right">
+                  <button type="button" className="text-xs text-primary hover:underline" onClick={() => setMode("forgot")}>
+                    Esqueci minha senha
+                  </button>
+                </div>
+              )}
 
               {mode === "signup" && (
                 <div className="space-y-3">
@@ -206,16 +232,24 @@ const Auth = () => {
               <Button type="submit" className="w-full h-12" disabled={loading || (mode === "signup" && !lgpdConsent)}>
                 {mode === "login" ? (
                   <><LogIn className="h-4 w-4 mr-2" />{t("auth.loginBtn")}</>
-                ) : (
+                ) : mode === "signup" ? (
                   <><UserPlus className="h-4 w-4 mr-2" />{t("auth.signupBtn")}</>
+                ) : (
+                  <><Lock className="h-4 w-4 mr-2" />{loading ? "Enviando..." : "Enviar link de recuperação"}</>
                 )}
               </Button>
             </form>
 
-            <div className="mt-4 text-center">
-              <button type="button" className="text-sm text-primary hover:underline" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
-                {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
-              </button>
+            <div className="mt-4 text-center space-y-2">
+              {mode === "forgot" ? (
+                <button type="button" className="text-sm text-primary hover:underline" onClick={() => setMode("login")}>
+                  Voltar ao login
+                </button>
+              ) : (
+                <button type="button" className="text-sm text-primary hover:underline" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
+                  {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
+                </button>
+              )}
             </div>
           </CardContent>
         </Card>

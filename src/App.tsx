@@ -28,6 +28,7 @@ import Trash from "./pages/Trash";
 import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import PinLock from "./pages/PinLock";
+import ResetPassword from "./pages/ResetPassword";
 import { TrialGuard } from "@/components/TrialGuard";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,23 @@ function AppRoutes() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Carregando...</div>
       </div>
+    );
+  }
+
+  // Allow password reset page even without an authenticated session
+  const isResetRoute =
+    typeof window !== "undefined" &&
+    (window.location.pathname === "/reset-password" ||
+      window.location.hash.includes("type=recovery"));
+
+  if (isResetRoute) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="*" element={<ResetPassword />} />
+        </Routes>
+      </BrowserRouter>
     );
   }
 
@@ -71,6 +89,7 @@ function AppRoutes() {
             <Route path="/orcamento" element={<Orcamento />} />
             <Route path="/lixeira" element={<Trash />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
