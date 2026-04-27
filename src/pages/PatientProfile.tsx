@@ -558,6 +558,44 @@ const PatientProfile = () => {
             </Card>
           </TabsContent>
 
+          {/* PROCEDURES TAB — lista cronológica simples */}
+          <TabsContent value="procedures" className="space-y-3 mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Stethoscope className="h-4 w-4" /> Procedimentos Realizados
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {evolutions.filter(e => !e.deleted_at && (String(e.procedure || "").trim() || String(e.plan || "").trim())).length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">Nenhum procedimento registrado ainda. Adicione na aba Evoluções.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {[...evolutions]
+                      .filter(e => !e.deleted_at && (String(e.procedure || "").trim() || String(e.plan || "").trim()))
+                      .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+                      .map((evo) => (
+                        <div key={String(evo.id)} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 py-2 px-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors">
+                          <span className="font-mono text-xs text-muted-foreground whitespace-nowrap min-w-[80px]">
+                            {String(evo.date).split("-").reverse().join("/")}
+                          </span>
+                          {evo.tooth_number && (
+                            <Badge variant="secondary" className="w-fit text-xs">{String(evo.tooth_number)}</Badge>
+                          )}
+                          <span className="text-sm flex-1">
+                            {String(evo.procedure || evo.plan || "—")}
+                          </span>
+                          {evo.professional && (
+                            <span className="text-xs text-muted-foreground">{String(evo.professional)}</span>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* EVOLUTIONS TAB */}
           <TabsContent value="evolutions" className="space-y-4 mt-4">
             {/* Consultation Recorder */}
