@@ -45,7 +45,13 @@ function AppRoutes() {
     );
   }
 
-  if (!user) {
+  // Allow password reset page even without an authenticated session
+  const isResetRoute =
+    typeof window !== "undefined" &&
+    (window.location.pathname === "/reset-password" ||
+      window.location.hash.includes("type=recovery"));
+
+  if (!user && !isResetRoute) {
     return <Auth />;
   }
 
