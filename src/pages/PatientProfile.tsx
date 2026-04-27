@@ -519,9 +519,10 @@ const PatientProfile = () => {
         </Card>
 
         <Tabs defaultValue="clinical" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="clinical" className="text-xs sm:text-sm"><ClipboardList className="h-4 w-4 mr-1 hidden sm:inline" />Ficha</TabsTrigger>
-            <TabsTrigger value="evolutions" className="text-xs sm:text-sm"><Stethoscope className="h-4 w-4 mr-1 hidden sm:inline" />Evoluções</TabsTrigger>
+            <TabsTrigger value="procedures" className="text-xs sm:text-sm"><Stethoscope className="h-4 w-4 mr-1 hidden sm:inline" />Procedimentos</TabsTrigger>
+            <TabsTrigger value="evolutions" className="text-xs sm:text-sm"><Calendar className="h-4 w-4 mr-1 hidden sm:inline" />Evoluções</TabsTrigger>
             <TabsTrigger value="files" className="text-xs sm:text-sm"><FileImage className="h-4 w-4 mr-1 hidden sm:inline" />Arquivos</TabsTrigger>
             <TabsTrigger value="print" className="text-xs sm:text-sm"><Printer className="h-4 w-4 mr-1 hidden sm:inline" />Imprimir</TabsTrigger>
           </TabsList>
