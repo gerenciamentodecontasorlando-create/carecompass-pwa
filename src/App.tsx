@@ -51,7 +51,18 @@ function AppRoutes() {
     (window.location.pathname === "/reset-password" ||
       window.location.hash.includes("type=recovery"));
 
-  if (!user && !isResetRoute) {
+  if (isResetRoute) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="*" element={<ResetPassword />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
+
+  if (!user) {
     return <Auth />;
   }
 
@@ -78,6 +89,7 @@ function AppRoutes() {
             <Route path="/orcamento" element={<Orcamento />} />
             <Route path="/lixeira" element={<Trash />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
