@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Outlet } from "react-router-dom";
 import { JarvisButton } from "@/components/JarvisButton";
+import { SuggestionBox } from "@/components/SuggestionBox";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useSyncQueue } from "@/hooks/useSyncQueue";
 import { Shield, Lock } from "lucide-react";
@@ -50,6 +51,7 @@ export function AppLayout() {
           </footer>
         </main>
         <JarvisButton />
+        <SuggestionBox />
       </div>
     </SidebarProvider>
   );

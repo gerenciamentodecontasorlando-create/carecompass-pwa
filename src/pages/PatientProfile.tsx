@@ -519,9 +519,10 @@ const PatientProfile = () => {
         </Card>
 
         <Tabs defaultValue="clinical" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="clinical" className="text-xs sm:text-sm"><ClipboardList className="h-4 w-4 mr-1 hidden sm:inline" />Ficha</TabsTrigger>
-            <TabsTrigger value="evolutions" className="text-xs sm:text-sm"><Stethoscope className="h-4 w-4 mr-1 hidden sm:inline" />Evoluções</TabsTrigger>
+            <TabsTrigger value="procedures" className="text-xs sm:text-sm"><Stethoscope className="h-4 w-4 mr-1 hidden sm:inline" />Procedimentos</TabsTrigger>
+            <TabsTrigger value="evolutions" className="text-xs sm:text-sm"><Calendar className="h-4 w-4 mr-1 hidden sm:inline" />Evoluções</TabsTrigger>
             <TabsTrigger value="files" className="text-xs sm:text-sm"><FileImage className="h-4 w-4 mr-1 hidden sm:inline" />Arquivos</TabsTrigger>
             <TabsTrigger value="print" className="text-xs sm:text-sm"><Printer className="h-4 w-4 mr-1 hidden sm:inline" />Imprimir</TabsTrigger>
           </TabsList>
@@ -553,6 +554,44 @@ const PatientProfile = () => {
                 <div className="grid gap-2"><Label>Plano de Tratamento (P)</Label><Textarea value={clinicalForm.treatment_plan} onChange={(e) => setClinicalForm({ ...clinicalForm, treatment_plan: e.target.value })} rows={3} /></div>
                 <div className="grid gap-2"><Label>Prognóstico</Label><Textarea value={clinicalForm.prognosis} onChange={(e) => setClinicalForm({ ...clinicalForm, prognosis: e.target.value })} rows={2} /></div>
                 <Button onClick={handleSaveClinical} className="w-full"><Save className="h-4 w-4 mr-2" />Salvar Ficha Clínica</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* PROCEDURES TAB — lista cronológica simples */}
+          <TabsContent value="procedures" className="space-y-3 mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Stethoscope className="h-4 w-4" /> Procedimentos Realizados
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {evolutions.filter(e => !e.deleted_at && (String(e.procedure || "").trim() || String(e.plan || "").trim())).length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">Nenhum procedimento registrado ainda. Adicione na aba Evoluções.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {[...evolutions]
+                      .filter(e => !e.deleted_at && (String(e.procedure || "").trim() || String(e.plan || "").trim()))
+                      .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+                      .map((evo) => (
+                        <div key={String(evo.id)} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 py-2 px-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors">
+                          <span className="font-mono text-xs text-muted-foreground whitespace-nowrap min-w-[80px]">
+                            {String(evo.date).split("-").reverse().join("/")}
+                          </span>
+                          {evo.tooth_number && (
+                            <Badge variant="secondary" className="w-fit text-xs">{String(evo.tooth_number)}</Badge>
+                          )}
+                          <span className="text-sm flex-1">
+                            {String(evo.procedure || evo.plan || "—")}
+                          </span>
+                          {evo.professional && (
+                            <span className="text-xs text-muted-foreground">{String(evo.professional)}</span>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

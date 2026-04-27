@@ -4,11 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Hook que determina se o plano da clínica permite usar recursos de IA.
- * IA é exclusiva do plano Enterprise. O plano Básico (free/basic) é bloqueado.
+ * IA é exclusiva do plano Enterprise. Demais planos (free, student, professional, basic) ficam bloqueados.
+ * Também expõe o uso mensal e o limite mensal definido pelo administrador.
  */
 export function useAIAccess() {
   const { user } = useAuth();
   const [plan, setPlan] = useState<string>("free");
+  const [aiMonthlyLimit, setAiMonthlyLimit] = useState<number>(0);
+  const [aiUsedMonth, setAiUsedMonth] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,11 +32,20 @@ export function useAIAccess() {
       }
       const { data: clinic } = await supabase
         .from("clinics")
-        .select("plan")
+        .select("plan, ai_monthly_limit")
         .eq("id", profile.clinic_id)
+        .maybeSingle();
+      const ym = new Date().toISOString().slice(0, 7);
+      const { data: usage } = await supabase
+        .from("ai_usage")
+        .select("count")
+        .eq("clinic_id", profile.clinic_id)
+        .eq("year_month", ym)
         .maybeSingle();
       if (!cancelled) {
         setPlan(clinic?.plan || "free");
+        setAiMonthlyLimit(Number(clinic?.ai_monthly_limit) || 0);
+        setAiUsedMonth(Number(usage?.count) || 0);
         setLoading(false);
       }
     })();
@@ -43,6 +55,7 @@ export function useAIAccess() {
   }, [user]);
 
   const hasAIAccess = plan === "enterprise";
+  const hasReachedLimit = aiMonthlyLimit > 0 && aiUsedMonth >= aiMonthlyLimit;
 
-  return { hasAIAccess, plan, loading };
+  return { hasAIAccess, plan, loading, aiMonthlyLimit, aiUsedMonth, hasReachedLimit };
 }

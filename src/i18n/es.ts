@@ -42,7 +42,7 @@ const es = {
       certificates: "Certificados",
       consent: "Consentimiento",
       budget: "Presupuesto",
-      odontogram: "Odontograma",
+      odontogram: "Odontología",
       aiAssistant: "Asistente IA",
       notes: "Notas",
       financial: "Finanzas",

@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage: {
+        Row: {
+          clinic_id: string
+          count: number
+          created_at: string
+          id: string
+          updated_at: string
+          year_month: string
+        }
+        Insert: {
+          clinic_id: string
+          count?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          year_month: string
+        }
+        Update: {
+          clinic_id?: string
+          count?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          year_month?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           clinic_id: string
@@ -254,6 +281,7 @@ export type Database = {
       clinics: {
         Row: {
           address: string | null
+          ai_monthly_limit: number
           created_at: string
           email: string | null
           id: string
@@ -267,6 +295,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          ai_monthly_limit?: number
           created_at?: string
           email?: string | null
           id?: string
@@ -280,6 +309,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          ai_monthly_limit?: number
           created_at?: string
           email?: string | null
           id?: string
@@ -746,6 +776,7 @@ export type Database = {
     }
     Functions: {
       cleanup_old_documents: { Args: never; Returns: undefined }
+      get_ai_usage: { Args: { _clinic_id: string }; Returns: number }
       get_platform_stats: { Args: never; Returns: Json }
       get_user_clinic_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
@@ -755,6 +786,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_ai_usage: { Args: { _clinic_id: string }; Returns: number }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
