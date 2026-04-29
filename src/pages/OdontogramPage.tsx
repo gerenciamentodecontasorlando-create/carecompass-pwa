@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import OdontogramChart from "@/components/OdontogramChart";
-import { Smile, ListChecks } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DentalChartForm, emptyDentalChart, type DentalChart } from "@/components/DentalChartForm";
+import { Smile, ListChecks, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 
 interface ToothRecord {
