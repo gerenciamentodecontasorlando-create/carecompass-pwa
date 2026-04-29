@@ -517,15 +517,15 @@ function AgendaMock() {
           <div key={d} className="text-center font-semibold text-muted-foreground">{d}</div>
         ))}
         {["09h", "10h", "11h", "12h"].map((h, i) => (
-          <>
-            <div key={h} className="text-right pr-1 text-muted-foreground">{h}</div>
+          <div key={h} className="contents">
+            <div className="text-right pr-1 text-muted-foreground">{h}</div>
             {slots[i].map((v, j) => (
               <div
                 key={j}
                 className={`h-10 rounded ${v ? colors[(i + j) % colors.length] : "bg-muted"}`}
               />
             ))}
-          </>
+          </div>
         ))}
       </div>
       <div className="mt-3 flex items-center gap-3 text-[10px] text-muted-foreground">
