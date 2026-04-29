@@ -122,6 +122,27 @@ const App = () => {
     setPinUnlocked(true);
   };
 
+  // Public landing page — accessible without PIN or login
+  const isLandingRoute =
+    typeof window !== "undefined" && window.location.pathname === "/lp";
+
+  if (isLandingRoute) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/lp" element={<Landing />} />
+              <Route path="*" element={<Landing />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+
   if (!pinUnlocked) {
     return <PinLock onUnlock={handleUnlock} />;
   }
