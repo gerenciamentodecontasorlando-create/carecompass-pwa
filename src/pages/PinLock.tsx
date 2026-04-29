@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Lock, MessageCircle, Phone, Mail } from "lucide-react";
+import { BcLogo } from "@/components/BcLogo";
+import { LgpdSeal } from "@/components/LgpdSeal";
+import { SupportModal } from "@/components/SupportModal";
 
 const CORRECT_PIN = "212963";
 
@@ -25,66 +26,40 @@ const PinLock = ({ onUnlock }: PinLockProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
-            <Lock className="h-8 w-8 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold">Btx CliniCos</h1>
-          <p className="text-xs text-muted-foreground">Gestão para clínicas e consultórios de saúde</p>
-          <p className="text-sm text-muted-foreground mt-1">Digite o PIN para acessar</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            type="password"
-            inputMode="numeric"
-            maxLength={6}
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-            placeholder="••••••"
-            className="text-center text-2xl tracking-[0.5em] h-14"
-            autoFocus
-          />
-          <Button type="submit" className="w-full h-12" disabled={pin.length < 6}>
-            Entrar
-          </Button>
-        </form>
-
-        <Card className="border-primary/20 bg-card/60 backdrop-blur-sm">
-          <CardContent className="p-4 space-y-2.5">
-            <p className="text-xs font-semibold text-center text-foreground/80 mb-2">
-              Suporte e Contato
+    <div className="min-h-screen flex flex-col items-center justify-between bg-gradient-to-br from-background via-background to-primary/5 px-4 py-8">
+      <div className="flex-1 w-full flex items-center justify-center">
+        <div className="w-full max-w-sm space-y-6">
+          <div className="flex flex-col items-center gap-3">
+            <BcLogo size={92} />
+            <h1 className="text-2xl font-bold tracking-tight">Btx CliniCos</h1>
+            <p className="text-xs text-muted-foreground text-center">
+              Gestão para clínicas e consultórios de saúde
             </p>
-            <a
-              href="https://wa.me/5591999873835"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              <MessageCircle className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span className="font-medium">WhatsApp:</span>
-              <span>(91) 99987-3835</span>
-            </a>
-            <a
-              href="https://wa.me/5591992980333"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              <Phone className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span className="font-medium">Tel:</span>
-              <span>(91) 99298-0333</span>
-            </a>
-            <a
-              href="mailto:orlandoprogramador80@gmail.com"
-              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors break-all"
-            >
-              <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span>orlandoprogramador80@gmail.com</span>
-            </a>
-          </CardContent>
-        </Card>
+            <p className="text-sm text-muted-foreground mt-1">Digite o PIN para acessar</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <Input
+              type="password"
+              inputMode="numeric"
+              maxLength={6}
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+              placeholder="••••••"
+              className="text-center text-2xl tracking-[0.5em] h-14"
+              autoFocus
+            />
+            <Button type="submit" className="w-full h-12" disabled={pin.length < 6}>
+              Entrar
+            </Button>
+          </form>
+
+          <SupportModal />
+        </div>
+      </div>
+
+      <div className="w-full max-w-sm pt-6">
+        <LgpdSeal />
       </div>
     </div>
   );
