@@ -40,11 +40,26 @@ const OdontogramPage = () => {
   const { data: evolutions } = useClinicData("evolutions", { filter: { patient_id: selectedPatientId || "__none__" } });
 
   const currentOdontogram = odontograms.find((o) => String(o.patient_id) === selectedPatientId);
-  const records = (currentOdontogram?.records || {}) as Record<string, ToothRecord>;
+  const rawRecords = (currentOdontogram?.records || {}) as Record<string, unknown>;
+  // Tooth records (numeric keys) — exclude reserved __chart key
+  const records: Record<string, ToothRecord> = {};
+  Object.entries(rawRecords).forEach(([k, v]) => {
+    if (k !== "__chart" && v && typeof v === "object") records[k] = v as ToothRecord;
+  });
+  const dentalChart: DentalChart = ((rawRecords.__chart as DentalChart) || emptyDentalChart());
 
   const dentalProcedures = (evolutions || [])
     .filter((e) => !e.deleted_at && (String(e.tooth_number || "").trim() || String(e.procedure || "").trim()))
     .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+
+  const saveDentalChart = async (chart: DentalChart) => {
+    const updatedRecords = { ...rawRecords, __chart: chart };
+    if (currentOdontogram) {
+      await update(String(currentOdontogram.id), { records: updatedRecords });
+    } else {
+      await insert({ patient_id: selectedPatientId, records: updatedRecords });
+    }
+  };
 
   const handleToothClick = (toothNumber: number) => {
     setSelectedTooth(toothNumber);
