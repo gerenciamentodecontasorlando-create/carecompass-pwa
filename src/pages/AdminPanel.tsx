@@ -95,11 +95,12 @@ const AdminPanel = () => {
     });
     if (error) {
       console.error("Plan update error:", error);
-      toast.error("Erro ao alterar plano: " + error.message);
+      const msg = error.message || error.details || error.hint || JSON.stringify(error);
+      toast.error("Erro ao alterar plano: " + msg, { duration: 8000 });
       return;
     }
     if (!data) {
-      toast.error("Falha: nenhum registro atualizado. Verifique permissões de administrador.");
+      toast.error("Falha: nenhum registro retornado. Você ainda é admin? Faça logout e entre novamente.", { duration: 8000 });
       return;
     }
     toast.success("Plano atualizado!");
