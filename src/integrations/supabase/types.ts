@@ -775,6 +775,58 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_clinic_ai_limit: {
+        Args: { _ai_monthly_limit: number; _clinic_id: string }
+        Returns: {
+          address: string | null
+          ai_monthly_limit: number
+          created_at: string
+          email: string | null
+          id: string
+          max_patients: number
+          max_storage_mb: number
+          name: string
+          phone: string | null
+          plan: string
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "clinics"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_update_clinic_plan: {
+        Args: {
+          _ai_monthly_limit: number
+          _clinic_id: string
+          _max_patients: number
+          _max_storage_mb: number
+          _plan: string
+        }
+        Returns: {
+          address: string | null
+          ai_monthly_limit: number
+          created_at: string
+          email: string | null
+          id: string
+          max_patients: number
+          max_storage_mb: number
+          name: string
+          phone: string | null
+          plan: string
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "clinics"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       cleanup_old_documents: { Args: never; Returns: undefined }
       get_ai_usage: { Args: { _clinic_id: string }; Returns: number }
       get_platform_stats: { Args: never; Returns: Json }
