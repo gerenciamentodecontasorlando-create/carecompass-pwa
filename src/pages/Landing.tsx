@@ -131,17 +131,21 @@ export default function Landing() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button size="lg" asChild>
-                <Link to="/">
-                  Teste grátis por 15 dias <ArrowRight className="h-4 w-4 ml-1" />
-                </Link>
+              <Button size="lg" onClick={handleDemoLogin} disabled={demoLoading}>
+                {demoLoading ? "Preparando demo…" : (<>Entrar no Modo Demo <ArrowRight className="h-4 w-4 ml-1" /></>)}
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/">Teste grátis por 15 dias</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
                 <a href={WHATSAPP} target="_blank" rel="noreferrer">
-                  <MessageCircle className="h-4 w-4 mr-2" /> Falar no WhatsApp
+                  <MessageCircle className="h-4 w-4 mr-2" /> WhatsApp
                 </a>
               </Button>
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              👀 Modo Demo: entre sem cadastro, com pacientes e dados de exemplo já preenchidos.
+            </p>
 
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5"><Check className="h-4 w-4 text-success" /> Sem cartão para testar</span>
