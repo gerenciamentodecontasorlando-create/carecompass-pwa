@@ -1,5 +1,7 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +45,9 @@ const WHATSAPP =
   );
 
 export default function Landing() {
+  const navigate = useNavigate();
+  const [demoLoading, setDemoLoading] = useState(false);
+
   useEffect(() => {
     document.title = "Btx CliniCos — Prontuário, Agenda e Financeiro para Clínicas";
     const meta = document.querySelector('meta[name="description"]');
@@ -53,6 +58,31 @@ export default function Landing() {
       );
     }
   }, []);
+
+  const handleDemoLogin = async () => {
+    setDemoLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("demo-signin");
+      if (error || !data?.email) throw error || new Error("Falha ao preparar demo");
+      const { error: signErr } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      if (signErr) throw signErr;
+      // Bypass PIN lock for demo session
+      try {
+        localStorage.setItem("clinicapro-pin-unlocked", String(Date.now()));
+        sessionStorage.setItem("demo_mode", "true");
+      } catch {}
+      toast.success("Bem-vindo ao modo demonstração!");
+      navigate("/");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Erro ao entrar no modo demo: " + (err?.message || "tente novamente"));
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -101,17 +131,21 @@ export default function Landing() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button size="lg" asChild>
-                <Link to="/">
-                  Teste grátis por 15 dias <ArrowRight className="h-4 w-4 ml-1" />
-                </Link>
+              <Button size="lg" onClick={handleDemoLogin} disabled={demoLoading}>
+                {demoLoading ? "Preparando demo…" : (<>Entrar no Modo Demo <ArrowRight className="h-4 w-4 ml-1" /></>)}
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/">Teste grátis por 15 dias</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
                 <a href={WHATSAPP} target="_blank" rel="noreferrer">
-                  <MessageCircle className="h-4 w-4 mr-2" /> Falar no WhatsApp
+                  <MessageCircle className="h-4 w-4 mr-2" /> WhatsApp
                 </a>
               </Button>
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              👀 Modo Demo: entre sem cadastro, com pacientes e dados de exemplo já preenchidos.
+            </p>
 
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5"><Check className="h-4 w-4 text-success" /> Sem cartão para testar</span>
