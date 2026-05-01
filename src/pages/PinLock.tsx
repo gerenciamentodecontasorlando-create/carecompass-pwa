@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { BcLogo } from "@/components/BcLogo";
 import { LgpdSeal } from "@/components/LgpdSeal";
 import { SupportModal } from "@/components/SupportModal";
+import { ExternalLink } from "lucide-react";
 
 const CORRECT_PIN = "212963";
 
@@ -53,6 +54,13 @@ const PinLock = ({ onUnlock }: PinLockProps) => {
               Entrar
             </Button>
           </form>
+
+          <Button variant="outline" className="w-full" asChild>
+            <a href="/apresentacao" target="_blank" rel="noopener noreferrer">
+              Ver apresentação do software
+              <ExternalLink className="h-4 w-4 ml-2" />
+            </a>
+          </Button>
 
           <SupportModal />
         </div>

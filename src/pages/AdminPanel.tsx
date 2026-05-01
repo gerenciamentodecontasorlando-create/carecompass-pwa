@@ -86,22 +86,19 @@ const AdminPanel = () => {
       enterprise:   { max_patients: 99999, max_storage_mb: 10000, ai_monthly_limit: 500 },
     };
     const limits = planLimits[newPlan] || planLimits.free;
-    const { error, data } = await supabase
-      .from("clinics")
-      .update({
-        plan: newPlan,
-        max_patients: limits.max_patients,
-        max_storage_mb: limits.max_storage_mb,
-        ai_monthly_limit: limits.ai_monthly_limit,
-      })
-      .eq("id", clinicId)
-      .select();
+    const { error, data } = await (supabase as any).rpc("admin_update_clinic_plan", {
+      _clinic_id: clinicId,
+      _plan: newPlan,
+      _max_patients: limits.max_patients,
+      _max_storage_mb: limits.max_storage_mb,
+      _ai_monthly_limit: limits.ai_monthly_limit,
+    });
     if (error) {
       console.error("Plan update error:", error);
       toast.error("Erro ao alterar plano: " + error.message);
       return;
     }
-    if (!data || data.length === 0) {
+    if (!data) {
       toast.error("Falha: nenhum registro atualizado. Verifique permissões de administrador.");
       return;
     }
@@ -116,11 +113,10 @@ const AdminPanel = () => {
       toast.error("Informe um número válido (0 = ilimitado)");
       return;
     }
-    const { error } = await supabase
-      .from("clinics")
-      .update({ ai_monthly_limit: value })
-      .eq("id", clinicId)
-      .select();
+    const { error } = await (supabase as any).rpc("admin_update_clinic_ai_limit", {
+      _clinic_id: clinicId,
+      _ai_monthly_limit: value,
+    });
     if (error) {
       toast.error("Erro: " + error.message);
       return;

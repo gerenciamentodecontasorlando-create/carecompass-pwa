@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useLocalDataMigration } from "@/hooks/useLocalDataMigration";
 import { AppLayout } from "@/components/AppLayout";
@@ -101,6 +101,7 @@ function AppRoutes() {
 
 const PIN_STORAGE_KEY = "clinicapro-pin-unlocked";
 const PIN_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+const PUBLIC_LANDING_PATHS = ["/lp", "/apresentacao", "/index"];
 
 function isPinValid(): boolean {
   try {
@@ -123,8 +124,11 @@ const App = () => {
   };
 
   // Public landing page — accessible without PIN or login
-  const isLandingRoute =
-    typeof window !== "undefined" && window.location.pathname === "/lp";
+  const currentPath =
+    typeof window !== "undefined"
+      ? window.location.pathname.replace(/\/+$/, "") || "/"
+      : "/";
+  const isLandingRoute = PUBLIC_LANDING_PATHS.includes(currentPath);
 
   if (isLandingRoute) {
     return (
@@ -135,6 +139,8 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/lp" element={<Landing />} />
+              <Route path="/apresentacao" element={<Landing />} />
+              <Route path="/index" element={<Landing />} />
               <Route path="*" element={<Landing />} />
             </Routes>
           </BrowserRouter>
