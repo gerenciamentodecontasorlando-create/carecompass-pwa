@@ -1,5 +1,7 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +45,9 @@ const WHATSAPP =
   );
 
 export default function Landing() {
+  const navigate = useNavigate();
+  const [demoLoading, setDemoLoading] = useState(false);
+
   useEffect(() => {
     document.title = "Btx CliniCos — Prontuário, Agenda e Financeiro para Clínicas";
     const meta = document.querySelector('meta[name="description"]');
@@ -53,6 +58,31 @@ export default function Landing() {
       );
     }
   }, []);
+
+  const handleDemoLogin = async () => {
+    setDemoLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("demo-signin");
+      if (error || !data?.email) throw error || new Error("Falha ao preparar demo");
+      const { error: signErr } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      if (signErr) throw signErr;
+      // Bypass PIN for demo
+      try {
+        sessionStorage.setItem("pin_unlocked", "true");
+        sessionStorage.setItem("demo_mode", "true");
+      } catch {}
+      toast.success("Bem-vindo ao modo demonstração!");
+      navigate("/");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Erro ao entrar no modo demo: " + (err?.message || "tente novamente"));
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
