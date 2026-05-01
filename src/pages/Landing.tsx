@@ -69,9 +69,9 @@ export default function Landing() {
         password: data.password,
       });
       if (signErr) throw signErr;
-      // Bypass PIN for demo
+      // Bypass PIN lock for demo session
       try {
-        sessionStorage.setItem("pin_unlocked", "true");
+        localStorage.setItem("clinicapro-pin-unlocked", String(Date.now()));
         sessionStorage.setItem("demo_mode", "true");
       } catch {}
       toast.success("Bem-vindo ao modo demonstração!");
