@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkAiAccess, corsHeaders } from "../_shared/aiGuard.ts";
+import { callGemini } from "../_shared/gemini.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -10,8 +11,6 @@ serve(async (req) => {
 
     const { messages, type, patientContext, imageUrl, language } = await req.json();
     const lang = language === "es" ? "es" : "pt";
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     // Build patient context string if provided
     let contextBlock = "";
