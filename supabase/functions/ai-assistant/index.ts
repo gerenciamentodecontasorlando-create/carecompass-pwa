@@ -140,20 +140,13 @@ IMPORTANTE: Suas sugestões clínicas são auxiliares. A decisão final é sempr
       }
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemContent },
-          ...apiMessages,
-        ],
-        stream: true,
-      }),
+    const response = await callGemini({
+      model,
+      messages: [
+        { role: "system", content: systemContent },
+        ...apiMessages,
+      ],
+      stream: true,
     });
 
     if (!response.ok) {
