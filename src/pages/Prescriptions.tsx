@@ -629,40 +629,125 @@ const Prescriptions = () => {
 
           {/* Prescription print area */}
           <div className="print-area">
-              <div className="bg-card border border-border rounded-xl shadow-sm" style={{ padding: "2.5rem 3rem", minHeight: "700px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <div className="text-center pb-5 mb-6" style={{ borderBottom: "2px solid hsl(var(--primary) / 0.25)" }}>
-                    <h2 className="text-xl font-bold text-primary">{String(settings.professional_name || "Dr(a). Nome")}</h2>
-                    <p className="text-sm text-muted-foreground">{String(settings.specialty || "Especialidade")} — {String(settings.registration_number || "Registro Profissional")}</p>
-                    {settings.clinic_name && <p className="text-sm font-medium mt-1">{String(settings.clinic_name)}</p>}
-                  </div>
-                  {previewPrescription ? (
-                    <div className="space-y-6">
-                      <div className="flex justify-between text-sm">
-                        <span><strong>Paciente:</strong> {String(previewPrescription.patient_name)}</span>
-                        <span><strong>Data:</strong> {format(new Date(String(previewPrescription.date)), "dd/MM/yyyy")}</span>
-                      </div>
-                      <div className="pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
-                        <h3 className="font-semibold mb-4 text-center text-lg tracking-wide">RECEITUÁRIO</h3>
-                        <div className="whitespace-pre-wrap text-sm leading-7" style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
-                          {String(previewPrescription.medications)}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-center text-muted-foreground py-20">Selecione ou crie um receituário.</p>
+            <div
+              className="bg-card rounded-xl shadow-md relative overflow-hidden"
+              style={{
+                padding: "2.75rem 3rem 2rem",
+                minHeight: "760px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                border: "1px solid hsl(var(--primary) / 0.35)",
+                boxShadow: "0 0 0 1px hsl(var(--primary) / 0.08) inset, 0 4px 18px -8px hsl(var(--primary) / 0.18)",
+              }}
+            >
+              {/* Top corner brand mark — discreet */}
+              <div
+                className="absolute top-3 right-4 flex items-center gap-1.5 text-[9px] uppercase tracking-[0.18em] font-semibold"
+                style={{ color: "hsl(var(--primary) / 0.55)" }}
+              >
+                <span
+                  className="inline-flex items-center justify-center rounded-sm"
+                  style={{
+                    width: 14,
+                    height: 14,
+                    background: "hsl(var(--primary) / 0.12)",
+                    border: "1px solid hsl(var(--primary) / 0.35)",
+                    color: "hsl(var(--primary))",
+                    fontSize: 9,
+                    fontWeight: 800,
+                  }}
+                >
+                  B
+                </span>
+                Btx CliniCos
+              </div>
+
+              <div>
+                <div
+                  className="text-center pb-5 mb-6"
+                  style={{ borderBottom: "2px solid hsl(var(--primary) / 0.3)" }}
+                >
+                  <h2 className="text-xl font-bold text-primary tracking-tight">
+                    {String(settings.professional_name || "Dr(a). Nome")}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {String(settings.specialty || "Especialidade")} — {String(settings.registration_number || "Registro Profissional")}
+                  </p>
+                  {settings.clinic_name && (
+                    <p className="text-sm font-medium mt-1">{String(settings.clinic_name)}</p>
                   )}
                 </div>
-                <div className="mt-12" style={{ borderTop: "2px solid hsl(var(--primary) / 0.25)", paddingTop: "1.5rem" }}>
-                  <div className="text-center">
-                    <div className="w-48 mx-auto mb-2" style={{ borderTop: "1px solid hsl(var(--foreground))" }} />
-                    <p className="text-sm font-semibold text-primary">{String(settings.professional_name || "Assinatura")}</p>
-                    <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
+
+                {previewPrescription ? (
+                  <div className="space-y-5">
+                    <div
+                      className="flex justify-between text-sm rounded-md px-3 py-2"
+                      style={{ background: "hsl(var(--muted) / 0.5)" }}
+                    >
+                      <span><strong>Paciente:</strong> {String(previewPrescription.patient_name)}</span>
+                      <span><strong>Data:</strong> {format(new Date(String(previewPrescription.date)), "dd/MM/yyyy")}</span>
+                    </div>
+
+                    <div className="pt-2">
+                      <h3
+                        className="font-semibold mb-4 text-center text-base tracking-[0.25em] uppercase"
+                        style={{ color: "hsl(var(--primary))" }}
+                      >
+                        Receituário
+                      </h3>
+                      <div
+                        className="whitespace-pre-wrap text-[13.5px] leading-7 rounded-md"
+                        style={{
+                          paddingLeft: "1.25rem",
+                          paddingRight: "1.25rem",
+                          paddingTop: "0.75rem",
+                          paddingBottom: "0.75rem",
+                          borderLeft: "3px solid hsl(var(--primary) / 0.4)",
+                        }}
+                      >
+                        {String(previewPrescription.medications)}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-3 text-center">{String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}</p>
+                ) : (
+                  <p className="text-center text-muted-foreground py-20">
+                    Selecione ou crie um receituário.
+                  </p>
+                )}
+              </div>
+
+              <div
+                className="mt-12"
+                style={{ borderTop: "2px solid hsl(var(--primary) / 0.3)", paddingTop: "1.75rem" }}
+              >
+                <div className="text-center">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-8">
+                    Assinatura e Carimbo do Profissional
+                  </p>
+                  <div
+                    className="w-64 mx-auto mb-2"
+                    style={{ borderTop: "1.5px solid hsl(var(--foreground) / 0.85)" }}
+                  />
+                  <p className="text-sm font-semibold text-primary">
+                    {String(settings.professional_name || "Assinatura")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {String(settings.specialty || "")}{settings.specialty && settings.registration_number ? " • " : ""}
+                    {String(settings.registration_number || "Registro Profissional")}
+                  </p>
+                </div>
+                <div
+                  className="mt-4 pt-3 text-center text-[10.5px] text-muted-foreground"
+                  style={{ borderTop: "1px dashed hsl(var(--border))" }}
+                >
+                  {String(settings.address || "Endereço")}
+                  {settings.phone ? ` • ${settings.phone}` : ""}
+                  {settings.email ? ` • ${settings.email}` : ""}
                 </div>
               </div>
             </div>
+          </div>
         </div>
       </div>
 
