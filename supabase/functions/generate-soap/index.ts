@@ -40,19 +40,12 @@ Formato de resposta (JSON puro):
   "tooth_number": "número ou vazio"
 }`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Paciente: ${patientName || "Não informado"}\n\nTranscrição da consulta:\n${formattedTranscript}` },
-        ],
-      }),
+    const response = await callGemini({
+      model: "gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Paciente: ${patientName || "Não informado"}\n\nTranscrição da consulta:\n${formattedTranscript}` },
+      ],
     });
 
     if (!response.ok) {
