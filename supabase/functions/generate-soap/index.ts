@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkAiAccess, corsHeaders } from "../_shared/aiGuard.ts";
+import { callGemini } from "../_shared/gemini.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -7,9 +8,6 @@ serve(async (req) => {
   try {
     const guard = await checkAiAccess(req);
     if (!guard.ok) return guard.response;
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const { transcript, segments, patientName } = await req.json();
 
@@ -42,19 +40,12 @@ Formato de resposta (JSON puro):
   "tooth_number": "número ou vazio"
 }`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Paciente: ${patientName || "Não informado"}\n\nTranscrição da consulta:\n${formattedTranscript}` },
-        ],
-      }),
+    const response = await callGemini({
+      model: "gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Paciente: ${patientName || "Não informado"}\n\nTranscrição da consulta:\n${formattedTranscript}` },
+      ],
     });
 
     if (!response.ok) {

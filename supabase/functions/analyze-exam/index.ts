@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkAiAccess, corsHeaders } from "../_shared/aiGuard.ts";
+import { callGemini } from "../_shared/gemini.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -10,8 +11,6 @@ serve(async (req) => {
 
     const { description, fileName, category, patientInfo, language } = await req.json();
     const lang = language === "es" ? "es" : "pt";
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const langInstruction = lang === "es" ? "Responda en español." : "Responda em português brasileiro.";
     const systemPrompt = `Você é um assistente clínico especializado em análise de exames complementares. Auxilie o profissional de saúde na interpretação dos resultados.
@@ -33,19 +32,12 @@ ${patientInfo ? `- Informações do paciente: ${patientInfo}` : ""}
 
 Forneça sua análise auxiliar.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
-      }),
+    const response = await callGemini({
+      model: "gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
     });
 
     if (!response.ok) {
