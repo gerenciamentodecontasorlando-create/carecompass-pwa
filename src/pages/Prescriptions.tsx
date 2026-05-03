@@ -83,16 +83,67 @@ const ADULT_CATALOG: Record<string, MedEntry[]> = {
     { name: "Metoclopramida 10mg (Plasil)", posology: "Tomar 1 comprimido de 8 em 8 horas, 30 minutos antes das refeições." },
     { name: "Buscopan Composto (Escopolamina + Dipirona)", posology: "Tomar 1 a 2 comprimidos de 6 em 6 horas se cólica/dor abdominal." },
   ],
-  "Anti-hipertensivos": [
-    { name: "Losartana Potássica 50mg", posology: "Tomar 1 comprimido ao dia, pela manhã." },
+  "Anti-hipertensivos (1ª linha)": [
+    { name: "Losartana Potássica 50mg", posology: "Tomar 1 comprimido ao dia, pela manhã. Pode aumentar para 100mg/dia se necessário." },
+    { name: "Losartana Potássica 100mg", posology: "Tomar 1 comprimido ao dia, pela manhã." },
+    { name: "Valsartana 160mg", posology: "Tomar 1 comprimido ao dia, pela manhã." },
     { name: "Anlodipino 5mg", posology: "Tomar 1 comprimido ao dia, pela manhã." },
+    { name: "Anlodipino 10mg", posology: "Tomar 1 comprimido ao dia, pela manhã." },
     { name: "Enalapril 10mg", posology: "Tomar 1 comprimido de 12 em 12 horas." },
+    { name: "Enalapril 20mg", posology: "Tomar 1 comprimido de 12 em 12 horas." },
+    { name: "Hidroclorotiazida 25mg", posology: "Tomar 1 comprimido ao dia, pela manhã." },
+    { name: "Indapamida 1,5mg SR", posology: "Tomar 1 comprimido ao dia, pela manhã." },
   ],
-  "Antidiabéticos": [
+  "HAS Refratária / Resistente": [
+    { name: "Espironolactona 25mg", posology: "Tomar 1 comprimido ao dia, pela manhã. (4ª droga preferencial em HAS resistente — PATHWAY-2)" },
+    { name: "Espironolactona 50mg", posology: "Tomar 1 comprimido ao dia, pela manhã. Monitorar K+ e função renal em 2-4 semanas." },
+    { name: "Clortalidona 25mg", posology: "Tomar 1 comprimido ao dia, pela manhã. (Tiazídico-símile preferível à HCTZ na resistente)" },
+    { name: "Furosemida 40mg", posology: "Tomar 1 comprimido pela manhã. Reservado para ClCr < 30mL/min ou edema." },
+    { name: "Carvedilol 25mg", posology: "Tomar 1 comprimido de 12 em 12 horas, com alimento." },
+    { name: "Bisoprolol 5mg", posology: "Tomar 1 comprimido ao dia, pela manhã." },
+    { name: "Clonidina 0,150mg", posology: "Tomar 1 comprimido de 12 em 12 horas. Não suspender abruptamente." },
+    { name: "Hidralazina 25mg", posology: "Tomar 1 comprimido de 8 em 8 horas. Associar a betabloqueador e diurético." },
+    { name: "Minoxidil 10mg", posology: "Tomar 1 comprimido ao dia. Associar obrigatoriamente a betabloqueador + diurético de alça." },
+    { name: "Olmesartana 40mg + Anlodipino 10mg + HCTZ 25mg", posology: "Tomar 1 comprimido ao dia, pela manhã. (Combinação tripla fixa)" },
+  ],
+  "Antidiabéticos Orais (1ª linha)": [
+    { name: "Metformina 500mg XR", posology: "Tomar 1 comprimido ao dia, com o jantar. Aumentar gradualmente até 2g/dia." },
     { name: "Metformina 850mg", posology: "Tomar 1 comprimido de 12 em 12 horas, durante as refeições." },
+    { name: "Metformina 1000mg", posology: "Tomar 1 comprimido de 12 em 12 horas, durante as refeições." },
     { name: "Glibenclamida 5mg", posology: "Tomar 1 comprimido ao dia, antes do café da manhã." },
     { name: "Gliclazida 30mg MR", posology: "Tomar 1 comprimido ao dia, antes do café da manhã." },
+    { name: "Gliclazida 60mg MR", posology: "Tomar 1 comprimido ao dia, antes do café da manhã." },
+  ],
+  "DM2 Refratário / Avançado": [
+    { name: "Empagliflozina 25mg (Jardiance)", posology: "Tomar 1 comprimido ao dia, pela manhã. (iSGLT2 — proteção cardiorrenal)" },
+    { name: "Dapagliflozina 10mg (Forxiga)", posology: "Tomar 1 comprimido ao dia, pela manhã. Suspender em jejum prolongado/cirurgia." },
+    { name: "Empagliflozina 12,5mg + Metformina 1000mg", posology: "Tomar 1 comprimido de 12 em 12 horas, com as refeições." },
+    { name: "Semaglutida 1mg/dose (Ozempic)", posology: "Aplicar 0,25mg SC 1x/semana por 4 semanas; depois 0,5mg/sem; titular até 1mg/sem conforme resposta." },
+    { name: "Liraglutida 6mg/mL (Victoza)", posology: "Aplicar 0,6mg SC ao dia por 1 semana; depois 1,2mg/dia; máx 1,8mg/dia." },
+    { name: "Dulaglutida 1,5mg (Trulicity)", posology: "Aplicar 0,75mg SC 1x/semana; titular para 1,5mg/sem após 4 semanas." },
     { name: "Sitagliptina 100mg", posology: "Tomar 1 comprimido ao dia, com ou sem alimento." },
+    { name: "Linagliptina 5mg (Trayenta)", posology: "Tomar 1 comprimido ao dia. (Não requer ajuste renal)" },
+    { name: "Pioglitazona 30mg", posology: "Tomar 1 comprimido ao dia. Contraindicado em ICC classe III/IV." },
+    { name: "Insulina NPH 100UI/mL", posology: "Aplicar SC ___UI antes do café da manhã e ___UI antes de dormir. Titular conforme glicemia capilar." },
+    { name: "Insulina Glargina 100UI/mL (Lantus/Basaglar)", posology: "Aplicar ___UI SC 1x/dia, sempre no mesmo horário. Iniciar com 0,2UI/kg/dia." },
+    { name: "Insulina Degludeca 100UI/mL (Tresiba)", posology: "Aplicar ___UI SC 1x/dia, em horário flexível." },
+    { name: "Insulina Lispro/Asparte (Humalog/NovoRapid)", posology: "Aplicar ___UI SC imediatamente antes das refeições principais conforme contagem de carboidratos." },
+  ],
+  "Dislipidemia": [
+    { name: "Sinvastatina 20mg", posology: "Tomar 1 comprimido à noite." },
+    { name: "Sinvastatina 40mg", posology: "Tomar 1 comprimido à noite." },
+    { name: "Atorvastatina 20mg", posology: "Tomar 1 comprimido à noite." },
+    { name: "Atorvastatina 40mg", posology: "Tomar 1 comprimido à noite." },
+    { name: "Rosuvastatina 10mg", posology: "Tomar 1 comprimido ao dia, em qualquer horário." },
+    { name: "Rosuvastatina 20mg", posology: "Tomar 1 comprimido ao dia." },
+    { name: "Ezetimiba 10mg", posology: "Tomar 1 comprimido ao dia. Associável a estatina." },
+    { name: "Ciprofibrato 100mg", posology: "Tomar 1 comprimido ao dia (hipertrigliceridemia)." },
+  ],
+  "Anticoagulantes / Antiagregantes": [
+    { name: "AAS 100mg", posology: "Tomar 1 comprimido ao dia, após o almoço." },
+    { name: "Clopidogrel 75mg", posology: "Tomar 1 comprimido ao dia." },
+    { name: "Rivaroxabana 20mg (Xarelto)", posology: "Tomar 1 comprimido ao dia, com o jantar." },
+    { name: "Apixabana 5mg (Eliquis)", posology: "Tomar 1 comprimido de 12 em 12 horas." },
   ],
   "Antiparasitários": [
     { name: "Albendazol 400mg", posology: "Tomar 1 comprimido em dose única." },
@@ -578,40 +629,125 @@ const Prescriptions = () => {
 
           {/* Prescription print area */}
           <div className="print-area">
-              <div className="bg-card border border-border rounded-xl shadow-sm" style={{ padding: "2.5rem 3rem", minHeight: "700px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <div className="text-center pb-5 mb-6" style={{ borderBottom: "2px solid hsl(var(--primary) / 0.25)" }}>
-                    <h2 className="text-xl font-bold text-primary">{String(settings.professional_name || "Dr(a). Nome")}</h2>
-                    <p className="text-sm text-muted-foreground">{String(settings.specialty || "Especialidade")} — {String(settings.registration_number || "Registro Profissional")}</p>
-                    {settings.clinic_name && <p className="text-sm font-medium mt-1">{String(settings.clinic_name)}</p>}
-                  </div>
-                  {previewPrescription ? (
-                    <div className="space-y-6">
-                      <div className="flex justify-between text-sm">
-                        <span><strong>Paciente:</strong> {String(previewPrescription.patient_name)}</span>
-                        <span><strong>Data:</strong> {format(new Date(String(previewPrescription.date)), "dd/MM/yyyy")}</span>
-                      </div>
-                      <div className="pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
-                        <h3 className="font-semibold mb-4 text-center text-lg tracking-wide">RECEITUÁRIO</h3>
-                        <div className="whitespace-pre-wrap text-sm leading-7" style={{ paddingLeft: "1rem", paddingRight: "1rem" }}>
-                          {String(previewPrescription.medications)}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-center text-muted-foreground py-20">Selecione ou crie um receituário.</p>
+            <div
+              className="bg-card rounded-xl shadow-md relative overflow-hidden"
+              style={{
+                padding: "2.75rem 3rem 2rem",
+                minHeight: "760px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                border: "1px solid hsl(var(--primary) / 0.35)",
+                boxShadow: "0 0 0 1px hsl(var(--primary) / 0.08) inset, 0 4px 18px -8px hsl(var(--primary) / 0.18)",
+              }}
+            >
+              {/* Top corner brand mark — discreet */}
+              <div
+                className="absolute top-3 right-4 flex items-center gap-1.5 text-[9px] uppercase tracking-[0.18em] font-semibold"
+                style={{ color: "hsl(var(--primary) / 0.55)" }}
+              >
+                <span
+                  className="inline-flex items-center justify-center rounded-sm"
+                  style={{
+                    width: 14,
+                    height: 14,
+                    background: "hsl(var(--primary) / 0.12)",
+                    border: "1px solid hsl(var(--primary) / 0.35)",
+                    color: "hsl(var(--primary))",
+                    fontSize: 9,
+                    fontWeight: 800,
+                  }}
+                >
+                  B
+                </span>
+                Btx CliniCos
+              </div>
+
+              <div>
+                <div
+                  className="text-center pb-5 mb-6"
+                  style={{ borderBottom: "2px solid hsl(var(--primary) / 0.3)" }}
+                >
+                  <h2 className="text-xl font-bold text-primary tracking-tight">
+                    {String(settings.professional_name || "Dr(a). Nome")}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {String(settings.specialty || "Especialidade")} — {String(settings.registration_number || "Registro Profissional")}
+                  </p>
+                  {settings.clinic_name && (
+                    <p className="text-sm font-medium mt-1">{String(settings.clinic_name)}</p>
                   )}
                 </div>
-                <div className="mt-12" style={{ borderTop: "2px solid hsl(var(--primary) / 0.25)", paddingTop: "1.5rem" }}>
-                  <div className="text-center">
-                    <div className="w-48 mx-auto mb-2" style={{ borderTop: "1px solid hsl(var(--foreground))" }} />
-                    <p className="text-sm font-semibold text-primary">{String(settings.professional_name || "Assinatura")}</p>
-                    <p className="text-xs text-muted-foreground">{String(settings.registration_number || "Registro Profissional")}</p>
+
+                {previewPrescription ? (
+                  <div className="space-y-5">
+                    <div
+                      className="flex justify-between text-sm rounded-md px-3 py-2"
+                      style={{ background: "hsl(var(--muted) / 0.5)" }}
+                    >
+                      <span><strong>Paciente:</strong> {String(previewPrescription.patient_name)}</span>
+                      <span><strong>Data:</strong> {format(new Date(String(previewPrescription.date)), "dd/MM/yyyy")}</span>
+                    </div>
+
+                    <div className="pt-2">
+                      <h3
+                        className="font-semibold mb-4 text-center text-base tracking-[0.25em] uppercase"
+                        style={{ color: "hsl(var(--primary))" }}
+                      >
+                        Receituário
+                      </h3>
+                      <div
+                        className="whitespace-pre-wrap text-[13.5px] leading-7 rounded-md"
+                        style={{
+                          paddingLeft: "1.25rem",
+                          paddingRight: "1.25rem",
+                          paddingTop: "0.75rem",
+                          paddingBottom: "0.75rem",
+                          borderLeft: "3px solid hsl(var(--primary) / 0.4)",
+                        }}
+                      >
+                        {String(previewPrescription.medications)}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-3 text-center">{String(settings.address || "Endereço")} {settings.phone ? `• ${settings.phone}` : ""}</p>
+                ) : (
+                  <p className="text-center text-muted-foreground py-20">
+                    Selecione ou crie um receituário.
+                  </p>
+                )}
+              </div>
+
+              <div
+                className="mt-12"
+                style={{ borderTop: "2px solid hsl(var(--primary) / 0.3)", paddingTop: "1.75rem" }}
+              >
+                <div className="text-center">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-8">
+                    Assinatura e Carimbo do Profissional
+                  </p>
+                  <div
+                    className="w-64 mx-auto mb-2"
+                    style={{ borderTop: "1.5px solid hsl(var(--foreground) / 0.85)" }}
+                  />
+                  <p className="text-sm font-semibold text-primary">
+                    {String(settings.professional_name || "Assinatura")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {String(settings.specialty || "")}{settings.specialty && settings.registration_number ? " • " : ""}
+                    {String(settings.registration_number || "Registro Profissional")}
+                  </p>
+                </div>
+                <div
+                  className="mt-4 pt-3 text-center text-[10.5px] text-muted-foreground"
+                  style={{ borderTop: "1px dashed hsl(var(--border))" }}
+                >
+                  {String(settings.address || "Endereço")}
+                  {settings.phone ? ` • ${settings.phone}` : ""}
+                  {settings.email ? ` • ${settings.email}` : ""}
                 </div>
               </div>
             </div>
+          </div>
         </div>
       </div>
 
