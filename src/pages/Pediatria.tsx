@@ -144,7 +144,7 @@ const Pediatria = () => {
       if (v) indicatorsForDB[k] = v;
     }
 
-    const { error } = await supabase.from("pediatric_assessments").insert({
+    const { error } = await supabase.from("pediatric_assessments").insert([{
       clinic_id: clinicId,
       patient_id: selectedPatientId,
       date,
