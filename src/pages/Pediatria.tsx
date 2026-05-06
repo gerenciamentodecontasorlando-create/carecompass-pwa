@@ -170,11 +170,11 @@ const Pediatria = () => {
       clinic_id: clinicId,
       patient_id: selectedPatientId,
       age_group: ageGroup,
-      form_data: anamnesisData,
+      form_data: anamnesisData as Record<string, unknown> as never,
     };
     const { error } = anamnesisId
       ? await supabase.from("pediatric_anamnesis").update(payload).eq("id", anamnesisId)
-      : await supabase.from("pediatric_anamnesis").insert(payload);
+      : await supabase.from("pediatric_anamnesis").insert([payload]);
     if (error) { toast.error("Erro ao salvar: " + error.message); return; }
     toast.success("Anamnese salva!");
     loadPatientData();
