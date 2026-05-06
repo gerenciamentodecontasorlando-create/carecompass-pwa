@@ -154,7 +154,7 @@ const Pediatria = () => {
       height_cm: height ? +height : null,
       head_circumference_cm: hc ? +hc : null,
       gestational_age_weeks: gestAge ? +gestAge : null,
-      indicators: indicatorsForDB,
+      indicators: indicatorsForDB as Record<string, unknown> as never,
       classification: indicators.bmi?.classification || indicators.wfa?.classification || "",
       notes,
     }]);
