@@ -36,6 +36,7 @@ export function AppSidebar() {
     { title: t("menu.consent"), url: "/consentimento", icon: ClipboardCheck },
     { title: t("menu.budget"), url: "/orcamento", icon: Calculator },
     { title: t("menu.odontogram"), url: "/odontograma", icon: Smile },
+    { title: "Pediatria", url: "/pediatria", icon: Baby },
     ...(hasAIAccess ? [{ title: t("menu.aiAssistant"), url: "/assistente-ia", icon: Bot }] : []),
     { title: t("menu.notes"), url: "/notas", icon: StickyNote },
     { title: t("menu.financial"), url: "/financeiro", icon: DollarSign },
