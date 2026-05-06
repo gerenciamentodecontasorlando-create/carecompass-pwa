@@ -157,7 +157,7 @@ const Pediatria = () => {
       indicators: indicatorsForDB,
       classification: indicators.bmi?.classification || indicators.wfa?.classification || "",
       notes,
-    });
+    }]);
     if (error) { toast.error("Erro ao salvar: " + error.message); return; }
     toast.success("Avaliação salva!");
     setWeight(""); setHeight(""); setHc(""); setNotes("");
