@@ -15,6 +15,7 @@ import Agenda from "./pages/Agenda";
 import Prescriptions from "./pages/Prescriptions";
 import Certificates from "./pages/Certificates";
 import OdontogramPage from "./pages/OdontogramPage";
+import Pediatria from "./pages/Pediatria";
 import Financial from "./pages/Financial";
 import Materials from "./pages/Materials";
 import SettingsPage from "./pages/SettingsPage";
