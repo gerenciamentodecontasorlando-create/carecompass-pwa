@@ -15,7 +15,6 @@ import Agenda from "./pages/Agenda";
 import Prescriptions from "./pages/Prescriptions";
 import Certificates from "./pages/Certificates";
 import OdontogramPage from "./pages/OdontogramPage";
-import Pediatria from "./pages/Pediatria";
 import Financial from "./pages/Financial";
 import Materials from "./pages/Materials";
 import SettingsPage from "./pages/SettingsPage";
@@ -80,7 +79,6 @@ function AppRoutes() {
             <Route path="/receituario" element={<Prescriptions />} />
             <Route path="/atestados" element={<Certificates />} />
             <Route path="/odontograma" element={<OdontogramPage />} />
-            <Route path="/pediatria" element={<Pediatria />} />
             <Route path="/financeiro" element={<Financial />} />
             <Route path="/materiais" element={<Materials />} />
             <Route path="/assistente-ia" element={<AIAssistant />} />
