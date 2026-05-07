@@ -43,6 +43,8 @@ const pt = {
       consent: "Consentimento (TCLE)",
       budget: "Orçamento",
       odontogram: "Odontologia",
+      pediatrics: "Pediatria",
+      dermatology: "Dermatologia",
       aiAssistant: "Assistente IA",
       notes: "Notas",
       financial: "Financeiro",
