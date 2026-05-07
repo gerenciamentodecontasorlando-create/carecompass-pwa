@@ -2,6 +2,7 @@ import {
   LayoutDashboard, Users, CalendarDays, FileText, FileBadge,
   Smile, DollarSign, Package, Settings, Bot, StickyNote, LogOut,
   Shield, Upload, ClipboardCheck, Trash2, Crown, Calculator,
+  Baby, Sparkles,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,6 +37,8 @@ export function AppSidebar() {
     { title: t("menu.consent"), url: "/consentimento", icon: ClipboardCheck },
     { title: t("menu.budget"), url: "/orcamento", icon: Calculator },
     { title: t("menu.odontogram"), url: "/odontograma", icon: Smile },
+    { title: t("menu.pediatrics"), url: "/pediatria", icon: Baby },
+    { title: t("menu.dermatology"), url: "/dermatologia", icon: Sparkles },
     ...(hasAIAccess ? [{ title: t("menu.aiAssistant"), url: "/assistente-ia", icon: Bot }] : []),
     { title: t("menu.notes"), url: "/notas", icon: StickyNote },
     { title: t("menu.financial"), url: "/financeiro", icon: DollarSign },
