@@ -43,6 +43,8 @@ const es = {
       consent: "Consentimiento",
       budget: "Presupuesto",
       odontogram: "Odontología",
+      pediatrics: "Pediatría",
+      dermatology: "Dermatología",
       aiAssistant: "Asistente IA",
       notes: "Notas",
       financial: "Finanzas",
