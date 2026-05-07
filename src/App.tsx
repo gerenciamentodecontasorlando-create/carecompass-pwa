@@ -92,6 +92,8 @@ function AppRoutes() {
             <Route path="/orcamento" element={<Orcamento />} />
             <Route path="/lixeira" element={<Trash />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/pediatria" element={<Pediatria />} />
+            <Route path="/dermatologia" element={<Dermatologia />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
           <Route path="*" element={<NotFound />} />
