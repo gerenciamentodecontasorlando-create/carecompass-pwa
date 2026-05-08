@@ -263,11 +263,19 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     async (text: string) => {
       setIsProcessing(true);
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) {
+          speak("Sua sessão expirou. Faça login novamente para usar o Roma.");
+          setIsProcessing(false);
+          return;
+        }
         const resp = await fetch(AI_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
             messages: [{ role: "user", content: text }],
