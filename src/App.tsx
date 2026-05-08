@@ -28,6 +28,7 @@ import Trash from "./pages/Trash";
 import AdminPanel from "./pages/AdminPanel";
 import Pediatria from "./pages/Pediatria";
 import Dermatologia from "./pages/Dermatologia";
+import Psiquiatria from "./pages/Psiquiatria";
 import NotFound from "./pages/NotFound";
 import PinLock from "./pages/PinLock";
 import ResetPassword from "./pages/ResetPassword";
@@ -94,6 +95,7 @@ function AppRoutes() {
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/pediatria" element={<Pediatria />} />
             <Route path="/dermatologia" element={<Dermatologia />} />
+            <Route path="/psiquiatria" element={<Psiquiatria />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
           <Route path="*" element={<NotFound />} />
