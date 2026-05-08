@@ -95,6 +95,7 @@ function AppRoutes() {
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/pediatria" element={<Pediatria />} />
             <Route path="/dermatologia" element={<Dermatologia />} />
+            <Route path="/psiquiatria" element={<Psiquiatria />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
           <Route path="*" element={<NotFound />} />
