@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Mic, Square, Pause, Play, Loader2, FileText, Clock, Shield } from "lucide-react";
 import { useAIAccess } from "@/hooks/useAIAccess";
+import { supabase } from "@/integrations/supabase/client";
 
 const RECORDING_CONSENT_TEXT = `TERMO DE CONSENTIMENTO LIVRE E ESCLARECIDO — GRAVAÇÃO DE CONSULTA
 
@@ -206,10 +207,15 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
       const formData = new FormData();
       formData.append("audio", blob, "consultation.webm");
 
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sessão expirada. Faça login novamente.");
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/transcribe-consultation`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${SUPABASE_KEY}`,
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: formData,
       });
@@ -238,11 +244,16 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
 
     setIsGeneratingSoap(true);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sessão expirada. Faça login novamente.");
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-soap`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_KEY}`,
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           transcript: fullText,
