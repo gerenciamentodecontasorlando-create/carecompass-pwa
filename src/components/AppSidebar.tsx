@@ -39,6 +39,7 @@ export function AppSidebar() {
     { title: t("menu.odontogram"), url: "/odontograma", icon: Smile },
     { title: t("menu.pediatrics"), url: "/pediatria", icon: Baby },
     { title: t("menu.dermatology"), url: "/dermatologia", icon: Sparkles },
+    { title: t("menu.psychiatry"), url: "/psiquiatria", icon: Brain },
     ...(hasAIAccess ? [{ title: t("menu.aiAssistant"), url: "/assistente-ia", icon: Bot }] : []),
     { title: t("menu.notes"), url: "/notas", icon: StickyNote },
     { title: t("menu.financial"), url: "/financeiro", icon: DollarSign },
