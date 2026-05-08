@@ -45,6 +45,7 @@ const es = {
       odontogram: "Odontología",
       pediatrics: "Pediatría",
       dermatology: "Dermatología",
+      psychiatry: "Psiquiatría",
       aiAssistant: "Asistente IA",
       notes: "Notas",
       financial: "Finanzas",
