@@ -28,6 +28,7 @@ import Trash from "./pages/Trash";
 import AdminPanel from "./pages/AdminPanel";
 import Pediatria from "./pages/Pediatria";
 import Dermatologia from "./pages/Dermatologia";
+import Psiquiatria from "./pages/Psiquiatria";
 import NotFound from "./pages/NotFound";
 import PinLock from "./pages/PinLock";
 import ResetPassword from "./pages/ResetPassword";
