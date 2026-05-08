@@ -244,11 +244,16 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
 
     setIsGeneratingSoap(true);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sessão expirada. Faça login novamente.");
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-soap`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_KEY}`,
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           transcript: fullText,
