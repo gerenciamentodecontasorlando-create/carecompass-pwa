@@ -207,10 +207,15 @@ export function ConsultationRecorder({ patientName, onSoapGenerated }: Consultat
       const formData = new FormData();
       formData.append("audio", blob, "consultation.webm");
 
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sessão expirada. Faça login novamente.");
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/transcribe-consultation`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${SUPABASE_KEY}`,
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: formData,
       });
