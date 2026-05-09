@@ -305,8 +305,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
           weekday: "long", year: "numeric", month: "long", day: "numeric",
           hour: "2-digit", minute: "2-digit",
         });
-        const hour = now.getHours();
-        const periodo = hour < 6 ? "madrugada" : hour < 12 ? "manhã" : hour < 18 ? "tarde" : "noite";
+        const periodo = getPeriodOfDay(now.getHours());
         const contextPrefix = `[Contexto: agora é ${dateStr}, período do dia: ${periodo}.] `;
 
         const resp = await fetch(AI_URL, {
@@ -380,10 +379,15 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
 
   const processCommand = useCallback(
     (text: string) => {
-      if (!text.trim()) return;
-      setTranscript(text);
-      if (tryNavigate(text)) return;
-      askAI(text);
+      const command = text.trim();
+      if (!command || isProcessingRef.current || isSpeakingRef.current) return;
+      setTranscript(command);
+
+      try { recognitionRef.current?.stop(); } catch { /* noop */ }
+      setIsListening(false);
+
+      if (tryNavigate(command)) return;
+      askAI(command);
     },
     [tryNavigate, askAI]
   );
