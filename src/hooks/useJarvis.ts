@@ -492,6 +492,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     const recognition = ensureRecognition();
     if (!recognition) return;
     shouldListenRef.current = true;
+    if (isSpeakingRef.current || isProcessingRef.current) return;
     try {
       recognition.start();
       setIsListening(true);
