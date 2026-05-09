@@ -384,7 +384,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
         const spokenText = fullResponse.length > 500 
           ? fullResponse.slice(0, 500) + "... Resposta completa disponível no chat."
           : fullResponse;
-        const cleanText = spokenText.replace(/[#*_`>\-\[\]()]/g, "").replace(/\n+/g, ". ");
+        const cleanText = spokenText.replace(/[#*_`>\-[\]()]/g, "").replace(/\n+/g, ". ");
         speak(cleanText);
       } catch (e) {
         console.error("Jarvis AI error:", e);
@@ -417,8 +417,11 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   // across awaits and so we can reliably auto-restart it (Alexa-like behavior).
   const ensureRecognition = useCallback(() => {
     if (recognitionRef.current) return recognitionRef.current;
-    const Ctor =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const speechWindow = window as Window & {
+      SpeechRecognition?: SpeechRecognitionConstructorLike;
+      webkitSpeechRecognition?: SpeechRecognitionConstructorLike;
+    };
+    const Ctor = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
     if (!Ctor) {
       toast.error("Seu navegador não suporta reconhecimento de voz.");
       return null;
@@ -444,7 +447,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       if (text) processCommandRef.current(text);
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEventLike) => {
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const r = event.results[i];
@@ -462,7 +465,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       if (previewText) silenceTimer = window.setTimeout(flush, 1100);
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
       const err = event.error;
       console.warn("[Roma] recognition error:", err);
       if (err === "not-allowed" || err === "service-not-allowed") {
