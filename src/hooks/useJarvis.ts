@@ -19,6 +19,24 @@ interface UseJarvisOptions {
   onGreetingDone?: () => void;
 }
 
+type SpeechRecognitionAlternativeLike = { transcript: string };
+type SpeechRecognitionResultLike = { isFinal: boolean; 0: SpeechRecognitionAlternativeLike };
+type SpeechRecognitionResultsLike = { length: number; [index: number]: SpeechRecognitionResultLike };
+type SpeechRecognitionEventLike = { resultIndex: number; results: SpeechRecognitionResultsLike };
+type SpeechRecognitionErrorEventLike = { error: string };
+type SpeechRecognitionLike = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+type SpeechRecognitionConstructorLike = new () => SpeechRecognitionLike;
+
 const NAVIGATION_MAP: Record<string, string> = {
   dashboard: "/",
   inicio: "/",
@@ -152,7 +170,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   const [transcript, setTranscript] = useState("");
   const [lastResponse, setLastResponse] = useState("");
   const [isActive, setIsActive] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const shouldListenRef = useRef(false);
   const isActiveRef = useRef(false);
   const isSpeakingRef = useRef(false);
