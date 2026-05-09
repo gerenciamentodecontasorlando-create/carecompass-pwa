@@ -412,23 +412,36 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     recognition.maxAlternatives = 1;
 
     let finalBuffer = "";
+    let interimBuffer = "";
     let silenceTimer: number | null = null;
 
     const flush = () => {
-      const text = finalBuffer.trim();
+      const text = (finalBuffer || interimBuffer).trim();
       finalBuffer = "";
+      interimBuffer = "";
+      if (silenceTimer) {
+        window.clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
       if (text) processCommandRef.current(text);
     };
 
     recognition.onresult = (event: any) => {
+      let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const r = event.results[i];
         if (r.isFinal) {
           finalBuffer += " " + r[0].transcript;
-          if (silenceTimer) window.clearTimeout(silenceTimer);
-          silenceTimer = window.setTimeout(flush, 700);
+        } else {
+          interim += " " + r[0].transcript;
         }
       }
+      interimBuffer = interim.trim();
+      const previewText = (finalBuffer || interimBuffer).trim();
+      if (previewText) setTranscript(previewText);
+
+      if (silenceTimer) window.clearTimeout(silenceTimer);
+      if (previewText) silenceTimer = window.setTimeout(flush, 1100);
     };
 
     recognition.onerror = (event: any) => {
