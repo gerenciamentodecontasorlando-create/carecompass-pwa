@@ -272,6 +272,17 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
           setIsProcessing(false);
           return;
         }
+
+        // Inject current local date/time so Roma knows day vs night, weekday, etc.
+        const now = new Date();
+        const dateStr = now.toLocaleString("pt-BR", {
+          weekday: "long", year: "numeric", month: "long", day: "numeric",
+          hour: "2-digit", minute: "2-digit",
+        });
+        const hour = now.getHours();
+        const periodo = hour < 6 ? "madrugada" : hour < 12 ? "manhã" : hour < 18 ? "tarde" : "noite";
+        const contextPrefix = `[Contexto: agora é ${dateStr}, período do dia: ${periodo}.] `;
+
         const resp = await fetch(AI_URL, {
           method: "POST",
           headers: {
@@ -280,7 +291,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            messages: [{ role: "user", content: text }],
+            messages: [{ role: "user", content: contextPrefix + text }],
             type: "jarvis",
           }),
         });
