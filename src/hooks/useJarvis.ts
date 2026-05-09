@@ -19,6 +19,24 @@ interface UseJarvisOptions {
   onGreetingDone?: () => void;
 }
 
+type SpeechRecognitionAlternativeLike = { transcript: string };
+type SpeechRecognitionResultLike = { isFinal: boolean; 0: SpeechRecognitionAlternativeLike };
+type SpeechRecognitionResultsLike = { length: number; [index: number]: SpeechRecognitionResultLike };
+type SpeechRecognitionEventLike = { resultIndex: number; results: SpeechRecognitionResultsLike };
+type SpeechRecognitionErrorEventLike = { error: string };
+type SpeechRecognitionLike = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+type SpeechRecognitionConstructorLike = new () => SpeechRecognitionLike;
+
 const NAVIGATION_MAP: Record<string, string> = {
   dashboard: "/",
   inicio: "/",
@@ -53,6 +71,15 @@ const NAVIGATION_MAP: Record<string, string> = {
   orcamento: "/orcamento",
   orçamento: "/orcamento",
   "orçamento personalizado": "/orcamento",
+  pediatria: "/pediatria",
+  pediatrico: "/pediatria",
+  pediátrico: "/pediatria",
+  dermatologia: "/dermatologia",
+  estetica: "/dermatologia",
+  estética: "/dermatologia",
+  psiquiatria: "/psiquiatria",
+  psiquiatrico: "/psiquiatria",
+  psiquiátrico: "/psiquiatria",
 };
 
 const NAV_TRIGGERS = [
@@ -121,6 +148,13 @@ function getGreeting(): string {
   return "Boa noite";
 }
 
+function getPeriodOfDay(hour = new Date().getHours()): string {
+  if (hour < 6) return "madrugada";
+  if (hour < 12) return "manhã";
+  if (hour < 18) return "tarde";
+  return "noite";
+}
+
 const DEFAULT_VOICE: JarvisVoiceSettings = {
   speed: 1.0,
   pitch: 0.7,
@@ -136,7 +170,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   const [transcript, setTranscript] = useState("");
   const [lastResponse, setLastResponse] = useState("");
   const [isActive, setIsActive] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const shouldListenRef = useRef(false);
   const isActiveRef = useRef(false);
   const isSpeakingRef = useRef(false);
@@ -179,13 +213,15 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       
-      audio.onplay = () => setIsSpeaking(true);
+      audio.onplay = () => { isSpeakingRef.current = true; setIsSpeaking(true); };
       audio.onended = () => {
+        isSpeakingRef.current = false;
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
         onEnd?.();
       };
       audio.onerror = () => {
+        isSpeakingRef.current = false;
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
         onEnd?.();
@@ -211,9 +247,9 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     const { voice } = getVoiceByGender(vs.voiceGender);
     if (voice) utterance.voice = voice;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => { setIsSpeaking(false); onEnd?.(); };
-    utterance.onerror = () => { setIsSpeaking(false); onEnd?.(); };
+    utterance.onstart = () => { isSpeakingRef.current = true; setIsSpeaking(true); };
+    utterance.onend = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
+    utterance.onerror = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
     window.speechSynthesis.speak(utterance);
   }, []);
 
@@ -225,6 +261,8 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     }
     
     const vs = voiceSettingsRef.current;
+    isSpeakingRef.current = true;
+    setIsSpeaking(true);
     
     if (vs.voiceGender === "male") {
       speakWithElevenLabs(text, vs.speed, onEnd);
@@ -273,12 +311,14 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
 
   const askAI = useCallback(
     async (text: string) => {
+      isProcessingRef.current = true;
       setIsProcessing(true);
       try {
         const { data: sessionData } = await supabase.auth.getSession();
         const accessToken = sessionData.session?.access_token;
         if (!accessToken) {
           speak("Sua sessão expirou. Faça login novamente para usar o Roma.");
+          isProcessingRef.current = false;
           setIsProcessing(false);
           return;
         }
@@ -289,8 +329,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
           weekday: "long", year: "numeric", month: "long", day: "numeric",
           hour: "2-digit", minute: "2-digit",
         });
-        const hour = now.getHours();
-        const periodo = hour < 6 ? "madrugada" : hour < 12 ? "manhã" : hour < 18 ? "tarde" : "noite";
+        const periodo = getPeriodOfDay(now.getHours());
         const contextPrefix = `[Contexto: agora é ${dateStr}, período do dia: ${periodo}.] `;
 
         const resp = await fetch(AI_URL, {
@@ -309,6 +348,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({ error: "Erro" }));
           speak(err.error || "Desculpe, ocorreu um erro.");
+          isProcessingRef.current = false;
           setIsProcessing(false);
           return;
         }
@@ -351,12 +391,13 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
         const spokenText = fullResponse.length > 500 
           ? fullResponse.slice(0, 500) + "... Resposta completa disponível no chat."
           : fullResponse;
-        const cleanText = spokenText.replace(/[#*_`>\-\[\]()]/g, "").replace(/\n+/g, ". ");
+        const cleanText = spokenText.replace(/[#*_`>\-[\]()]/g, "").replace(/\n+/g, ". ");
         speak(cleanText);
       } catch (e) {
         console.error("Jarvis AI error:", e);
         speak("Desculpe, não consegui processar sua solicitação.");
       }
+      isProcessingRef.current = false;
       setIsProcessing(false);
     },
     [speak]
@@ -364,10 +405,15 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
 
   const processCommand = useCallback(
     (text: string) => {
-      if (!text.trim()) return;
-      setTranscript(text);
-      if (tryNavigate(text)) return;
-      askAI(text);
+      const command = text.trim();
+      if (!command || isProcessingRef.current || isSpeakingRef.current) return;
+      setTranscript(command);
+
+      try { recognitionRef.current?.stop(); } catch { /* noop */ }
+      setIsListening(false);
+
+      if (tryNavigate(command)) return;
+      askAI(command);
     },
     [tryNavigate, askAI]
   );
@@ -379,8 +425,11 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   // across awaits and so we can reliably auto-restart it (Alexa-like behavior).
   const ensureRecognition = useCallback(() => {
     if (recognitionRef.current) return recognitionRef.current;
-    const Ctor =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const speechWindow = window as Window & {
+      SpeechRecognition?: SpeechRecognitionConstructorLike;
+      webkitSpeechRecognition?: SpeechRecognitionConstructorLike;
+    };
+    const Ctor = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
     if (!Ctor) {
       toast.error("Seu navegador não suporta reconhecimento de voz.");
       return null;
@@ -392,26 +441,39 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     recognition.maxAlternatives = 1;
 
     let finalBuffer = "";
+    let interimBuffer = "";
     let silenceTimer: number | null = null;
 
     const flush = () => {
-      const text = finalBuffer.trim();
+      const text = (finalBuffer || interimBuffer).trim();
       finalBuffer = "";
+      interimBuffer = "";
+      if (silenceTimer) {
+        window.clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
       if (text) processCommandRef.current(text);
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEventLike) => {
+      let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const r = event.results[i];
         if (r.isFinal) {
           finalBuffer += " " + r[0].transcript;
-          if (silenceTimer) window.clearTimeout(silenceTimer);
-          silenceTimer = window.setTimeout(flush, 700);
+        } else {
+          interim += " " + r[0].transcript;
         }
       }
+      interimBuffer = interim.trim();
+      const previewText = (finalBuffer || interimBuffer).trim();
+      if (previewText) setTranscript(previewText);
+
+      if (silenceTimer) window.clearTimeout(silenceTimer);
+      if (previewText) silenceTimer = window.setTimeout(flush, 1100);
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
       const err = event.error;
       console.warn("[Roma] recognition error:", err);
       if (err === "not-allowed" || err === "service-not-allowed") {
@@ -431,7 +493,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     recognition.onend = () => {
       setIsListening(false);
       if (silenceTimer) { window.clearTimeout(silenceTimer); silenceTimer = null; }
-      if (finalBuffer.trim()) flush();
+      if ((finalBuffer || interimBuffer).trim()) flush();
       // Auto-restart while Roma is active and not currently speaking
       if (
         shouldListenRef.current &&
@@ -459,6 +521,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     const recognition = ensureRecognition();
     if (!recognition) return;
     shouldListenRef.current = true;
+    if (isSpeakingRef.current || isProcessingRef.current) return;
     try {
       recognition.start();
       setIsListening(true);
