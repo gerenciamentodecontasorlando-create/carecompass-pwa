@@ -464,7 +464,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     recognition.onend = () => {
       setIsListening(false);
       if (silenceTimer) { window.clearTimeout(silenceTimer); silenceTimer = null; }
-      if (finalBuffer.trim()) flush();
+      if ((finalBuffer || interimBuffer).trim()) flush();
       // Auto-restart while Roma is active and not currently speaking
       if (
         shouldListenRef.current &&
