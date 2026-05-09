@@ -372,57 +372,124 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     [tryNavigate, askAI]
   );
 
-  const startListening = useCallback(() => {
-    const SpeechRecognitionCtor =
+  // Keep stable ref to latest processCommand so the recognition handlers don't go stale
+  useEffect(() => { processCommandRef.current = processCommand; }, [processCommand]);
+
+  // Initialize SpeechRecognition ONCE so the user's gesture context is preserved
+  // across awaits and so we can reliably auto-restart it (Alexa-like behavior).
+  const ensureRecognition = useCallback(() => {
+    if (recognitionRef.current) return recognitionRef.current;
+    const Ctor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognitionCtor) {
+    if (!Ctor) {
       toast.error("Seu navegador não suporta reconhecimento de voz.");
-      return;
+      return null;
     }
-
-    const recognition = new SpeechRecognitionCtor();
+    const recognition = new Ctor();
     recognition.lang = "pt-BR";
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const result = event.results[0][0].transcript;
-      processCommand(result);
+    let finalBuffer = "";
+    let silenceTimer: number | null = null;
+
+    const flush = () => {
+      const text = finalBuffer.trim();
+      finalBuffer = "";
+      if (text) processCommandRef.current(text);
+    };
+
+    recognition.onresult = (event: any) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const r = event.results[i];
+        if (r.isFinal) {
+          finalBuffer += " " + r[0].transcript;
+          if (silenceTimer) window.clearTimeout(silenceTimer);
+          silenceTimer = window.setTimeout(flush, 700);
+        }
+      }
     };
 
     recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
-      if (event.error !== "no-speech" && event.error !== "aborted") {
-        toast.error("Erro no reconhecimento de voz");
+      const err = event.error;
+      console.warn("[Roma] recognition error:", err);
+      if (err === "not-allowed" || err === "service-not-allowed") {
+        toast.error("Permissão do microfone bloqueada. Habilite nas configurações do navegador.");
+        shouldListenRef.current = false;
+        setIsListening(false);
+        return;
       }
-      setIsListening(false);
+      if (err === "audio-capture") {
+        toast.error("Microfone não disponível.");
+        shouldListenRef.current = false;
+        setIsListening(false);
+      }
+      // 'no-speech', 'aborted', 'network' -> just let onend handle restart
     };
 
     recognition.onend = () => {
       setIsListening(false);
+      if (silenceTimer) { window.clearTimeout(silenceTimer); silenceTimer = null; }
+      if (finalBuffer.trim()) flush();
+      // Auto-restart while Roma is active and not currently speaking
+      if (
+        shouldListenRef.current &&
+        isActiveRef.current &&
+        !isSpeakingRef.current &&
+        !isProcessingRef.current
+      ) {
+        if (restartTimerRef.current) window.clearTimeout(restartTimerRef.current);
+        restartTimerRef.current = window.setTimeout(() => {
+          try {
+            recognition.start();
+            setIsListening(true);
+          } catch (e) {
+            console.warn("[Roma] restart failed:", e);
+          }
+        }, 250);
+      }
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-  }, [processCommand]);
+    return recognition;
+  }, []);
+
+  const startListening = useCallback(() => {
+    const recognition = ensureRecognition();
+    if (!recognition) return;
+    shouldListenRef.current = true;
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch {
+      // already started — ignore
+      setIsListening(true);
+    }
+  }, [ensureRecognition]);
 
   const stopListening = useCallback(() => {
-    recognitionRef.current?.stop();
+    shouldListenRef.current = false;
+    if (restartTimerRef.current) {
+      window.clearTimeout(restartTimerRef.current);
+      restartTimerRef.current = null;
+    }
+    try { recognitionRef.current?.stop(); } catch { /* noop */ }
     setIsListening(false);
   }, []);
 
   const activate = useCallback(() => {
+    // Initialize recognition synchronously inside the user gesture to preserve permission context
+    ensureRecognition();
     if (!isActive) {
       setIsActive(true);
+      isActiveRef.current = true;
       greet();
     }
     if (!isListening && !isSpeaking && !isProcessing) {
       startListening();
     }
-  }, [isActive, isListening, isSpeaking, isProcessing, greet, startListening]);
+  }, [isActive, isListening, isSpeaking, isProcessing, greet, startListening, ensureRecognition]);
 
   const deactivate = useCallback(() => {
     stopListening();
@@ -432,9 +499,20 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       audioRef.current = null;
     }
     setIsActive(false);
+    isActiveRef.current = false;
     setIsSpeaking(false);
     hasGreetedRef.current = false;
   }, [stopListening]);
+
+  // When Roma finishes speaking/processing while active, auto-resume listening (Alexa-like)
+  useEffect(() => {
+    if (isActive && !isSpeaking && !isProcessing && !isListening && shouldListenRef.current) {
+      const t = window.setTimeout(() => {
+        try { recognitionRef.current?.start(); setIsListening(true); } catch { /* ignore */ }
+      }, 300);
+      return () => window.clearTimeout(t);
+    }
+  }, [isActive, isSpeaking, isProcessing, isListening]);
 
   // Load voices
   useEffect(() => {
