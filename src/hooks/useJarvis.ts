@@ -311,12 +311,14 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
 
   const askAI = useCallback(
     async (text: string) => {
+      isProcessingRef.current = true;
       setIsProcessing(true);
       try {
         const { data: sessionData } = await supabase.auth.getSession();
         const accessToken = sessionData.session?.access_token;
         if (!accessToken) {
           speak("Sua sessão expirou. Faça login novamente para usar o Roma.");
+          isProcessingRef.current = false;
           setIsProcessing(false);
           return;
         }
@@ -346,6 +348,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({ error: "Erro" }));
           speak(err.error || "Desculpe, ocorreu um erro.");
+          isProcessingRef.current = false;
           setIsProcessing(false);
           return;
         }
@@ -394,6 +397,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
         console.error("Jarvis AI error:", e);
         speak("Desculpe, não consegui processar sua solicitação.");
       }
+      isProcessingRef.current = false;
       setIsProcessing(false);
     },
     [speak]
