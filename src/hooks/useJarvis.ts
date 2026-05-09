@@ -227,7 +227,9 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     if (hasGreetedRef.current) return;
     hasGreetedRef.current = true;
 
-    const text = `Bom dia doutor, abençoado e produtivo seja seu dia de trabalho. Estou aqui para ajudar.`;
+    const greeting = getGreeting();
+    const namePart = professionalName ? `, ${professionalName}` : " doutor";
+    const text = `${greeting}${namePart}. Estou aqui para ajudar. Pode falar.`;
 
     speak(text, onGreetingDone);
   }, [professionalName, speak, onGreetingDone]);
