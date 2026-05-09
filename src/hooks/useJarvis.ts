@@ -213,13 +213,15 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       
-      audio.onplay = () => setIsSpeaking(true);
+      audio.onplay = () => { isSpeakingRef.current = true; setIsSpeaking(true); };
       audio.onended = () => {
+        isSpeakingRef.current = false;
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
         onEnd?.();
       };
       audio.onerror = () => {
+        isSpeakingRef.current = false;
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
         onEnd?.();
@@ -245,9 +247,9 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     const { voice } = getVoiceByGender(vs.voiceGender);
     if (voice) utterance.voice = voice;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => { setIsSpeaking(false); onEnd?.(); };
-    utterance.onerror = () => { setIsSpeaking(false); onEnd?.(); };
+    utterance.onstart = () => { isSpeakingRef.current = true; setIsSpeaking(true); };
+    utterance.onend = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
+    utterance.onerror = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
     window.speechSynthesis.speak(utterance);
   }, []);
 
@@ -259,6 +261,8 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     }
     
     const vs = voiceSettingsRef.current;
+    isSpeakingRef.current = true;
+    setIsSpeaking(true);
     
     if (vs.voiceGender === "male") {
       speakWithElevenLabs(text, vs.speed, onEnd);
