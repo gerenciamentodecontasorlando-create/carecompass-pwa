@@ -137,10 +137,20 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   const [lastResponse, setLastResponse] = useState("");
   const [isActive, setIsActive] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const shouldListenRef = useRef(false);
+  const isActiveRef = useRef(false);
+  const isSpeakingRef = useRef(false);
+  const isProcessingRef = useRef(false);
+  const processCommandRef = useRef<(t: string) => void>(() => {});
+  const restartTimerRef = useRef<number | null>(null);
   const navigate = useNavigate();
   const hasGreetedRef = useRef(false);
   const voiceSettingsRef = useRef<JarvisVoiceSettings>(voiceSettings || DEFAULT_VOICE);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => { isActiveRef.current = isActive; }, [isActive]);
+  useEffect(() => { isSpeakingRef.current = isSpeaking; }, [isSpeaking]);
+  useEffect(() => { isProcessingRef.current = isProcessing; }, [isProcessing]);
 
   // Keep ref in sync with latest props
   useEffect(() => {
