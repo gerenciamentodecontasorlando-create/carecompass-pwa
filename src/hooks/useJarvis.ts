@@ -53,6 +53,15 @@ const NAVIGATION_MAP: Record<string, string> = {
   orcamento: "/orcamento",
   orçamento: "/orcamento",
   "orçamento personalizado": "/orcamento",
+  pediatria: "/pediatria",
+  pediatrico: "/pediatria",
+  pediátrico: "/pediatria",
+  dermatologia: "/dermatologia",
+  estetica: "/dermatologia",
+  estética: "/dermatologia",
+  psiquiatria: "/psiquiatria",
+  psiquiatrico: "/psiquiatria",
+  psiquiátrico: "/psiquiatria",
 };
 
 const NAV_TRIGGERS = [
@@ -119,6 +128,13 @@ function getGreeting(): string {
   if (hour < 12) return "Bom dia";
   if (hour < 18) return "Boa tarde";
   return "Boa noite";
+}
+
+function getPeriodOfDay(hour = new Date().getHours()): string {
+  if (hour < 6) return "madrugada";
+  if (hour < 12) return "manhã";
+  if (hour < 18) return "tarde";
+  return "noite";
 }
 
 const DEFAULT_VOICE: JarvisVoiceSettings = {
