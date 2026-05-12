@@ -428,6 +428,155 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     [tryNavigate, askAI]
   );
 
+  const transcribeRecordedAudio = useCallback(async (blob: Blob) => {
+    if (blob.size < 1200) {
+      toast.error("Não detectei áudio suficiente. Aproxime-se do microfone e tente novamente.");
+      return;
+    }
+
+    isProcessingRef.current = true;
+    setIsProcessing(true);
+    setTranscript("Transcrevendo sua fala...");
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sua sessão expirou. Faça login novamente para usar o Roma.");
+
+      const formData = new FormData();
+      formData.append("audio", blob, "roma-comando.webm");
+      const response = await fetch(TRANSCRIBE_URL, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: "Erro ao transcrever áudio" }));
+        throw new Error(err.error || "Erro ao transcrever áudio");
+      }
+
+      const data = await response.json();
+      const text = String(data.text || "").trim();
+      if (!text) throw new Error("Não consegui entender o áudio. Tente falar mais perto do microfone.");
+      processCommandRef.current(text);
+    } catch (e) {
+      console.error("[Roma] audio transcription error:", e);
+      toast.error(e instanceof Error ? e.message : "Erro ao entender o áudio");
+      speak("Não consegui entender com clareza. Toque no microfone e tente falar mais perto.");
+    } finally {
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+    }
+  }, [speak]);
+
+  const cleanupRecording = useCallback(() => {
+    if (analyserFrameRef.current) {
+      cancelAnimationFrame(analyserFrameRef.current);
+      analyserFrameRef.current = null;
+    }
+    if (maxRecordTimerRef.current) {
+      window.clearTimeout(maxRecordTimerRef.current);
+      maxRecordTimerRef.current = null;
+    }
+    if (noSpeechTimerRef.current) {
+      window.clearTimeout(noSpeechTimerRef.current);
+      noSpeechTimerRef.current = null;
+    }
+    mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    mediaStreamRef.current = null;
+    audioContextRef.current?.close().catch(() => undefined);
+    audioContextRef.current = null;
+    mediaRecorderRef.current = null;
+    hasDetectedVoiceRef.current = false;
+  }, []);
+
+  const stopRecordingCommand = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      try { recorder.stop(); } catch { cleanupRecording(); }
+    } else {
+      cleanupRecording();
+      setIsListening(false);
+    }
+  }, [cleanupRecording]);
+
+  const startRecordedListening = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") return false;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      mediaStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+      mediaChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) mediaChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(mediaChunksRef.current, { type: mimeType });
+        cleanupRecording();
+        setIsListening(false);
+        void transcribeRecordedAudio(blob);
+      };
+
+      const AudioCtx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        const audioContext = new AudioCtx();
+        audioContextRef.current = audioContext;
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 1024;
+        source.connect(analyser);
+        const data = new Uint8Array(analyser.fftSize);
+        let quietSince = performance.now();
+
+        const monitor = () => {
+          analyser.getByteTimeDomainData(data);
+          let sum = 0;
+          for (const value of data) {
+            const centered = value - 128;
+            sum += centered * centered;
+          }
+          const volume = Math.sqrt(sum / data.length) / 128;
+          const now = performance.now();
+          if (volume > 0.035) {
+            hasDetectedVoiceRef.current = true;
+            quietSince = now;
+          }
+          if (hasDetectedVoiceRef.current && now - quietSince > 1400) {
+            stopRecordingCommand();
+            return;
+          }
+          analyserFrameRef.current = requestAnimationFrame(monitor);
+        };
+        analyserFrameRef.current = requestAnimationFrame(monitor);
+      }
+
+      noSpeechTimerRef.current = window.setTimeout(() => {
+        if (!hasDetectedVoiceRef.current) {
+          stopRecordingCommand();
+          toast.error("Não ouvi sua voz. Verifique o microfone e tente novamente.");
+        }
+      }, 5000);
+      maxRecordTimerRef.current = window.setTimeout(stopRecordingCommand, 12000);
+
+      recorder.start(250);
+      setIsListening(true);
+      setTranscript("Ouvindo com transcrição avançada...");
+      return true;
+    } catch (e) {
+      console.warn("[Roma] MediaRecorder unavailable, falling back to browser recognition:", e);
+      cleanupRecording();
+      return false;
+    }
+  }, [cleanupRecording, stopRecordingCommand, transcribeRecordedAudio]);
+
   // Keep stable ref to latest processCommand so the recognition handlers don't go stale
   useEffect(() => { processCommandRef.current = processCommand; }, [processCommand]);
 
