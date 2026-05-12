@@ -678,11 +678,14 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     return recognition;
   }, []);
 
-  const startListening = useCallback(() => {
-    const recognition = ensureRecognition();
-    if (!recognition) return;
+  const startListening = useCallback(async () => {
     shouldListenRef.current = true;
     if (isSpeakingRef.current || isProcessingRef.current) return;
+    const usingRecordedMode = await startRecordedListening();
+    if (usingRecordedMode) return;
+
+    const recognition = ensureRecognition();
+    if (!recognition) return;
     try {
       recognition.start();
       setIsListening(true);
@@ -690,7 +693,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       // already started — ignore
       setIsListening(true);
     }
-  }, [ensureRecognition]);
+  }, [ensureRecognition, startRecordedListening]);
 
   const stopListening = useCallback(() => {
     shouldListenRef.current = false;
@@ -699,8 +702,9 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       restartTimerRef.current = null;
     }
     try { recognitionRef.current?.stop(); } catch { /* noop */ }
+    stopRecordingCommand();
     setIsListening(false);
-  }, []);
+  }, [stopRecordingCommand]);
 
   const activate = useCallback(() => {
     // Initialize recognition synchronously inside the user gesture to preserve permission context
@@ -732,11 +736,11 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   useEffect(() => {
     if (isActive && !isSpeaking && !isProcessing && !isListening && shouldListenRef.current) {
       const t = window.setTimeout(() => {
-        try { recognitionRef.current?.start(); setIsListening(true); } catch { /* ignore */ }
+        void startListening();
       }, 300);
       return () => window.clearTimeout(t);
     }
-  }, [isActive, isSpeaking, isProcessing, isListening]);
+  }, [isActive, isSpeaking, isProcessing, isListening, startListening]);
 
   // Load voices
   useEffect(() => {
