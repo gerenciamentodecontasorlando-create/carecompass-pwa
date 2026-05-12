@@ -726,7 +726,9 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     if (!isActive) {
       setIsActive(true);
       isActiveRef.current = true;
+      shouldListenRef.current = true;
       greet();
+      return;
     }
     if (!isListening && !isSpeaking && !isProcessing) {
       startListening();
