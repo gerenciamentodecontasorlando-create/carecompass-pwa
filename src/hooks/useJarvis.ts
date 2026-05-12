@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
+const TRANSCRIBE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-consultation`;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export interface JarvisVoiceSettings {
   speed: number;
@@ -177,6 +179,15 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   const isProcessingRef = useRef(false);
   const processCommandRef = useRef<(t: string) => void>(() => {});
   const restartTimerRef = useRef<number | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const mediaChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserFrameRef = useRef<number | null>(null);
+  const maxRecordTimerRef = useRef<number | null>(null);
+  const noSpeechTimerRef = useRef<number | null>(null);
+  const hasDetectedVoiceRef = useRef(false);
+  const shouldTranscribeRecordingRef = useRef(true);
   const navigate = useNavigate();
   const hasGreetedRef = useRef(false);
   const voiceSettingsRef = useRef<JarvisVoiceSettings>(voiceSettings || DEFAULT_VOICE);
@@ -192,6 +203,25 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       voiceSettingsRef.current = voiceSettings;
     }
   }, [voiceSettings]);
+
+  const speakWithBrowser = useCallback((text: string, onEnd?: () => void) => {
+    window.speechSynthesis.cancel();
+    const vs = voiceSettingsRef.current;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "pt-BR";
+    utterance.rate = vs.speed;
+    utterance.volume = vs.volume;
+    utterance.pitch = vs.pitch;
+    
+    const { voice } = getVoiceByGender(vs.voiceGender);
+    if (voice) utterance.voice = voice;
+
+    utterance.onstart = () => { isSpeakingRef.current = true; setIsSpeaking(true); };
+    utterance.onend = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
+    utterance.onerror = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
 
   const speakWithElevenLabs = useCallback(async (text: string, speed: number, onEnd?: () => void) => {
     try {
@@ -233,25 +263,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       console.warn("[Roma] ElevenLabs TTS falhou, usando voz do navegador:", e);
       speakWithBrowser(text, onEnd);
     }
-  }, []);
-
-  const speakWithBrowser = useCallback((text: string, onEnd?: () => void) => {
-    window.speechSynthesis.cancel();
-    const vs = voiceSettingsRef.current;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "pt-BR";
-    utterance.rate = vs.speed;
-    utterance.volume = vs.volume;
-    utterance.pitch = vs.pitch;
-    
-    const { voice } = getVoiceByGender(vs.voiceGender);
-    if (voice) utterance.voice = voice;
-
-    utterance.onstart = () => { isSpeakingRef.current = true; setIsSpeaking(true); };
-    utterance.onend = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
-    utterance.onerror = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
-    window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [speakWithBrowser]);
 
   const speak = useCallback((text: string, onEnd?: () => void) => {
     window.speechSynthesis.cancel();
@@ -418,6 +430,170 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     [tryNavigate, askAI]
   );
 
+  const transcribeRecordedAudio = useCallback(async (blob: Blob) => {
+    if (blob.size < 1200) {
+      toast.error("Não detectei áudio suficiente. Aproxime-se do microfone e tente novamente.");
+      return;
+    }
+
+    isProcessingRef.current = true;
+    setIsProcessing(true);
+    setTranscript("Transcrevendo sua fala...");
+    let handedOffToAI = false;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sua sessão expirou. Faça login novamente para usar o Roma.");
+
+      const formData = new FormData();
+      formData.append("audio", blob, "roma-comando.webm");
+      formData.append("mode", "command");
+      const response = await fetch(TRANSCRIBE_URL, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: "Erro ao transcrever áudio" }));
+        throw new Error(err.error || "Erro ao transcrever áudio");
+      }
+
+      const data = await response.json();
+      const text = String(data.text || "").trim();
+      if (!text) throw new Error("Não consegui entender o áudio. Tente falar mais perto do microfone.");
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+      handedOffToAI = true;
+      processCommandRef.current(text);
+    } catch (e) {
+      console.error("[Roma] audio transcription error:", e);
+      shouldListenRef.current = false;
+      toast.error(e instanceof Error ? e.message : "Erro ao entender o áudio");
+      speak("Não consegui entender com clareza. Toque no microfone e tente falar mais perto.");
+    } finally {
+      if (!handedOffToAI) {
+        isProcessingRef.current = false;
+        setIsProcessing(false);
+      }
+    }
+  }, [speak]);
+
+  const cleanupRecording = useCallback(() => {
+    if (analyserFrameRef.current) {
+      cancelAnimationFrame(analyserFrameRef.current);
+      analyserFrameRef.current = null;
+    }
+    if (maxRecordTimerRef.current) {
+      window.clearTimeout(maxRecordTimerRef.current);
+      maxRecordTimerRef.current = null;
+    }
+    if (noSpeechTimerRef.current) {
+      window.clearTimeout(noSpeechTimerRef.current);
+      noSpeechTimerRef.current = null;
+    }
+    mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    mediaStreamRef.current = null;
+    audioContextRef.current?.close().catch(() => undefined);
+    audioContextRef.current = null;
+    mediaRecorderRef.current = null;
+    hasDetectedVoiceRef.current = false;
+  }, []);
+
+  const stopRecordingCommand = useCallback((shouldTranscribe = true) => {
+    shouldTranscribeRecordingRef.current = shouldTranscribe;
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      try { recorder.stop(); } catch { cleanupRecording(); }
+    } else {
+      cleanupRecording();
+      setIsListening(false);
+    }
+  }, [cleanupRecording]);
+
+  const startRecordedListening = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") return false;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      mediaStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+      mediaChunksRef.current = [];
+      shouldTranscribeRecordingRef.current = true;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) mediaChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const hadVoice = hasDetectedVoiceRef.current;
+        const shouldTranscribe = shouldTranscribeRecordingRef.current;
+        const blob = new Blob(mediaChunksRef.current, { type: mimeType });
+        cleanupRecording();
+        setIsListening(false);
+        shouldTranscribeRecordingRef.current = true;
+        if (!hadVoice || !shouldTranscribe) return;
+        void transcribeRecordedAudio(blob);
+      };
+
+      const AudioCtx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        const audioContext = new AudioCtx();
+        audioContextRef.current = audioContext;
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 1024;
+        source.connect(analyser);
+        const data = new Uint8Array(analyser.fftSize);
+        let quietSince = performance.now();
+
+        const monitor = () => {
+          analyser.getByteTimeDomainData(data);
+          let sum = 0;
+          for (const value of data) {
+            const centered = value - 128;
+            sum += centered * centered;
+          }
+          const volume = Math.sqrt(sum / data.length) / 128;
+          const now = performance.now();
+          if (volume > 0.035) {
+            hasDetectedVoiceRef.current = true;
+            quietSince = now;
+          }
+          if (hasDetectedVoiceRef.current && now - quietSince > 1400) {
+            stopRecordingCommand();
+            return;
+          }
+          analyserFrameRef.current = requestAnimationFrame(monitor);
+        };
+        analyserFrameRef.current = requestAnimationFrame(monitor);
+      }
+
+      noSpeechTimerRef.current = window.setTimeout(() => {
+        if (!hasDetectedVoiceRef.current) {
+          shouldListenRef.current = false;
+          stopRecordingCommand();
+          toast.error("Não ouvi sua voz. Verifique o microfone e tente novamente.");
+        }
+      }, 5000);
+      maxRecordTimerRef.current = window.setTimeout(stopRecordingCommand, 12000);
+
+      recorder.start(250);
+      setIsListening(true);
+      setTranscript("Ouvindo com transcrição avançada...");
+      return true;
+    } catch (e) {
+      console.warn("[Roma] MediaRecorder unavailable, falling back to browser recognition:", e);
+      cleanupRecording();
+      return false;
+    }
+  }, [cleanupRecording, stopRecordingCommand, transcribeRecordedAudio]);
+
   // Keep stable ref to latest processCommand so the recognition handlers don't go stale
   useEffect(() => { processCommandRef.current = processCommand; }, [processCommand]);
 
@@ -517,11 +693,14 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     return recognition;
   }, []);
 
-  const startListening = useCallback(() => {
-    const recognition = ensureRecognition();
-    if (!recognition) return;
+  const startListening = useCallback(async () => {
     shouldListenRef.current = true;
     if (isSpeakingRef.current || isProcessingRef.current) return;
+    const usingRecordedMode = await startRecordedListening();
+    if (usingRecordedMode) return;
+
+    const recognition = ensureRecognition();
+    if (!recognition) return;
     try {
       recognition.start();
       setIsListening(true);
@@ -529,7 +708,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       // already started — ignore
       setIsListening(true);
     }
-  }, [ensureRecognition]);
+  }, [ensureRecognition, startRecordedListening]);
 
   const stopListening = useCallback(() => {
     shouldListenRef.current = false;
@@ -538,21 +717,22 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       restartTimerRef.current = null;
     }
     try { recognitionRef.current?.stop(); } catch { /* noop */ }
+    stopRecordingCommand(false);
     setIsListening(false);
-  }, []);
+  }, [stopRecordingCommand]);
 
   const activate = useCallback(() => {
-    // Initialize recognition synchronously inside the user gesture to preserve permission context
-    ensureRecognition();
     if (!isActive) {
       setIsActive(true);
       isActiveRef.current = true;
+      shouldListenRef.current = true;
       greet();
+      return;
     }
     if (!isListening && !isSpeaking && !isProcessing) {
       startListening();
     }
-  }, [isActive, isListening, isSpeaking, isProcessing, greet, startListening, ensureRecognition]);
+  }, [isActive, isListening, isSpeaking, isProcessing, greet, startListening]);
 
   const deactivate = useCallback(() => {
     stopListening();
@@ -571,11 +751,11 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   useEffect(() => {
     if (isActive && !isSpeaking && !isProcessing && !isListening && shouldListenRef.current) {
       const t = window.setTimeout(() => {
-        try { recognitionRef.current?.start(); setIsListening(true); } catch { /* ignore */ }
+        void startListening();
       }, 300);
       return () => window.clearTimeout(t);
     }
-  }, [isActive, isSpeaking, isProcessing, isListening]);
+  }, [isActive, isSpeaking, isProcessing, isListening, startListening]);
 
   // Load voices
   useEffect(() => {
