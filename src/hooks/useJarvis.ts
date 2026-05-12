@@ -244,7 +244,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       console.warn("[Roma] ElevenLabs TTS falhou, usando voz do navegador:", e);
       speakWithBrowser(text, onEnd);
     }
-  }, []);
+  }, [speakWithBrowser]);
 
   const speakWithBrowser = useCallback((text: string, onEnd?: () => void) => {
     window.speechSynthesis.cancel();
