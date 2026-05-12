@@ -136,12 +136,108 @@ type Patient = { id: string; name: string };
 const Psiquiatria = () => {
   const { data: patients } = useClinicData("patients");
   const { insert: insertEvolution } = useClinicData("evolutions");
+  const { data: clinicSettings } = useClinicData("clinic_settings");
+  const clinic = (clinicSettings as any[])?.[0] || {};
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const selectedPatient = useMemo(
     () => (patients as unknown as Patient[]).find((p) => p.id === selectedPatientId),
     [patients, selectedPatientId]
   );
+
+  // ===== Receita de Controle Especial (Notificação B - branca / Portaria 344/98) =====
+  const [rxTipo, setRxTipo] = useState<"B1" | "B2" | "C1">("C1");
+  const [rxNumero, setRxNumero] = useState("");
+  const [rxMedicamentos, setRxMedicamentos] = useState("");
+  const [rxPosologia, setRxPosologia] = useState("");
+  const [rxEndereco, setRxEndereco] = useState("");
+  const [rxIdade, setRxIdade] = useState("");
+  const [rxCompradorNome, setRxCompradorNome] = useState("");
+  const [rxCompradorRg, setRxCompradorRg] = useState("");
+  const [rxCompradorEndereco, setRxCompradorEndereco] = useState("");
+
+  const tipoLabel = {
+    B1: "Notificação de Receita B1 (AZUL) - Psicotrópicos (benzodiazepínicos, barbitúricos)",
+    B2: "Notificação de Receita B2 (AZUL) - Anorexígenos",
+    C1: "Receita de Controle Especial (BRANCA, 2 vias) - Outras substâncias sujeitas a controle (antidepressivos, antipsicóticos, anticonvulsivantes)",
+  }[rxTipo];
+
+  const imprimirReceitaControle = () => {
+    const w = window.open("", "_blank");
+    if (!w) return;
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    const corBorda = rxTipo === "C1" ? "#000" : "#1e40af";
+    const tituloDoc = rxTipo === "C1" ? "RECEITA DE CONTROLE ESPECIAL" : `NOTIFICAÇÃO DE RECEITA ${rxTipo}`;
+    const viaHtml = (via: string) => `
+      <div class="receita">
+        <div class="cabec">
+          <div class="clinic">
+            <strong>${clinic.clinic_name || "Clínica"}</strong><br />
+            ${clinic.address || ""}<br />
+            ${clinic.phone ? "Tel: " + clinic.phone : ""}
+          </div>
+          <div class="tipo">
+            <div class="titulo">${tituloDoc}</div>
+            <div class="via">${via}</div>
+            ${rxNumero ? `<div>Nº ${rxNumero}</div>` : ""}
+          </div>
+        </div>
+        <hr />
+        <div class="campo"><strong>Paciente:</strong> ${selectedPatient?.name || "_____________________________"}</div>
+        <div class="campo"><strong>Idade:</strong> ${rxIdade || "_____"} &nbsp;&nbsp; <strong>Endereço:</strong> ${rxEndereco || "_____________________________"}</div>
+        <hr />
+        <div class="rx">
+          <div><strong>Prescrição:</strong></div>
+          <pre>${rxMedicamentos || "_______________________________________________"}</pre>
+          <div><strong>Posologia / Modo de usar:</strong></div>
+          <pre>${rxPosologia || "_______________________________________________"}</pre>
+        </div>
+        <hr />
+        <div class="comprador">
+          <strong>IDENTIFICAÇÃO DO COMPRADOR</strong><br />
+          Nome: ${rxCompradorNome || "_____________________________"}<br />
+          RG: ${rxCompradorRg || "_____________"} &nbsp;&nbsp; Endereço: ${rxCompradorEndereco || "_____________________________"}
+        </div>
+        <hr />
+        <div class="comprador">
+          <strong>IDENTIFICAÇÃO DO FORNECEDOR</strong><br />
+          Farmácia: ___________________________________________ &nbsp; Data: ___/___/______<br />
+          Farmacêutico (nome/CRF): ___________________________________________
+        </div>
+        <div class="ass">
+          <div class="linha"></div>
+          <div>${clinic.professional_name || "Médico(a)"}<br />
+          ${clinic.professional_council || "CRM ____________"}<br />
+          Data: ${hoje}</div>
+        </div>
+      </div>`;
+
+    const segundaVia = rxTipo === "C1" ? viaHtml("2ª VIA - FARMÁCIA") : "";
+    w.document.write(`
+      <html><head><title>${tituloDoc}</title>
+      <style>
+        @page { size: A4; margin: 12mm; }
+        body { font-family: Arial, sans-serif; font-size: 12px; color: #000; }
+        .receita { border: 2px solid ${corBorda}; padding: 14px; margin-bottom: 14px; page-break-inside: avoid; }
+        .cabec { display: flex; justify-content: space-between; align-items: flex-start; }
+        .clinic { font-size: 11px; }
+        .tipo { text-align: right; }
+        .titulo { font-weight: bold; font-size: 13px; color: ${corBorda}; }
+        .via { font-weight: bold; font-size: 11px; }
+        hr { border: none; border-top: 1px dashed #999; margin: 8px 0; }
+        .campo { margin: 4px 0; }
+        pre { white-space: pre-wrap; font-family: Arial; font-size: 12px; min-height: 50px; border: 1px solid #ddd; padding: 6px; }
+        .ass { margin-top: 30px; text-align: center; }
+        .linha { width: 60%; border-bottom: 1px solid #000; margin: 0 auto 4px; }
+        .comprador { font-size: 11px; line-height: 1.6; }
+      </style></head><body>
+      ${viaHtml(rxTipo === "C1" ? "1ª VIA - PACIENTE" : "VIA DA FARMÁCIA")}
+      ${segundaVia}
+      </body></html>`);
+    w.document.close();
+    setTimeout(() => w.print(), 300);
+  };
+
 
   // Anamnese
   const [queixa, setQueixa] = useState("");
