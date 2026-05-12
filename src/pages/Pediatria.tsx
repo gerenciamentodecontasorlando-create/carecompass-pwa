@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Baby, Activity, Syringe, Calculator, Printer } from "lucide-react";
+import { Baby, Activity, Syringe, Calculator, Printer, Ruler } from "lucide-react";
 import { toast } from "sonner";
 
 /* ------------------ WHO Z-SCORE (LMS) ------------------ */
@@ -192,6 +192,79 @@ function bsa(weight: number, height: number): number {
   return Math.round(Math.sqrt((weight * height) / 3600) * 100) / 100;
 }
 
+/* ------------------ Tabela de medidas de referência por fase (P50 OMS / SBP) ------------------ */
+type RefRow = {
+  faixa: string;
+  pesoM: string; pesoF: string;
+  altM: string; altF: string;
+  pc: string;
+  imc: string;
+  fc: string;
+  fr: string;
+  pas: string;
+  observ: string;
+};
+
+const REF_MEDIDAS: RefRow[] = [
+  { faixa: "RN a termo (0d)", pesoM: "3,3 kg", pesoF: "3,2 kg", altM: "49,9 cm", altF: "49,1 cm",
+    pc: "34-35 cm", imc: "13,4", fc: "100-160", fr: "30-60", pas: "60-90 / 30-60",
+    observ: "Perda fisiológica até 10% na 1ª sem; recupera até 15º dia" },
+  { faixa: "1 mês",  pesoM: "4,5 kg", pesoF: "4,2 kg", altM: "54,7 cm", altF: "53,7 cm",
+    pc: "37 cm", imc: "14,9", fc: "100-150", fr: "30-50", pas: "70-95 / 35-65",
+    observ: "Ganho ~30 g/dia (1º trim.)" },
+  { faixa: "3 meses", pesoM: "6,4 kg", pesoF: "5,8 kg", altM: "61,4 cm", altF: "59,8 cm",
+    pc: "40 cm", imc: "16,9", fc: "90-150", fr: "30-45", pas: "75-100 / 40-70",
+    observ: "Sustenta cabeça; sorri" },
+  { faixa: "6 meses", pesoM: "7,9 kg", pesoF: "7,3 kg", altM: "67,6 cm", altF: "65,7 cm",
+    pc: "43 cm", imc: "17,3", fc: "80-140", fr: "25-40", pas: "80-100 / 40-70",
+    observ: "Dobra peso de nascimento; início alimentação complementar" },
+  { faixa: "9 meses", pesoM: "8,9 kg", pesoF: "8,2 kg", altM: "72,0 cm", altF: "70,1 cm",
+    pc: "45 cm", imc: "17,2", fc: "80-140", fr: "25-40", pas: "85-105 / 45-70",
+    observ: "Senta sem apoio; engatinha" },
+  { faixa: "12 meses", pesoM: "9,6 kg", pesoF: "8,9 kg", altM: "75,7 cm", altF: "74,0 cm",
+    pc: "46 cm", imc: "16,8", fc: "80-130", fr: "20-35", pas: "85-105 / 45-70",
+    observ: "Triplica peso de nascimento; primeiras palavras" },
+  { faixa: "18 meses", pesoM: "10,9 kg", pesoF: "10,2 kg", altM: "82,3 cm", altF: "80,7 cm",
+    pc: "47-48 cm", imc: "16,1", fc: "80-130", fr: "20-30", pas: "90-105 / 50-70",
+    observ: "Anda firme; ~10 palavras" },
+  { faixa: "2 anos", pesoM: "12,2 kg", pesoF: "11,5 kg", altM: "87,8 cm", altF: "86,4 cm",
+    pc: "48-49 cm", imc: "15,7", fc: "80-120", fr: "20-30", pas: "90-110 / 50-75",
+    observ: "Frases de 2 palavras; corre" },
+  { faixa: "3 anos", pesoM: "14,3 kg", pesoF: "13,9 kg", altM: "96,1 cm", altF: "95,1 cm",
+    pc: "49-50 cm", imc: "15,4", fc: "75-115", fr: "20-30", pas: "95-110 / 55-75",
+    observ: "Frases completas; controle esfincteriano" },
+  { faixa: "4 anos", pesoM: "16,3 kg", pesoF: "16,1 kg", altM: "103,3 cm", altF: "102,7 cm",
+    pc: "50 cm", imc: "15,3", fc: "75-115", fr: "20-25", pas: "95-110 / 55-75",
+    observ: "Pula em 1 pé; conta histórias" },
+  { faixa: "5 anos", pesoM: "18,3 kg", pesoF: "18,2 kg", altM: "110,0 cm", altF: "109,4 cm",
+    pc: "50-51 cm", imc: "15,2", fc: "70-110", fr: "18-25", pas: "95-110 / 55-75",
+    observ: "Início escolar" },
+  { faixa: "6 anos", pesoM: "20,5 kg", pesoF: "20,2 kg", altM: "116,0 cm", altF: "115,1 cm",
+    pc: "51 cm", imc: "15,3", fc: "70-110", fr: "18-25", pas: "95-115 / 55-75",
+    observ: "Erupção 1º molar permanente" },
+  { faixa: "8 anos", pesoM: "25,4 kg", pesoF: "25,0 kg", altM: "127,3 cm", altF: "126,6 cm",
+    pc: "52 cm", imc: "15,7", fc: "70-110", fr: "16-22", pas: "100-115 / 60-80",
+    observ: "Pico de crescimento próximo" },
+  { faixa: "10 anos", pesoM: "31,2 kg", pesoF: "31,9 kg", altM: "138,6 cm", altF: "138,6 cm",
+    pc: "53 cm", imc: "16,2", fc: "60-100", fr: "16-20", pas: "100-120 / 60-80",
+    observ: "Início puberal feminino (telarca)" },
+  { faixa: "12 anos", pesoM: "39,9 kg", pesoF: "41,5 kg", altM: "149,1 cm", altF: "151,2 cm",
+    pc: "54 cm", imc: "17,8", fc: "60-100", fr: "14-20", pas: "105-125 / 65-85",
+    observ: "Estirão feminino; menarca em ~12-13a" },
+  { faixa: "14 anos", pesoM: "50,8 kg", pesoF: "49,4 kg", altM: "163,0 cm", altF: "159,0 cm",
+    pc: "55 cm", imc: "19,3", fc: "60-100", fr: "12-20", pas: "110-130 / 65-85",
+    observ: "Estirão masculino; Tanner III-IV" },
+  { faixa: "16 anos", pesoM: "60,9 kg", pesoF: "53,7 kg", altM: "172,0 cm", altF: "162,1 cm",
+    pc: "55-56 cm", imc: "20,6", fc: "60-100", fr: "12-18", pas: "110-130 / 65-85",
+    observ: "Menarca já ocorrida; Tanner IV-V" },
+  { faixa: "18 anos", pesoM: "67,3 kg", pesoF: "55,6 kg", altM: "176,5 cm", altF: "163,1 cm",
+    pc: "56 cm", imc: "21,6", fc: "60-100", fr: "12-18", pas: "110-130 / 65-85",
+    observ: "Estatura final próxima" },
+  { faixa: "19 anos", pesoM: "68,9 kg", pesoF: "56,3 kg", altM: "176,9 cm", altF: "163,2 cm",
+    pc: "56 cm", imc: "22,0", fc: "60-100", fr: "12-18", pas: "110-130 / 65-85",
+    observ: "Transição para adulto" },
+];
+
 const Pediatria = () => {
   // Z-score state
   const [sex, setSex] = useState<"M" | "F">("M");
@@ -255,13 +328,69 @@ const Pediatria = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="curvas">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+      <Tabs defaultValue="referencias">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
+          <TabsTrigger value="referencias"><Ruler className="h-4 w-4 mr-1" />Referências</TabsTrigger>
           <TabsTrigger value="curvas"><Activity className="h-4 w-4 mr-1" />Curvas OMS</TabsTrigger>
           <TabsTrigger value="anamnese"><Baby className="h-4 w-4 mr-1" />Anamnese</TabsTrigger>
           <TabsTrigger value="vacinas"><Syringe className="h-4 w-4 mr-1" />Vacinas/Marcos</TabsTrigger>
           <TabsTrigger value="calc"><Calculator className="h-4 w-4 mr-1" />Calculadoras</TabsTrigger>
         </TabsList>
+
+        {/* REFERÊNCIAS */}
+        <TabsContent value="referencias">
+          <Card>
+            <CardHeader>
+              <CardTitle>Medidas de referência por fase (P50 - OMS / SBP)</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Peso, estatura, perímetro cefálico, IMC e sinais vitais (FC, FR, PA) esperados em cada faixa etária.
+                Valores aproximados (mediana) para orientação clínica — sempre correlacionar com curvas individuais.
+              </p>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-muted">
+                    <th className="border p-2 text-left">Fase</th>
+                    <th className="border p-2">Peso ♂</th>
+                    <th className="border p-2">Peso ♀</th>
+                    <th className="border p-2">Altura ♂</th>
+                    <th className="border p-2">Altura ♀</th>
+                    <th className="border p-2">PC</th>
+                    <th className="border p-2">IMC</th>
+                    <th className="border p-2">FC (bpm)</th>
+                    <th className="border p-2">FR (irpm)</th>
+                    <th className="border p-2">PA (mmHg)</th>
+                    <th className="border p-2 text-left">Observações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {REF_MEDIDAS.map((r) => (
+                    <tr key={r.faixa} className="hover:bg-accent/40">
+                      <td className="border p-2 font-medium">{r.faixa}</td>
+                      <td className="border p-2 text-center">{r.pesoM}</td>
+                      <td className="border p-2 text-center">{r.pesoF}</td>
+                      <td className="border p-2 text-center">{r.altM}</td>
+                      <td className="border p-2 text-center">{r.altF}</td>
+                      <td className="border p-2 text-center">{r.pc}</td>
+                      <td className="border p-2 text-center">{r.imc}</td>
+                      <td className="border p-2 text-center">{r.fc}</td>
+                      <td className="border p-2 text-center">{r.fr}</td>
+                      <td className="border p-2 text-center">{r.pas}</td>
+                      <td className="border p-2 text-muted-foreground">{r.observ}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="text-xs text-muted-foreground mt-3 border-l-4 border-primary pl-3">
+                <strong>Regras práticas de peso:</strong> RN ~3,3 kg • Dobra aos 4-6m • Triplica aos 12m • Quadruplica aos 24m •
+                Após 2a: peso (kg) = idade × 2 + 8. <br />
+                <strong>Estatura:</strong> +25 cm no 1º ano • +12 cm no 2º • +8 cm no 3º • depois ~5-6 cm/ano até puberdade. <br />
+                <strong>PA:</strong> PAS mínima esperada = 70 + (idade × 2) mmHg em &gt;1 ano.
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* CURVAS */}
         <TabsContent value="curvas">

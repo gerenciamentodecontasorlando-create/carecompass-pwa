@@ -136,12 +136,108 @@ type Patient = { id: string; name: string };
 const Psiquiatria = () => {
   const { data: patients } = useClinicData("patients");
   const { insert: insertEvolution } = useClinicData("evolutions");
+  const { data: clinicSettings } = useClinicData("clinic_settings");
+  const clinic = (clinicSettings as any[])?.[0] || {};
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const selectedPatient = useMemo(
     () => (patients as unknown as Patient[]).find((p) => p.id === selectedPatientId),
     [patients, selectedPatientId]
   );
+
+  // ===== Receita de Controle Especial (Notificação B - branca / Portaria 344/98) =====
+  const [rxTipo, setRxTipo] = useState<"B1" | "B2" | "C1">("C1");
+  const [rxNumero, setRxNumero] = useState("");
+  const [rxMedicamentos, setRxMedicamentos] = useState("");
+  const [rxPosologia, setRxPosologia] = useState("");
+  const [rxEndereco, setRxEndereco] = useState("");
+  const [rxIdade, setRxIdade] = useState("");
+  const [rxCompradorNome, setRxCompradorNome] = useState("");
+  const [rxCompradorRg, setRxCompradorRg] = useState("");
+  const [rxCompradorEndereco, setRxCompradorEndereco] = useState("");
+
+  const tipoLabel = {
+    B1: "Notificação de Receita B1 (AZUL) - Psicotrópicos (benzodiazepínicos, barbitúricos)",
+    B2: "Notificação de Receita B2 (AZUL) - Anorexígenos",
+    C1: "Receita de Controle Especial (BRANCA, 2 vias) - Outras substâncias sujeitas a controle (antidepressivos, antipsicóticos, anticonvulsivantes)",
+  }[rxTipo];
+
+  const imprimirReceitaControle = () => {
+    const w = window.open("", "_blank");
+    if (!w) return;
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    const corBorda = rxTipo === "C1" ? "#000" : "#1e40af";
+    const tituloDoc = rxTipo === "C1" ? "RECEITA DE CONTROLE ESPECIAL" : `NOTIFICAÇÃO DE RECEITA ${rxTipo}`;
+    const viaHtml = (via: string) => `
+      <div class="receita">
+        <div class="cabec">
+          <div class="clinic">
+            <strong>${clinic.clinic_name || "Clínica"}</strong><br />
+            ${clinic.address || ""}<br />
+            ${clinic.phone ? "Tel: " + clinic.phone : ""}
+          </div>
+          <div class="tipo">
+            <div class="titulo">${tituloDoc}</div>
+            <div class="via">${via}</div>
+            ${rxNumero ? `<div>Nº ${rxNumero}</div>` : ""}
+          </div>
+        </div>
+        <hr />
+        <div class="campo"><strong>Paciente:</strong> ${selectedPatient?.name || "_____________________________"}</div>
+        <div class="campo"><strong>Idade:</strong> ${rxIdade || "_____"} &nbsp;&nbsp; <strong>Endereço:</strong> ${rxEndereco || "_____________________________"}</div>
+        <hr />
+        <div class="rx">
+          <div><strong>Prescrição:</strong></div>
+          <pre>${rxMedicamentos || "_______________________________________________"}</pre>
+          <div><strong>Posologia / Modo de usar:</strong></div>
+          <pre>${rxPosologia || "_______________________________________________"}</pre>
+        </div>
+        <hr />
+        <div class="comprador">
+          <strong>IDENTIFICAÇÃO DO COMPRADOR</strong><br />
+          Nome: ${rxCompradorNome || "_____________________________"}<br />
+          RG: ${rxCompradorRg || "_____________"} &nbsp;&nbsp; Endereço: ${rxCompradorEndereco || "_____________________________"}
+        </div>
+        <hr />
+        <div class="comprador">
+          <strong>IDENTIFICAÇÃO DO FORNECEDOR</strong><br />
+          Farmácia: ___________________________________________ &nbsp; Data: ___/___/______<br />
+          Farmacêutico (nome/CRF): ___________________________________________
+        </div>
+        <div class="ass">
+          <div class="linha"></div>
+          <div>${clinic.professional_name || "Médico(a)"}<br />
+          ${clinic.professional_council || "CRM ____________"}<br />
+          Data: ${hoje}</div>
+        </div>
+      </div>`;
+
+    const segundaVia = rxTipo === "C1" ? viaHtml("2ª VIA - FARMÁCIA") : "";
+    w.document.write(`
+      <html><head><title>${tituloDoc}</title>
+      <style>
+        @page { size: A4; margin: 12mm; }
+        body { font-family: Arial, sans-serif; font-size: 12px; color: #000; }
+        .receita { border: 2px solid ${corBorda}; padding: 14px; margin-bottom: 14px; page-break-inside: avoid; }
+        .cabec { display: flex; justify-content: space-between; align-items: flex-start; }
+        .clinic { font-size: 11px; }
+        .tipo { text-align: right; }
+        .titulo { font-weight: bold; font-size: 13px; color: ${corBorda}; }
+        .via { font-weight: bold; font-size: 11px; }
+        hr { border: none; border-top: 1px dashed #999; margin: 8px 0; }
+        .campo { margin: 4px 0; }
+        pre { white-space: pre-wrap; font-family: Arial; font-size: 12px; min-height: 50px; border: 1px solid #ddd; padding: 6px; }
+        .ass { margin-top: 30px; text-align: center; }
+        .linha { width: 60%; border-bottom: 1px solid #000; margin: 0 auto 4px; }
+        .comprador { font-size: 11px; line-height: 1.6; }
+      </style></head><body>
+      ${viaHtml(rxTipo === "C1" ? "1ª VIA - PACIENTE" : "VIA DA FARMÁCIA")}
+      ${segundaVia}
+      </body></html>`);
+    w.document.close();
+    setTimeout(() => w.print(), 300);
+  };
+
 
   // Anamnese
   const [queixa, setQueixa] = useState("");
@@ -456,12 +552,89 @@ const Psiquiatria = () => {
 
         <TabsContent value="rx">
           <Card>
-            <CardContent className="pt-6 text-center space-y-3">
-              <Pill className="h-12 w-12 mx-auto text-primary" />
-              <p className="text-sm">
-                Use o Receituário para gerar prescrições psiquiátricas (antidepressivos, ansiolíticos, estabilizadores, antipsicóticos).
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Pill className="h-5 w-5" /> Receita de Controle Especial / Notificação
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Modelo conforme Portaria SVS/MS 344/98. C1 = receita branca em 2 vias (antidepressivos, antipsicóticos, anticonvulsivantes).
+                B1/B2 = notificação azul (benzodiazepínicos, barbitúricos, anorexígenos) — exige talonário oficial numerado da Vigilância Sanitária.
               </p>
-              <Button asChild><a href="/receituario">Abrir Receituário</a></Button>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid md:grid-cols-3 gap-3">
+                <div className="md:col-span-2">
+                  <Label>Tipo</Label>
+                  <Select value={rxTipo} onValueChange={(v) => setRxTipo(v as "B1" | "B2" | "C1")}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="C1">C1 - Controle Especial (Branca, 2 vias)</SelectItem>
+                      <SelectItem value="B1">B1 - Notificação Azul (Psicotrópicos)</SelectItem>
+                      <SelectItem value="B2">B2 - Notificação Azul (Anorexígenos)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Nº da notificação</Label>
+                  <Input value={rxNumero} onChange={(e) => setRxNumero(e.target.value)} placeholder="Ex.: 0000123" />
+                </div>
+              </div>
+
+              <div className="text-xs p-2 rounded bg-muted">{tipoLabel}</div>
+
+              <div className="grid md:grid-cols-2 gap-3">
+                <div>
+                  <Label>Idade do paciente</Label>
+                  <Input value={rxIdade} onChange={(e) => setRxIdade(e.target.value)} placeholder="Ex.: 34 anos" />
+                </div>
+                <div>
+                  <Label>Endereço do paciente</Label>
+                  <Input value={rxEndereco} onChange={(e) => setRxEndereco(e.target.value)} />
+                </div>
+              </div>
+
+              <div>
+                <Label>Medicamento(s) prescrito(s)</Label>
+                <Textarea
+                  rows={4}
+                  value={rxMedicamentos}
+                  onChange={(e) => setRxMedicamentos(e.target.value)}
+                  placeholder="Ex.: Sertralina 50mg --- 1 caixa com 30 comprimidos"
+                />
+              </div>
+
+              <div>
+                <Label>Posologia / Modo de usar</Label>
+                <Textarea
+                  rows={3}
+                  value={rxPosologia}
+                  onChange={(e) => setRxPosologia(e.target.value)}
+                  placeholder="Ex.: Tomar 1 comprimido pela manhã, por 30 dias. Retorno em 30 dias."
+                />
+              </div>
+
+              <div className="border-t pt-3">
+                <div className="text-sm font-semibold mb-2">Identificação do comprador (preenchido na farmácia)</div>
+                <div className="grid md:grid-cols-3 gap-3">
+                  <Input placeholder="Nome do comprador" value={rxCompradorNome} onChange={(e) => setRxCompradorNome(e.target.value)} />
+                  <Input placeholder="RG" value={rxCompradorRg} onChange={(e) => setRxCompradorRg(e.target.value)} />
+                  <Input placeholder="Endereço" value={rxCompradorEndereco} onChange={(e) => setRxCompradorEndereco(e.target.value)} />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-2 border-t">
+                <Button onClick={imprimirReceitaControle}>
+                  <Printer className="h-4 w-4 mr-1" /> Imprimir receita {rxTipo === "C1" ? "(2 vias)" : ""}
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href="/receituario">Receituário simples</a>
+                </Button>
+              </div>
+
+              <div className="text-xs text-muted-foreground border-l-4 border-primary pl-3 mt-3">
+                <strong>Validade:</strong> 30 dias (controle especial) • Quantidade máxima: 60 dias de tratamento (C1) /
+                30 dias (B1/B2). A 1ª via fica com o paciente, a 2ª via é retida pela farmácia.
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
