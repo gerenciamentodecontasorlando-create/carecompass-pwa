@@ -552,12 +552,89 @@ const Psiquiatria = () => {
 
         <TabsContent value="rx">
           <Card>
-            <CardContent className="pt-6 text-center space-y-3">
-              <Pill className="h-12 w-12 mx-auto text-primary" />
-              <p className="text-sm">
-                Use o Receituário para gerar prescrições psiquiátricas (antidepressivos, ansiolíticos, estabilizadores, antipsicóticos).
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Pill className="h-5 w-5" /> Receita de Controle Especial / Notificação
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Modelo conforme Portaria SVS/MS 344/98. C1 = receita branca em 2 vias (antidepressivos, antipsicóticos, anticonvulsivantes).
+                B1/B2 = notificação azul (benzodiazepínicos, barbitúricos, anorexígenos) — exige talonário oficial numerado da Vigilância Sanitária.
               </p>
-              <Button asChild><a href="/receituario">Abrir Receituário</a></Button>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid md:grid-cols-3 gap-3">
+                <div className="md:col-span-2">
+                  <Label>Tipo</Label>
+                  <Select value={rxTipo} onValueChange={(v) => setRxTipo(v as "B1" | "B2" | "C1")}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="C1">C1 - Controle Especial (Branca, 2 vias)</SelectItem>
+                      <SelectItem value="B1">B1 - Notificação Azul (Psicotrópicos)</SelectItem>
+                      <SelectItem value="B2">B2 - Notificação Azul (Anorexígenos)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Nº da notificação</Label>
+                  <Input value={rxNumero} onChange={(e) => setRxNumero(e.target.value)} placeholder="Ex.: 0000123" />
+                </div>
+              </div>
+
+              <div className="text-xs p-2 rounded bg-muted">{tipoLabel}</div>
+
+              <div className="grid md:grid-cols-2 gap-3">
+                <div>
+                  <Label>Idade do paciente</Label>
+                  <Input value={rxIdade} onChange={(e) => setRxIdade(e.target.value)} placeholder="Ex.: 34 anos" />
+                </div>
+                <div>
+                  <Label>Endereço do paciente</Label>
+                  <Input value={rxEndereco} onChange={(e) => setRxEndereco(e.target.value)} />
+                </div>
+              </div>
+
+              <div>
+                <Label>Medicamento(s) prescrito(s)</Label>
+                <Textarea
+                  rows={4}
+                  value={rxMedicamentos}
+                  onChange={(e) => setRxMedicamentos(e.target.value)}
+                  placeholder="Ex.: Sertralina 50mg --- 1 caixa com 30 comprimidos"
+                />
+              </div>
+
+              <div>
+                <Label>Posologia / Modo de usar</Label>
+                <Textarea
+                  rows={3}
+                  value={rxPosologia}
+                  onChange={(e) => setRxPosologia(e.target.value)}
+                  placeholder="Ex.: Tomar 1 comprimido pela manhã, por 30 dias. Retorno em 30 dias."
+                />
+              </div>
+
+              <div className="border-t pt-3">
+                <div className="text-sm font-semibold mb-2">Identificação do comprador (preenchido na farmácia)</div>
+                <div className="grid md:grid-cols-3 gap-3">
+                  <Input placeholder="Nome do comprador" value={rxCompradorNome} onChange={(e) => setRxCompradorNome(e.target.value)} />
+                  <Input placeholder="RG" value={rxCompradorRg} onChange={(e) => setRxCompradorRg(e.target.value)} />
+                  <Input placeholder="Endereço" value={rxCompradorEndereco} onChange={(e) => setRxCompradorEndereco(e.target.value)} />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-2 border-t">
+                <Button onClick={imprimirReceitaControle}>
+                  <Printer className="h-4 w-4 mr-1" /> Imprimir receita {rxTipo === "C1" ? "(2 vias)" : ""}
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href="/receituario">Receituário simples</a>
+                </Button>
+              </div>
+
+              <div className="text-xs text-muted-foreground border-l-4 border-primary pl-3 mt-3">
+                <strong>Validade:</strong> 30 dias (controle especial) • Quantidade máxima: 60 dias de tratamento (C1) /
+                30 dias (B1/B2). A 1ª via fica com o paciente, a 2ª via é retida pela farmácia.
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
