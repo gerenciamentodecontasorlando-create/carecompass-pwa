@@ -721,8 +721,6 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   }, [stopRecordingCommand]);
 
   const activate = useCallback(() => {
-    // Initialize recognition synchronously inside the user gesture to preserve permission context
-    ensureRecognition();
     if (!isActive) {
       setIsActive(true);
       isActiveRef.current = true;
@@ -733,7 +731,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     if (!isListening && !isSpeaking && !isProcessing) {
       startListening();
     }
-  }, [isActive, isListening, isSpeaking, isProcessing, greet, startListening, ensureRecognition]);
+  }, [isActive, isListening, isSpeaking, isProcessing, greet, startListening]);
 
   const deactivate = useCallback(() => {
     stopListening();
