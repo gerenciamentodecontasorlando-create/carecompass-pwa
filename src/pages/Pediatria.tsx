@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Baby, Activity, Syringe, Calculator, Printer } from "lucide-react";
+import { Baby, Activity, Syringe, Calculator, Printer, Ruler } from "lucide-react";
 import { toast } from "sonner";
 
 /* ------------------ WHO Z-SCORE (LMS) ------------------ */
