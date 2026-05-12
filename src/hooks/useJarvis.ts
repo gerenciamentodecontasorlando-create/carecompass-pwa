@@ -524,6 +524,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       mediaStreamRef.current = stream;
       mediaRecorderRef.current = recorder;
       mediaChunksRef.current = [];
+      shouldTranscribeRecordingRef.current = true;
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) mediaChunksRef.current.push(event.data);
