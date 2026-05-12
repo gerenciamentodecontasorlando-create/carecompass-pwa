@@ -521,9 +521,11 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
         if (event.data.size > 0) mediaChunksRef.current.push(event.data);
       };
       recorder.onstop = () => {
+        const hadVoice = hasDetectedVoiceRef.current;
         const blob = new Blob(mediaChunksRef.current, { type: mimeType });
         cleanupRecording();
         setIsListening(false);
+        if (!hadVoice) return;
         void transcribeRecordedAudio(blob);
       };
 
