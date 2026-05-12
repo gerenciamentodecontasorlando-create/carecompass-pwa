@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
+const TRANSCRIBE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-consultation`;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export interface JarvisVoiceSettings {
   speed: number;
@@ -177,6 +179,14 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   const isProcessingRef = useRef(false);
   const processCommandRef = useRef<(t: string) => void>(() => {});
   const restartTimerRef = useRef<number | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const mediaChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserFrameRef = useRef<number | null>(null);
+  const maxRecordTimerRef = useRef<number | null>(null);
+  const noSpeechTimerRef = useRef<number | null>(null);
+  const hasDetectedVoiceRef = useRef(false);
   const navigate = useNavigate();
   const hasGreetedRef = useRef(false);
   const voiceSettingsRef = useRef<JarvisVoiceSettings>(voiceSettings || DEFAULT_VOICE);
