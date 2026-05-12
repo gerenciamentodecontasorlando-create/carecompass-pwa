@@ -461,6 +461,8 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       const data = await response.json();
       const text = String(data.text || "").trim();
       if (!text) throw new Error("Não consegui entender o áudio. Tente falar mais perto do microfone.");
+      isProcessingRef.current = false;
+      setIsProcessing(false);
       processCommandRef.current(text);
     } catch (e) {
       console.error("[Roma] audio transcription error:", e);
