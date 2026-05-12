@@ -437,6 +437,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     isProcessingRef.current = true;
     setIsProcessing(true);
     setTranscript("Transcrevendo sua fala...");
+    let handedOffToAI = false;
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
@@ -463,14 +464,17 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       if (!text) throw new Error("Não consegui entender o áudio. Tente falar mais perto do microfone.");
       isProcessingRef.current = false;
       setIsProcessing(false);
+      handedOffToAI = true;
       processCommandRef.current(text);
     } catch (e) {
       console.error("[Roma] audio transcription error:", e);
       toast.error(e instanceof Error ? e.message : "Erro ao entender o áudio");
       speak("Não consegui entender com clareza. Toque no microfone e tente falar mais perto.");
     } finally {
-      isProcessingRef.current = false;
-      setIsProcessing(false);
+      if (!handedOffToAI) {
+        isProcessingRef.current = false;
+        setIsProcessing(false);
+      }
     }
   }, [speak]);
 
