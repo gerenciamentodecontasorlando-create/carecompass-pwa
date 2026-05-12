@@ -15,12 +15,13 @@ serve(async (req) => {
     const formData = await req.formData();
     const audioFile = formData.get("audio") as File;
     if (!audioFile) throw new Error("No audio file provided");
+    const mode = String(formData.get("mode") || "consultation");
 
     const apiFormData = new FormData();
     apiFormData.append("file", audioFile);
     apiFormData.append("model_id", "scribe_v2");
     apiFormData.append("tag_audio_events", "false");
-    apiFormData.append("diarize", "true");
+    apiFormData.append("diarize", mode === "command" ? "false" : "true");
     apiFormData.append("language_code", "por");
 
     console.log("Sending audio to ElevenLabs STT, size:", audioFile.size);
