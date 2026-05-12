@@ -445,6 +445,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
 
       const formData = new FormData();
       formData.append("audio", blob, "roma-comando.webm");
+      formData.append("mode", "command");
       const response = await fetch(TRANSCRIBE_URL, {
         method: "POST",
         headers: {
