@@ -328,13 +328,69 @@ const Pediatria = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="curvas">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+      <Tabs defaultValue="referencias">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
+          <TabsTrigger value="referencias"><Ruler className="h-4 w-4 mr-1" />Referências</TabsTrigger>
           <TabsTrigger value="curvas"><Activity className="h-4 w-4 mr-1" />Curvas OMS</TabsTrigger>
           <TabsTrigger value="anamnese"><Baby className="h-4 w-4 mr-1" />Anamnese</TabsTrigger>
           <TabsTrigger value="vacinas"><Syringe className="h-4 w-4 mr-1" />Vacinas/Marcos</TabsTrigger>
           <TabsTrigger value="calc"><Calculator className="h-4 w-4 mr-1" />Calculadoras</TabsTrigger>
         </TabsList>
+
+        {/* REFERÊNCIAS */}
+        <TabsContent value="referencias">
+          <Card>
+            <CardHeader>
+              <CardTitle>Medidas de referência por fase (P50 - OMS / SBP)</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Peso, estatura, perímetro cefálico, IMC e sinais vitais (FC, FR, PA) esperados em cada faixa etária.
+                Valores aproximados (mediana) para orientação clínica — sempre correlacionar com curvas individuais.
+              </p>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="bg-muted">
+                    <th className="border p-2 text-left">Fase</th>
+                    <th className="border p-2">Peso ♂</th>
+                    <th className="border p-2">Peso ♀</th>
+                    <th className="border p-2">Altura ♂</th>
+                    <th className="border p-2">Altura ♀</th>
+                    <th className="border p-2">PC</th>
+                    <th className="border p-2">IMC</th>
+                    <th className="border p-2">FC (bpm)</th>
+                    <th className="border p-2">FR (irpm)</th>
+                    <th className="border p-2">PA (mmHg)</th>
+                    <th className="border p-2 text-left">Observações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {REF_MEDIDAS.map((r) => (
+                    <tr key={r.faixa} className="hover:bg-accent/40">
+                      <td className="border p-2 font-medium">{r.faixa}</td>
+                      <td className="border p-2 text-center">{r.pesoM}</td>
+                      <td className="border p-2 text-center">{r.pesoF}</td>
+                      <td className="border p-2 text-center">{r.altM}</td>
+                      <td className="border p-2 text-center">{r.altF}</td>
+                      <td className="border p-2 text-center">{r.pc}</td>
+                      <td className="border p-2 text-center">{r.imc}</td>
+                      <td className="border p-2 text-center">{r.fc}</td>
+                      <td className="border p-2 text-center">{r.fr}</td>
+                      <td className="border p-2 text-center">{r.pas}</td>
+                      <td className="border p-2 text-muted-foreground">{r.observ}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="text-xs text-muted-foreground mt-3 border-l-4 border-primary pl-3">
+                <strong>Regras práticas de peso:</strong> RN ~3,3 kg • Dobra aos 4-6m • Triplica aos 12m • Quadruplica aos 24m •
+                Após 2a: peso (kg) = idade × 2 + 8. <br />
+                <strong>Estatura:</strong> +25 cm no 1º ano • +12 cm no 2º • +8 cm no 3º • depois ~5-6 cm/ano até puberdade. <br />
+                <strong>PA:</strong> PAS mínima esperada = 70 + (idade × 2) mmHg em &gt;1 ano.
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* CURVAS */}
         <TabsContent value="curvas">
