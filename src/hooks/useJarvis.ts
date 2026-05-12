@@ -204,6 +204,25 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     }
   }, [voiceSettings]);
 
+  const speakWithBrowser = useCallback((text: string, onEnd?: () => void) => {
+    window.speechSynthesis.cancel();
+    const vs = voiceSettingsRef.current;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "pt-BR";
+    utterance.rate = vs.speed;
+    utterance.volume = vs.volume;
+    utterance.pitch = vs.pitch;
+    
+    const { voice } = getVoiceByGender(vs.voiceGender);
+    if (voice) utterance.voice = voice;
+
+    utterance.onstart = () => { isSpeakingRef.current = true; setIsSpeaking(true); };
+    utterance.onend = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
+    utterance.onerror = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
+
   const speakWithElevenLabs = useCallback(async (text: string, speed: number, onEnd?: () => void) => {
     try {
       const response = await fetch(
@@ -245,24 +264,6 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       speakWithBrowser(text, onEnd);
     }
   }, [speakWithBrowser]);
-
-  const speakWithBrowser = useCallback((text: string, onEnd?: () => void) => {
-    window.speechSynthesis.cancel();
-    const vs = voiceSettingsRef.current;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "pt-BR";
-    utterance.rate = vs.speed;
-    utterance.volume = vs.volume;
-    utterance.pitch = vs.pitch;
-    
-    const { voice } = getVoiceByGender(vs.voiceGender);
-    if (voice) utterance.voice = voice;
-
-    utterance.onstart = () => { isSpeakingRef.current = true; setIsSpeaking(true); };
-    utterance.onend = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
-    utterance.onerror = () => { isSpeakingRef.current = false; setIsSpeaking(false); onEnd?.(); };
-    window.speechSynthesis.speak(utterance);
-  }, []);
 
   const speak = useCallback((text: string, onEnd?: () => void) => {
     window.speechSynthesis.cancel();
