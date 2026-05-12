@@ -187,6 +187,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   const maxRecordTimerRef = useRef<number | null>(null);
   const noSpeechTimerRef = useRef<number | null>(null);
   const hasDetectedVoiceRef = useRef(false);
+  const shouldTranscribeRecordingRef = useRef(true);
   const navigate = useNavigate();
   const hasGreetedRef = useRef(false);
   const voiceSettingsRef = useRef<JarvisVoiceSettings>(voiceSettings || DEFAULT_VOICE);
@@ -469,6 +470,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       processCommandRef.current(text);
     } catch (e) {
       console.error("[Roma] audio transcription error:", e);
+      shouldListenRef.current = false;
       toast.error(e instanceof Error ? e.message : "Erro ao entender o áudio");
       speak("Não consegui entender com clareza. Toque no microfone e tente falar mais perto.");
     } finally {
@@ -500,7 +502,8 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     hasDetectedVoiceRef.current = false;
   }, []);
 
-  const stopRecordingCommand = useCallback(() => {
+  const stopRecordingCommand = useCallback((shouldTranscribe = true) => {
+    shouldTranscribeRecordingRef.current = shouldTranscribe;
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state !== "inactive") {
       try { recorder.stop(); } catch { cleanupRecording(); }
@@ -527,10 +530,12 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       };
       recorder.onstop = () => {
         const hadVoice = hasDetectedVoiceRef.current;
+        const shouldTranscribe = shouldTranscribeRecordingRef.current;
         const blob = new Blob(mediaChunksRef.current, { type: mimeType });
         cleanupRecording();
         setIsListening(false);
-        if (!hadVoice) return;
+        shouldTranscribeRecordingRef.current = true;
+        if (!hadVoice || !shouldTranscribe) return;
         void transcribeRecordedAudio(blob);
       };
 
@@ -569,6 +574,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
 
       noSpeechTimerRef.current = window.setTimeout(() => {
         if (!hasDetectedVoiceRef.current) {
+          shouldListenRef.current = false;
           stopRecordingCommand();
           toast.error("Não ouvi sua voz. Verifique o microfone e tente novamente.");
         }
@@ -709,7 +715,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       restartTimerRef.current = null;
     }
     try { recognitionRef.current?.stop(); } catch { /* noop */ }
-    stopRecordingCommand();
+    stopRecordingCommand(false);
     setIsListening(false);
   }, [stopRecordingCommand]);
 
