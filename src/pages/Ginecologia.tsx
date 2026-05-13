@@ -367,7 +367,7 @@ const Ginecologia = () => {
               <SelectTrigger><SelectValue placeholder="Selecionar paciente para integrar ao prontuário" /></SelectTrigger>
               <SelectContent>
                 {(pacientes || []).map((p) => (
-                  <SelectItem key={p.id} value={String(p.id)}>{String(p.name)}</SelectItem>
+                  <SelectItem key={String(p.id)} value={String(p.id)}>{String(p.name)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
