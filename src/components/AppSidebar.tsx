@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Users, CalendarDays, FileText, FileBadge,
   Smile, DollarSign, Package, Settings, Bot, StickyNote, LogOut,
   Shield, Upload, ClipboardCheck, Trash2, Crown, Calculator,
-  Baby, Sparkles, Brain,
+  Baby, Sparkles, Brain, Heart,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +40,7 @@ export function AppSidebar() {
     { title: t("menu.pediatrics"), url: "/pediatria", icon: Baby },
     { title: t("menu.dermatology"), url: "/dermatologia", icon: Sparkles },
     { title: t("menu.psychiatry"), url: "/psiquiatria", icon: Brain },
+    { title: t("menu.gynecology"), url: "/ginecologia", icon: Heart },
     ...(hasAIAccess ? [{ title: t("menu.aiAssistant"), url: "/assistente-ia", icon: Bot }] : []),
     { title: t("menu.notes"), url: "/notas", icon: StickyNote },
     { title: t("menu.financial"), url: "/financeiro", icon: DollarSign },

@@ -46,6 +46,7 @@ const pt = {
       pediatrics: "Pediatria",
       dermatology: "Dermatologia",
       psychiatry: "Psiquiatria",
+      gynecology: "Gineco / Obstetrícia",
       aiAssistant: "Assistente IA",
       notes: "Notas",
       financial: "Financeiro",
