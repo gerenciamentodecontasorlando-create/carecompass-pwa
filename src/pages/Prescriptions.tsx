@@ -327,7 +327,7 @@ const ADULT_CATALOG: Record<string, MedEntry[]> = {
     { name: "Betametasona 12mg/2mL IM (corticoide antenatal — 24-34 sem)", posology: "Aplicar 1 ampola IM e repetir após 24h (total 2 doses)." },
     { name: "Dexametasona 6mg IM (alternativa antenatal)", posology: "Aplicar 1 ampola IM de 12 em 12 horas, total 4 doses." },
   ],
-],
+};
 
 const PEDIATRIC_CATALOG: Record<string, MedEntry[]> = {
   "Antibióticos Pediátricos": [
