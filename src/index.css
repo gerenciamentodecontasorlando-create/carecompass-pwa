@@ -109,6 +109,10 @@
 }
 
 /* Print styles for prescriptions and certificates */
+.print-only {
+  display: none;
+}
+
 @media print {
   body * {
     visibility: hidden;
@@ -126,8 +130,27 @@
   .no-print {
     display: none !important;
   }
+  .print-only {
+    display: block !important;
+  }
+  /* Receituário: 2 vias na mesma folha A4 */
+  .print-two-copies .prescription-copy {
+    min-height: 132mm !important;
+    padding: 10mm 14mm !important;
+    box-shadow: none !important;
+    border: 1px dashed hsl(var(--foreground) / 0.4) !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .print-two-copies .prescription-copy + .prescription-copy {
+    margin-top: 6mm !important;
+    border-top: 1px dashed hsl(var(--foreground) / 0.6) !important;
+  }
   @page {
-    margin: 12mm;
+    margin: 10mm;
     size: A4;
   }
 }
+
