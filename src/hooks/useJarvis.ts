@@ -475,7 +475,7 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
   );
 
   const transcribeRecordedAudio = useCallback(async (blob: Blob) => {
-    if (blob.size < 1200) {
+    if (blob.size < 500) {
       toast.error("Não detectei áudio suficiente. Aproxime-se do microfone e tente novamente.");
       return;
     }
