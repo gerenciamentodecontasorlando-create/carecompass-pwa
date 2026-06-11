@@ -318,16 +318,35 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     speak(text, onGreetingDone);
   }, [professionalName, speak, onGreetingDone]);
 
+  const tryAction = useCallback(
+    (text: string): boolean => {
+      const lower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      for (const cmd of ACTION_COMMANDS) {
+        if (cmd.patterns.some((re) => re.test(lower))) {
+          if (cmd.route) navigate(cmd.route);
+          // Slight delay so the target page mounts before receiving the action
+          window.setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("roma:action", { detail: { action: cmd.action } }));
+          }, cmd.route ? 350 : 50);
+          speak(cmd.speak);
+          return true;
+        }
+      }
+      return false;
+    },
+    [navigate, speak]
+  );
+
   const tryNavigate = useCallback(
     (text: string): boolean => {
       const lower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      
+
       // Check if any navigation trigger word is present
       const hasTrigger = NAV_TRIGGERS.some((t) => {
         const normalized = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         return lower.includes(normalized);
       });
-      
+
       if (!hasTrigger) return false;
 
       // Find which page keyword matches
