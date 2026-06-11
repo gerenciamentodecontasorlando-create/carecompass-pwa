@@ -94,6 +94,30 @@ const NAV_TRIGGERS = [
   "acessar", "acesse", "acessa",
   "entrar", "entre", "entra",
   "carregar", "carregue",
+  "leva", "leve", "levar",
+  "pular", "pula", "pule",
+];
+
+// Map of action keywords (verb + object) -> { route, action }
+// Action is dispatched as window CustomEvent('roma:action', { detail: { action, params } })
+// so individual pages can listen and execute (open create dialog, save, print, etc).
+const ACTION_COMMANDS: Array<{
+  patterns: RegExp[];
+  route?: string;
+  action: string;
+  speak: string;
+}> = [
+  { patterns: [/\bnov[oa]\s+paciente\b/, /\bcriar\s+paciente\b/, /\bcadastrar\s+paciente\b/, /\badicionar\s+paciente\b/], route: "/pacientes", action: "new-patient", speak: "Abrindo cadastro de paciente." },
+  { patterns: [/\bnov[oa]\s+agendamento\b/, /\bnov[oa]\s+consulta\b/, /\bagendar\b/, /\bmarcar\s+consulta\b/], route: "/agenda", action: "new-appointment", speak: "Abrindo novo agendamento." },
+  { patterns: [/\bnov[oa]\s+receita\b/, /\bnov[oa]\s+prescri/, /\bprescrever\b/, /\breceitar\b/], route: "/receituario", action: "new-prescription", speak: "Abrindo nova prescrição." },
+  { patterns: [/\bnov[oa]\s+atestado\b/, /\bemitir\s+atestado\b/, /\bgerar\s+atestado\b/], route: "/atestados", action: "new-certificate", speak: "Abrindo novo atestado." },
+  { patterns: [/\bnov[oa]\s+orcamento\b/, /\bnov[oa]\s+orçamento\b/], route: "/orcamento", action: "new-budget", speak: "Abrindo novo orçamento." },
+  { patterns: [/\bnov[oa]\s+nota\b/, /\bnov[oa]\s+anota/], route: "/notas", action: "new-note", speak: "Abrindo nova nota." },
+  { patterns: [/\bnov[oa]\s+transa/, /\bnov[oa]\s+lancamento\b/, /\bnov[oa]\s+lançamento\b/, /\bregistrar\s+(receita|despesa|pagamento)\b/], route: "/financeiro", action: "new-transaction", speak: "Abrindo novo lançamento financeiro." },
+  { patterns: [/\bsalvar\b/, /\bgrava[r]?\b/], action: "save", speak: "Salvando." },
+  { patterns: [/\bimprimir\b/, /\bimprime\b/], action: "print", speak: "Imprimindo." },
+  { patterns: [/\bfechar\b/, /\bcancelar\b/], action: "close", speak: "Fechando." },
+  { patterns: [/\b(busca|buscar|procura|procurar|pesquisa|pesquisar)\s+paciente\b/], route: "/pacientes", action: "search-patient", speak: "Abrindo busca de pacientes." },
 ];
 
 // Returns { voice, isForcedMale } — isForcedMale means we couldn't find a real male voice
