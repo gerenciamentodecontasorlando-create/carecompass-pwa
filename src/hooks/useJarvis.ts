@@ -94,6 +94,30 @@ const NAV_TRIGGERS = [
   "acessar", "acesse", "acessa",
   "entrar", "entre", "entra",
   "carregar", "carregue",
+  "leva", "leve", "levar",
+  "pular", "pula", "pule",
+];
+
+// Map of action keywords (verb + object) -> { route, action }
+// Action is dispatched as window CustomEvent('roma:action', { detail: { action, params } })
+// so individual pages can listen and execute (open create dialog, save, print, etc).
+const ACTION_COMMANDS: Array<{
+  patterns: RegExp[];
+  route?: string;
+  action: string;
+  speak: string;
+}> = [
+  { patterns: [/\bnov[oa]\s+paciente\b/, /\bcriar\s+paciente\b/, /\bcadastrar\s+paciente\b/, /\badicionar\s+paciente\b/], route: "/pacientes", action: "new-patient", speak: "Abrindo cadastro de paciente." },
+  { patterns: [/\bnov[oa]\s+agendamento\b/, /\bnov[oa]\s+consulta\b/, /\bagendar\b/, /\bmarcar\s+consulta\b/], route: "/agenda", action: "new-appointment", speak: "Abrindo novo agendamento." },
+  { patterns: [/\bnov[oa]\s+receita\b/, /\bnov[oa]\s+prescri/, /\bprescrever\b/, /\breceitar\b/], route: "/receituario", action: "new-prescription", speak: "Abrindo nova prescrição." },
+  { patterns: [/\bnov[oa]\s+atestado\b/, /\bemitir\s+atestado\b/, /\bgerar\s+atestado\b/], route: "/atestados", action: "new-certificate", speak: "Abrindo novo atestado." },
+  { patterns: [/\bnov[oa]\s+orcamento\b/, /\bnov[oa]\s+orçamento\b/], route: "/orcamento", action: "new-budget", speak: "Abrindo novo orçamento." },
+  { patterns: [/\bnov[oa]\s+nota\b/, /\bnov[oa]\s+anota/], route: "/notas", action: "new-note", speak: "Abrindo nova nota." },
+  { patterns: [/\bnov[oa]\s+transa/, /\bnov[oa]\s+lancamento\b/, /\bnov[oa]\s+lançamento\b/, /\bregistrar\s+(receita|despesa|pagamento)\b/], route: "/financeiro", action: "new-transaction", speak: "Abrindo novo lançamento financeiro." },
+  { patterns: [/\bsalvar\b/, /\bgrava[r]?\b/], action: "save", speak: "Salvando." },
+  { patterns: [/\bimprimir\b/, /\bimprime\b/], action: "print", speak: "Imprimindo." },
+  { patterns: [/\bfechar\b/, /\bcancelar\b/], action: "close", speak: "Fechando." },
+  { patterns: [/\b(busca|buscar|procura|procurar|pesquisa|pesquisar)\s+paciente\b/], route: "/pacientes", action: "search-patient", speak: "Abrindo busca de pacientes." },
 ];
 
 // Returns { voice, isForcedMale } — isForcedMale means we couldn't find a real male voice
@@ -294,16 +318,35 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
     speak(text, onGreetingDone);
   }, [professionalName, speak, onGreetingDone]);
 
+  const tryAction = useCallback(
+    (text: string): boolean => {
+      const lower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      for (const cmd of ACTION_COMMANDS) {
+        if (cmd.patterns.some((re) => re.test(lower))) {
+          if (cmd.route) navigate(cmd.route);
+          // Slight delay so the target page mounts before receiving the action
+          window.setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("roma:action", { detail: { action: cmd.action } }));
+          }, cmd.route ? 350 : 50);
+          speak(cmd.speak);
+          return true;
+        }
+      }
+      return false;
+    },
+    [navigate, speak]
+  );
+
   const tryNavigate = useCallback(
     (text: string): boolean => {
       const lower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      
+
       // Check if any navigation trigger word is present
       const hasTrigger = NAV_TRIGGERS.some((t) => {
         const normalized = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         return lower.includes(normalized);
       });
-      
+
       if (!hasTrigger) return false;
 
       // Find which page keyword matches
@@ -424,14 +467,15 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       try { recognitionRef.current?.stop(); } catch { /* noop */ }
       setIsListening(false);
 
+      if (tryAction(command)) return;
       if (tryNavigate(command)) return;
       askAI(command);
     },
-    [tryNavigate, askAI]
+    [tryAction, tryNavigate, askAI]
   );
 
   const transcribeRecordedAudio = useCallback(async (blob: Blob) => {
-    if (blob.size < 1200) {
+    if (blob.size < 500) {
       toast.error("Não detectei áudio suficiente. Aproxime-se do microfone e tente novamente.");
       return;
     }
@@ -561,11 +605,11 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
           }
           const volume = Math.sqrt(sum / data.length) / 128;
           const now = performance.now();
-          if (volume > 0.035) {
+          if (volume > 0.015) {
             hasDetectedVoiceRef.current = true;
             quietSince = now;
           }
-          if (hasDetectedVoiceRef.current && now - quietSince > 1400) {
+          if (hasDetectedVoiceRef.current && now - quietSince > 2000) {
             stopRecordingCommand();
             return;
           }
@@ -580,8 +624,8 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
           stopRecordingCommand();
           toast.error("Não ouvi sua voz. Verifique o microfone e tente novamente.");
         }
-      }, 5000);
-      maxRecordTimerRef.current = window.setTimeout(stopRecordingCommand, 12000);
+      }, 10000);
+      maxRecordTimerRef.current = window.setTimeout(stopRecordingCommand, 20000);
 
       recorder.start(250);
       setIsListening(true);
