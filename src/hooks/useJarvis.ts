@@ -624,8 +624,8 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
           stopRecordingCommand();
           toast.error("Não ouvi sua voz. Verifique o microfone e tente novamente.");
         }
-      }, 5000);
-      maxRecordTimerRef.current = window.setTimeout(stopRecordingCommand, 12000);
+      }, 10000);
+      maxRecordTimerRef.current = window.setTimeout(stopRecordingCommand, 20000);
 
       recorder.start(250);
       setIsListening(true);
