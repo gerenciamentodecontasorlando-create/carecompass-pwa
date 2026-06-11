@@ -467,10 +467,11 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
       try { recognitionRef.current?.stop(); } catch { /* noop */ }
       setIsListening(false);
 
+      if (tryAction(command)) return;
       if (tryNavigate(command)) return;
       askAI(command);
     },
-    [tryNavigate, askAI]
+    [tryAction, tryNavigate, askAI]
   );
 
   const transcribeRecordedAudio = useCallback(async (blob: Blob) => {
