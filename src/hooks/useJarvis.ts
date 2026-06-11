@@ -605,11 +605,11 @@ export function useJarvis({ professionalName, voiceSettings, onGreetingDone }: U
           }
           const volume = Math.sqrt(sum / data.length) / 128;
           const now = performance.now();
-          if (volume > 0.035) {
+          if (volume > 0.015) {
             hasDetectedVoiceRef.current = true;
             quietSince = now;
           }
-          if (hasDetectedVoiceRef.current && now - quietSince > 1400) {
+          if (hasDetectedVoiceRef.current && now - quietSince > 2000) {
             stopRecordingCommand();
             return;
           }
