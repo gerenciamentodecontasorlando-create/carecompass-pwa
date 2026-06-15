@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import OdontogramChart from "@/components/OdontogramChart";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DentalChartForm, emptyDentalChart, type DentalChart } from "@/components/DentalChartForm";
-import { Smile, ListChecks, ClipboardList } from "lucide-react";
+import DentalProceduresTab from "@/components/DentalProceduresTab";
+import { Smile, ListChecks, ClipboardList, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 
 interface ToothRecord {
@@ -26,6 +27,15 @@ const conditions = [
   { value: "missing", label: "Ausente", color: "bg-muted-foreground" },
   { value: "implant", label: "Implante", color: "bg-accent-foreground" },
   { value: "root_canal", label: "Canal", color: "bg-destructive/70" },
+  { value: "prosthesis", label: "Prótese", color: "bg-[#8b5cf6]" },
+  { value: "cleaning", label: "Limpeza", color: "bg-[#06b6d4]" },
+  { value: "extraction", label: "Extração", color: "bg-[#7f1d1d]" },
+  { value: "orthodontics", label: "Aparelho", color: "bg-[#ec4899]" },
+  { value: "veneer", label: "Faceta", color: "bg-[#a78bfa]" },
+  { value: "sealant", label: "Selante", color: "bg-[#14b8a6]" },
+  { value: "fracture", label: "Fratura", color: "bg-[#b91c1c]" },
+  { value: "mobility", label: "Mobilidade", color: "bg-[#f97316]" },
+  { value: "whitening", label: "Clareamento", color: "bg-[#fde047]" },
 ];
 
 const OdontogramPage = () => {
@@ -126,9 +136,12 @@ const OdontogramPage = () => {
 
       {selectedPatientId && (
         <Tabs defaultValue="odontogram" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
             <TabsTrigger value="odontogram" className="gap-2">
               <Smile className="h-4 w-4" /> Odontograma
+            </TabsTrigger>
+            <TabsTrigger value="procedures" className="gap-2">
+              <Stethoscope className="h-4 w-4" /> Procedimentos
             </TabsTrigger>
             <TabsTrigger value="chart" className="gap-2">
               <ClipboardList className="h-4 w-4" /> Prontuário
@@ -243,6 +256,13 @@ const OdontogramPage = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="procedures" className="mt-4">
+            <DentalProceduresTab
+              patientId={selectedPatientId}
+              patientName={String(patients.find(p => String(p.id) === selectedPatientId)?.name || "")}
+            />
           </TabsContent>
 
           <TabsContent value="chart" className="mt-4">

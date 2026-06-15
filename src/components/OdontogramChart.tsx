@@ -14,6 +14,15 @@ const conditionColors: Record<string, string> = {
   missing: "#9ca3af",
   implant: "#065f53",
   root_canal: "#dc2626",
+  prosthesis: "#8b5cf6",
+  cleaning: "#06b6d4",
+  extraction: "#7f1d1d",
+  orthodontics: "#ec4899",
+  veneer: "#a78bfa",
+  sealant: "#14b8a6",
+  fracture: "#b91c1c",
+  mobility: "#f97316",
+  whitening: "#fde047",
 };
 
 // Adult teeth numbers: Upper right 18-11, Upper left 21-28, Lower left 38-31, Lower right 41-48
