@@ -323,6 +323,60 @@ export type Database = {
         }
         Relationships: []
       }
+      dental_procedures: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          date: string
+          deleted_at: string | null
+          id: string
+          notes: string | null
+          paid_amount: number
+          patient_id: string
+          payment_method: string | null
+          procedure: string
+          professional: string | null
+          status: string
+          tooth_number: string | null
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          date?: string
+          deleted_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_amount?: number
+          patient_id: string
+          payment_method?: string | null
+          procedure: string
+          professional?: string | null
+          status?: string
+          tooth_number?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          date?: string
+          deleted_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_amount?: number
+          patient_id?: string
+          payment_method?: string | null
+          procedure?: string
+          professional?: string | null
+          status?: string
+          tooth_number?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
       evolutions: {
         Row: {
           assessment: string | null
