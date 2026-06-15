@@ -258,6 +258,13 @@ const OdontogramPage = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="procedures" className="mt-4">
+            <DentalProceduresTab
+              patientId={selectedPatientId}
+              patientName={String(patients.find(p => String(p.id) === selectedPatientId)?.name || "")}
+            />
+          </TabsContent>
+
           <TabsContent value="chart" className="mt-4">
             <DentalChartForm value={dentalChart} onSave={saveDentalChart} />
           </TabsContent>
