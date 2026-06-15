@@ -136,9 +136,12 @@ const OdontogramPage = () => {
 
       {selectedPatientId && (
         <Tabs defaultValue="odontogram" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
             <TabsTrigger value="odontogram" className="gap-2">
               <Smile className="h-4 w-4" /> Odontograma
+            </TabsTrigger>
+            <TabsTrigger value="procedures" className="gap-2">
+              <Stethoscope className="h-4 w-4" /> Procedimentos
             </TabsTrigger>
             <TabsTrigger value="chart" className="gap-2">
               <ClipboardList className="h-4 w-4" /> Prontuário
