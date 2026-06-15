@@ -7,7 +7,7 @@ import { useOnlineStatus } from "./useOnlineStatus";
 
 type TableName = "patients" | "appointments" | "transactions" | "materials" | 
   "clinical_records" | "evolutions" | "patient_files" | "prescriptions" | 
-  "certificates" | "odontograms" | "notes" | "clinic_settings";
+  "certificates" | "odontograms" | "notes" | "clinic_settings" | "dental_procedures";
 
 export function useClinicData(
   table: TableName,
