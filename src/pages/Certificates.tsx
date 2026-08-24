@@ -1,16 +1,18 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useClinicData } from "@/hooks/useClinicData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Printer, Plus, Trash2, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { SignaturePad } from "@/components/SignaturePad";
 
+const COMP_FLAG = "COMP";
 
 const Certificates = () => {
   const { data: settingsArr } = useClinicData("clinic_settings");
@@ -18,16 +20,22 @@ const Certificates = () => {
   const { data: certificates, insert, remove } = useClinicData("certificates");
   const { data: patients } = useClinicData("patients");
   const [form, setForm, clearDraft] = useFormDraft("certificates-form", { patientName: "", content: "", days: "1" });
+  const [compForm, setCompForm, clearCompDraft] = useFormDraft("certificates-comp-form", {
+    patientName: "",
+    content: "",
+    date: format(new Date(), "yyyy-MM-dd"),
+    from: "",
+    to: "",
+  });
   const [previewId, setPreviewId] = useFormDraft<string | null>("certificates-preview", null);
   const [patientSignature, setPatientSignature] = useState<string | null>(null);
-  
 
   const handleSave = async () => {
     if (!form.patientName.trim()) { toast.error("Preencha o nome do paciente"); return; }
     const result = await insert({
-      patient_name: form.patientName,
+      patient_name: form.patientName.trim(),
       date: format(new Date(), "yyyy-MM-dd"),
-      content: form.content || `Atesto para os devidos fins que o(a) paciente ${form.patientName} esteve sob meus cuidados profissionais nesta data, necessitando de ${form.days} dia(s) de afastamento de suas atividades.`,
+      content: form.content || `Atesto para os devidos fins que o(a) paciente ${form.patientName.trim()} esteve sob meus cuidados profissionais nesta data, necessitando de ${form.days} dia(s) de afastamento de suas atividades.`,
       days: form.days,
     });
     if (result) {
@@ -37,7 +45,25 @@ const Certificates = () => {
     }
   };
 
+  const handleSaveComparecimento = async () => {
+    if (!compForm.patientName.trim()) { toast.error("Preencha o nome do paciente"); return; }
+    const periodo = compForm.from && compForm.to ? `, no período das ${compForm.from} às ${compForm.to}` : "";
+    const dataFmt = format(new Date(`${compForm.date}T12:00:00`), "dd/MM/yyyy");
+    const result = await insert({
+      patient_name: compForm.patientName.trim(),
+      date: compForm.date,
+      content: compForm.content || `Atesto para os devidos fins que o(a) paciente ${compForm.patientName.trim()} compareceu a esta unidade para atendimento profissional no dia ${dataFmt}${periodo}.`,
+      days: COMP_FLAG,
+    });
+    if (result) {
+      clearCompDraft();
+      setPreviewId(String(result.id));
+      toast.success("Atestado de comparecimento gerado");
+    }
+  };
+
   const previewCert = previewId ? certificates.find((c) => String(c.id) === previewId) : null;
+  const isComp = previewCert ? String(previewCert.days) === COMP_FLAG : false;
 
   return (
     <div className="space-y-6">
@@ -46,21 +72,75 @@ const Certificates = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
           <Card>
-            <CardContent className="p-6 space-y-4">
-              <div className="grid gap-2">
-                <Label>Paciente *</Label>
-                <Input value={form.patientName} onChange={(e) => setForm({ ...form, patientName: e.target.value })} />
+            <CardContent className="p-4 sm:p-6">
+              <Tabs defaultValue="afastamento">
+                <TabsList className="w-full">
+                  <TabsTrigger value="afastamento" className="flex-1">Afastamento</TabsTrigger>
+                  <TabsTrigger value="comparecimento" className="flex-1">Comparecimento</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="afastamento" className="space-y-4 mt-4">
+                  <div className="grid gap-2">
+                    <Label>Paciente *</Label>
+                    <Input
+                      list="pacientes-atestado"
+                      value={form.patientName}
+                      onChange={(e) => setForm({ ...form, patientName: e.target.value })}
+                      placeholder="Nome completo do paciente"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Dias de afastamento</Label>
+                    <Input type="number" min="1" value={form.days} onChange={(e) => setForm({ ...form, days: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Texto personalizado (opcional)</Label>
+                    <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={4} placeholder="Deixe em branco para usar o modelo padrão" />
+                  </div>
+                  <Button onClick={handleSave} className="w-full"><Plus className="h-4 w-4 mr-2" />Gerar Atestado</Button>
+                </TabsContent>
+
+                <TabsContent value="comparecimento" className="space-y-4 mt-4">
+                  <div className="grid gap-2">
+                    <Label>Paciente *</Label>
+                    <Input
+                      list="pacientes-atestado"
+                      value={compForm.patientName}
+                      onChange={(e) => setCompForm({ ...compForm, patientName: e.target.value })}
+                      placeholder="Nome completo do paciente"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Data do comparecimento</Label>
+                    <Input type="date" value={compForm.date} onChange={(e) => setCompForm({ ...compForm, date: e.target.value })} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="grid gap-2">
+                      <Label>Das</Label>
+                      <Input type="time" value={compForm.from} onChange={(e) => setCompForm({ ...compForm, from: e.target.value })} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Às</Label>
+                      <Input type="time" value={compForm.to} onChange={(e) => setCompForm({ ...compForm, to: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Texto personalizado (opcional)</Label>
+                    <Textarea value={compForm.content} onChange={(e) => setCompForm({ ...compForm, content: e.target.value })} rows={4} placeholder="Deixe em branco para usar o modelo padrão" />
+                  </div>
+                  <Button onClick={handleSaveComparecimento} className="w-full"><Plus className="h-4 w-4 mr-2" />Gerar Comparecimento</Button>
+                </TabsContent>
+              </Tabs>
+
+              <datalist id="pacientes-atestado">
+                {patients.map((p) => (
+                  <option key={String(p.id)} value={String(p.name)} />
+                ))}
+              </datalist>
+
+              <div className="mt-4">
+                <SignaturePad value={patientSignature} onChange={setPatientSignature} label="Assinatura do Paciente" />
               </div>
-              <div className="grid gap-2">
-                <Label>Dias de afastamento</Label>
-                <Input type="number" min="1" value={form.days} onChange={(e) => setForm({ ...form, days: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label>Texto personalizado (opcional)</Label>
-                <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={4} placeholder="Deixe em branco para usar o modelo padrão" />
-              </div>
-              <SignaturePad value={patientSignature} onChange={setPatientSignature} label="Assinatura do Paciente" />
-              <Button onClick={handleSave} className="w-full"><Plus className="h-4 w-4 mr-2" />Gerar Atestado</Button>
             </CardContent>
           </Card>
 
@@ -75,7 +155,9 @@ const Certificates = () => {
                     <div key={String(c.id)} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => setPreviewId(String(c.id))}>
                       <div>
                         <p className="text-sm font-medium">{String(c.patient_name)}</p>
-                        <p className="text-xs text-muted-foreground">{format(new Date(String(c.date)), "dd/MM/yyyy")}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(`${String(c.date)}T12:00:00`), "dd/MM/yyyy")} • {String(c.days) === COMP_FLAG ? "Comparecimento" : `Afastamento ${String(c.days || "")} dia(s)`}
+                        </p>
                       </div>
                       <Button variant="ghost" size="icon" onClick={async (e) => {
                         e.stopPropagation();
@@ -117,10 +199,21 @@ const Certificates = () => {
                 </div>
                 {previewCert ? (
                   <div className="space-y-6">
-                    <h3 className="font-semibold text-center text-lg">ATESTADO</h3>
-                    <p className="text-sm leading-relaxed">{String(previewCert.content)}</p>
+                    <h3 className="font-semibold text-center text-lg tracking-wide">
+                      {isComp ? "ATESTADO DE COMPARECIMENTO" : "ATESTADO MÉDICO"}
+                    </h3>
+                    <div className="rounded-lg border border-border p-3 space-y-1">
+                      <p className="text-sm"><span className="font-semibold">Paciente:</span> {String(previewCert.patient_name)}</p>
+                      <p className="text-sm">
+                        <span className="font-semibold">Data:</span> {format(new Date(`${String(previewCert.date)}T12:00:00`), "dd/MM/yyyy")}
+                      </p>
+                      {!isComp && previewCert.days ? (
+                        <p className="text-sm"><span className="font-semibold">Afastamento:</span> {String(previewCert.days)} dia(s)</p>
+                      ) : null}
+                    </div>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{String(previewCert.content)}</p>
                     <p className="text-sm text-right mt-8">
-                      {settings.address ? `${settings.address}, ` : ""}{format(new Date(String(previewCert.date)), "dd/MM/yyyy")}
+                      {settings.address ? `${settings.address}, ` : ""}{format(new Date(`${String(previewCert.date)}T12:00:00`), "dd/MM/yyyy")}
                     </p>
                   </div>
                 ) : (
