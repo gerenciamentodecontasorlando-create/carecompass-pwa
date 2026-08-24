@@ -29,6 +29,8 @@ import AdminPanel from "./pages/AdminPanel";
 import Pediatria from "./pages/Pediatria";
 import Dermatologia from "./pages/Dermatologia";
 import Psiquiatria from "./pages/Psiquiatria";
+import Nutricao from "./pages/Nutricao";
+import Psicologia from "./pages/Psicologia";
 import Ginecologia from "./pages/Ginecologia";
 import NotFound from "./pages/NotFound";
 import PinLock from "./pages/PinLock";
@@ -98,6 +100,8 @@ function AppRoutes() {
             <Route path="/dermatologia" element={<Dermatologia />} />
             <Route path="/psiquiatria" element={<Psiquiatria />} />
             <Route path="/ginecologia" element={<Ginecologia />} />
+            <Route path="/nutricao" element={<Nutricao />} />
+            <Route path="/psicologia" element={<Psicologia />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
           <Route path="*" element={<NotFound />} />

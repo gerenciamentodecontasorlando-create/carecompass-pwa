@@ -238,9 +238,6 @@ const Psicologia = () => {
     if (objetivosTerapeuticos) l.push(`\nObjetivos terapêuticos:\n${objetivosTerapeuticos}`);
     l.push(`\nAbordagem: ${abordagem.toUpperCase()} • Frequência: ${frequencia}`);
 
-    if (relato || observado || analise || planoSesEmpty()) {
-      // noop
-    }
     if (relato || observado || analise || planoSessao || tarefa) {
       l.push(`\n--- Registro de sessão ${sessaoNumero ? "nº " + sessaoNumero : ""} ---`);
       if (relato) l.push(`Relato do paciente (S): ${relato}`);
@@ -251,8 +248,6 @@ const Psicologia = () => {
     }
     return l.join("\n");
   };
-
-  const planoSesEmpty = () => false;
 
   const salvarNoProntuario = async () => {
     if (!selectedPatientId) {
@@ -538,9 +533,6 @@ const Psicologia = () => {
           <Card>
             <CardHeader><CardTitle className="text-base">Protocolos e técnicas</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <Select value={abordagem === "tcc" ? "tcc" : abordagem} onValueChange={() => {}}>
-                <SelectTrigger className="hidden"><SelectValue /></SelectTrigger>
-              </Select>
               <ProtocoloSelector onPrint={(titulo, corpo) => imprimir(titulo, corpo)} />
             </CardContent>
           </Card>
