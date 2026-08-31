@@ -8,8 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Baby, Activity, Syringe, Calculator, Printer, Ruler } from "lucide-react";
+import { Baby, Activity, Syringe, Calculator, Printer, Ruler, Pill } from "lucide-react";
 import { toast } from "sonner";
+import GrowthCharts from "@/components/pediatria/GrowthCharts";
+import PediatricPrescription from "@/components/pediatria/PediatricPrescription";
+
 
 /* ------------------ WHO Z-SCORE (LMS) ------------------ */
 /* Tabela LMS resumida da OMS para peso-para-idade (0-60 meses).
@@ -328,14 +331,27 @@ const Pediatria = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="referencias">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
+      <Tabs defaultValue="graficos">
+        <TabsList className="grid grid-cols-3 md:grid-cols-7 w-full h-auto">
+          <TabsTrigger value="graficos"><Activity className="h-4 w-4 mr-1" />Gráficos</TabsTrigger>
+          <TabsTrigger value="receita"><Pill className="h-4 w-4 mr-1" />Receita</TabsTrigger>
           <TabsTrigger value="referencias"><Ruler className="h-4 w-4 mr-1" />Referências</TabsTrigger>
-          <TabsTrigger value="curvas"><Activity className="h-4 w-4 mr-1" />Curvas OMS</TabsTrigger>
+          <TabsTrigger value="curvas"><Activity className="h-4 w-4 mr-1" />Z-score</TabsTrigger>
           <TabsTrigger value="anamnese"><Baby className="h-4 w-4 mr-1" />Anamnese</TabsTrigger>
           <TabsTrigger value="vacinas"><Syringe className="h-4 w-4 mr-1" />Vacinas/Marcos</TabsTrigger>
           <TabsTrigger value="calc"><Calculator className="h-4 w-4 mr-1" />Calculadoras</TabsTrigger>
         </TabsList>
+
+        {/* GRÁFICOS DE CRESCIMENTO */}
+        <TabsContent value="graficos">
+          <GrowthCharts />
+        </TabsContent>
+
+        {/* RECEITA PEDIÁTRICA */}
+        <TabsContent value="receita">
+          <PediatricPrescription />
+        </TabsContent>
+
 
         {/* REFERÊNCIAS */}
         <TabsContent value="referencias">
