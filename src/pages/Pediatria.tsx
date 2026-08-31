@@ -8,8 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Baby, Activity, Syringe, Calculator, Printer, Ruler } from "lucide-react";
+import { Baby, Activity, Syringe, Calculator, Printer, Ruler, Pill } from "lucide-react";
 import { toast } from "sonner";
+import GrowthCharts from "@/components/pediatria/GrowthCharts";
+import PediatricPrescription from "@/components/pediatria/PediatricPrescription";
+
 
 /* ------------------ WHO Z-SCORE (LMS) ------------------ */
 /* Tabela LMS resumida da OMS para peso-para-idade (0-60 meses).
