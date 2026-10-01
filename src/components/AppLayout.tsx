@@ -7,6 +7,7 @@ import { SuggestionBox } from "@/components/SuggestionBox";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useSyncQueue } from "@/hooks/useSyncQueue";
 import { Shield, Lock } from "lucide-react";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export function AppLayout() {
   useSyncQueue();
@@ -28,6 +29,7 @@ export function AppLayout() {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <main className="flex-1 flex flex-col min-h-screen">
+          <PaymentTestModeBanner />
           <header className="h-14 flex items-center border-b bg-card px-4 no-print">
             <SidebarTrigger />
             <span className="ml-3 text-lg font-bold text-primary tracking-tight">Btx CliniCos</span>
