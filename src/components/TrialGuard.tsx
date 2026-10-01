@@ -90,7 +90,7 @@ export function TrialGuard({ children }: { children: ReactNode }) {
     );
   }
 
-  if (isPlatformAdmin) return <>{children}</>;
+  if (isPlatformAdmin) return <>{children}<PlanCheckoutDialog priceId={checkout?.priceId ?? null} planName={checkout?.name} onClose={() => setCheckout(null)} /></>;
   if (trialInfo?.isActive && trialInfo.plan !== "free") return <>{children}<PlanCheckoutDialog priceId={checkout?.priceId ?? null} planName={checkout?.name} onClose={() => setCheckout(null)} /></>;
   if (trialInfo?.isExpired) return <TrialExpiredScreen onSubscribe={(priceId, name) => setCheckout({ priceId, name })} checkout={checkout} onClose={() => setCheckout(null)} />;
 
