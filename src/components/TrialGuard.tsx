@@ -17,6 +17,7 @@ interface TrialInfo {
 }
 
 const TRIAL_DAYS = 14;
+const PENDING_PLAN_KEY = "btx-pending-checkout";
 export function TrialGuard({ children }: { children: ReactNode }) {
   const { clinicId, user } = useAuth();
   const { t } = useTranslation();
@@ -68,6 +69,19 @@ export function TrialGuard({ children }: { children: ReactNode }) {
     fetchTrial();
   }, [clinicId, user]);
 
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const pending = localStorage.getItem(PENDING_PLAN_KEY);
+      if (!pending) return;
+      const selected = JSON.parse(pending) as { priceId?: string; name?: string };
+      if (selected.priceId && selected.name) setCheckout({ priceId: selected.priceId, name: selected.name });
+      localStorage.removeItem(PENDING_PLAN_KEY);
+    } catch {
+      localStorage.removeItem(PENDING_PLAN_KEY);
+    }
+  }, [user]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -77,7 +91,7 @@ export function TrialGuard({ children }: { children: ReactNode }) {
   }
 
   if (isPlatformAdmin) return <>{children}</>;
-  if (trialInfo?.isActive && trialInfo.plan !== "free") return <>{children}</>;
+  if (trialInfo?.isActive && trialInfo.plan !== "free") return <>{children}<PlanCheckoutDialog priceId={checkout?.priceId ?? null} planName={checkout?.name} onClose={() => setCheckout(null)} /></>;
   if (trialInfo?.isExpired) return <TrialExpiredScreen onSubscribe={(priceId, name) => setCheckout({ priceId, name })} checkout={checkout} onClose={() => setCheckout(null)} />;
 
   return (
