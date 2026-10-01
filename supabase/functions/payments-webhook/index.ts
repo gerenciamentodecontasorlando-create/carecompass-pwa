@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       if (userId && plan && ["active", "trialing", "past_due"].includes(subscription.status)) {
         const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
         const { data: profile } = await db.from("profiles").select("clinic_id").eq("user_id", userId).single();
-        if (profile?.clinic_id) await db.from("clinics").update({ plan: plan.plan, max_patients: plan.patients, max_storage_mb: plan.storage, ai_monthly_limit: plan.ai }).eq("id", profile.clinic_id);
+        if (profile?.clinic_id) await db.from("clinics").update({ plan: plan.plan, plan_display_name: null, plan_expires_at: null, custom_ai_enabled: plan.plan === "enterprise", max_patients: plan.patients, max_storage_mb: plan.storage, ai_monthly_limit: plan.ai }).eq("id", profile.clinic_id);
       }
     }
     if (["customer.subscription.deleted", "subscription.canceled"].includes(event.type)) {
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       if (userId) {
         const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
         const { data: profile } = await db.from("profiles").select("clinic_id").eq("user_id", userId).single();
-        if (profile?.clinic_id) await db.from("clinics").update({ plan: "free", max_patients: 50, max_storage_mb: 100, ai_monthly_limit: 0 }).eq("id", profile.clinic_id);
+        if (profile?.clinic_id) await db.from("clinics").update({ plan: "free", plan_display_name: null, plan_expires_at: null, custom_ai_enabled: false, max_patients: 50, max_storage_mb: 100, ai_monthly_limit: 0 }).eq("id", profile.clinic_id);
       }
     }
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });

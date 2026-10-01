@@ -38,6 +38,8 @@ export async function checkAiAccess(req: Request): Promise<{ ok: true; clinicId:
 
   const userId = userData.user.id;
 
+  const { data: isPlatformAdmin } = await admin.rpc("is_platform_admin", { _user_id: userId });
+
   // Find clinic via profile
   const { data: profile } = await admin
     .from("profiles").select("clinic_id").eq("user_id", userId).maybeSingle();
@@ -54,7 +56,7 @@ export async function checkAiAccess(req: Request): Promise<{ ok: true; clinicId:
   const clinicId = profile.clinic_id as string;
 
   const { data: clinic } = await admin
-    .from("clinics").select("plan, ai_monthly_limit").eq("id", clinicId).maybeSingle();
+    .from("clinics").select("plan, ai_monthly_limit, custom_ai_enabled, plan_expires_at").eq("id", clinicId).maybeSingle();
 
   if (!clinic) {
     return {
@@ -65,7 +67,10 @@ export async function checkAiAccess(req: Request): Promise<{ ok: true; clinicId:
     };
   }
 
-  if (clinic.plan !== "enterprise") {
+  const planExpired = clinic.plan_expires_at && new Date(clinic.plan_expires_at).getTime() < Date.now();
+  const hasAiPlan = clinic.plan === "enterprise" || clinic.custom_ai_enabled === true;
+
+  if (!isPlatformAdmin && (!hasAiPlan || planExpired)) {
     return {
       ok: false,
       response: new Response(JSON.stringify({
@@ -81,7 +86,7 @@ export async function checkAiAccess(req: Request): Promise<{ ok: true; clinicId:
   const used = usage?.count || 0;
   const limit = clinic.ai_monthly_limit || 0;
 
-  if (limit > 0 && used >= limit) {
+  if (!isPlatformAdmin && limit > 0 && used >= limit) {
     return {
       ok: false,
       response: new Response(JSON.stringify({
@@ -90,8 +95,10 @@ export async function checkAiAccess(req: Request): Promise<{ ok: true; clinicId:
     };
   }
 
-  // Increment counter (best-effort)
-  await admin.rpc("increment_ai_usage", { _clinic_id: clinicId });
+  // Administradores da plataforma têm acesso vitalício e ilimitado.
+  if (!isPlatformAdmin) {
+    await admin.rpc("increment_ai_usage", { _clinic_id: clinicId });
+  }
 
   return { ok: true, clinicId };
 }

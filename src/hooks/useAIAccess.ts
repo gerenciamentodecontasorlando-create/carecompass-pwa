@@ -12,6 +12,9 @@ export function useAIAccess() {
   const [plan, setPlan] = useState<string>("free");
   const [aiMonthlyLimit, setAiMonthlyLimit] = useState<number>(0);
   const [aiUsedMonth, setAiUsedMonth] = useState<number>(0);
+  const [customAiEnabled, setCustomAiEnabled] = useState(false);
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
+  const [planIsActive, setPlanIsActive] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,6 +24,7 @@ export function useAIAccess() {
     }
     let cancelled = false;
     (async () => {
+      const { data: adminCheck } = await supabase.rpc("is_platform_admin", { _user_id: user.id });
       const { data: profile } = await supabase
         .from("profiles")
         .select("clinic_id")
@@ -32,7 +36,7 @@ export function useAIAccess() {
       }
       const { data: clinic } = await supabase
         .from("clinics")
-        .select("plan, ai_monthly_limit")
+        .select("plan, ai_monthly_limit, custom_ai_enabled, plan_expires_at")
         .eq("id", profile.clinic_id)
         .maybeSingle();
       const ym = new Date().toISOString().slice(0, 7);
@@ -46,6 +50,9 @@ export function useAIAccess() {
         setPlan(clinic?.plan || "free");
         setAiMonthlyLimit(Number(clinic?.ai_monthly_limit) || 0);
         setAiUsedMonth(Number(usage?.count) || 0);
+        setCustomAiEnabled(Boolean(clinic?.custom_ai_enabled));
+        setIsPlatformAdmin(adminCheck === true);
+        setPlanIsActive(!clinic?.plan_expires_at || new Date(clinic.plan_expires_at).getTime() >= Date.now());
         setLoading(false);
       }
     })();
@@ -54,8 +61,8 @@ export function useAIAccess() {
     };
   }, [user]);
 
-  const hasAIAccess = plan === "enterprise";
-  const hasReachedLimit = aiMonthlyLimit > 0 && aiUsedMonth >= aiMonthlyLimit;
+  const hasAIAccess = isPlatformAdmin || (planIsActive && (plan === "enterprise" || customAiEnabled));
+  const hasReachedLimit = !isPlatformAdmin && aiMonthlyLimit > 0 && aiUsedMonth >= aiMonthlyLimit;
 
   return { hasAIAccess, plan, loading, aiMonthlyLimit, aiUsedMonth, hasReachedLimit };
 }
