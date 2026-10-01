@@ -40,7 +40,7 @@ import { TrialGuard } from "@/components/TrialGuard";
 
 const queryClient = new QueryClient();
 
-function AppRoutes() {
+function AppRoutes({ pinUnlocked, onUnlock }: { pinUnlocked: boolean; onUnlock: () => void }) {
   const { user, loading } = useAuth();
   useLocalDataMigration();
 
@@ -71,6 +71,10 @@ function AppRoutes() {
 
   if (!user) {
     return <Auth />;
+  }
+
+  if (!pinUnlocked) {
+    return <PinLock onUnlock={onUnlock} />;
   }
 
   return (
@@ -161,17 +165,13 @@ const App = () => {
     );
   }
 
-  if (!pinUnlocked) {
-    return <PinLock onUnlock={handleUnlock} />;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <AppRoutes />
+          <AppRoutes pinUnlocked={pinUnlocked} onUnlock={handleUnlock} />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

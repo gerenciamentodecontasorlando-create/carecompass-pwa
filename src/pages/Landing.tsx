@@ -36,7 +36,16 @@ import {
   StickyNote,
   Receipt,
   Trash2,
+  CreditCard,
 } from "lucide-react";
+
+const PENDING_PLAN_KEY = "btx-pending-checkout";
+
+const SALES_PLANS = [
+  { name: "Estudante", price: "R$ 25", priceId: "student_monthly", tag: "para quem está começando", features: ["Todos os módulos clínicos", "Agenda e financeiro", "Receituário e atestados", "Funciona offline"] },
+  { name: "Profissional", price: "R$ 49,90", priceId: "professional_monthly", tag: "o mais popular", highlight: true, features: ["Tudo do Estudante", "Suporte prioritário", "Backup automático", "Múltiplos dispositivos"] },
+  { name: "Enterprise + IA", price: "R$ 199", priceId: "enterprise_ai_monthly", tag: "com IA Roma", features: ["Tudo do Profissional", "IA Roma completa", "Análise de exames por IA", "Transcrição de consultas"] },
+];
 
 const WHATSAPP =
   "https://wa.me/5591999873835?text=" +
@@ -47,6 +56,11 @@ const WHATSAPP =
 export default function Landing() {
   const navigate = useNavigate();
   const [demoLoading, setDemoLoading] = useState(false);
+
+  const handleSubscribe = (priceId: string, planName: string) => {
+    localStorage.setItem(PENDING_PLAN_KEY, JSON.stringify({ priceId, name: planName }));
+    window.location.assign("/?checkout=plan");
+  };
 
   useEffect(() => {
     document.title = "Btx CliniCos — Prontuário, Agenda e Financeiro para Clínicas";
@@ -156,6 +170,30 @@ export default function Landing() {
 
           {/* Mockup do Dashboard */}
           <DashboardMock />
+        </div>
+      </section>
+
+      {/* PLANOS EM DESTAQUE */}
+      <section className="border-y bg-card" aria-labelledby="planos-topo-titulo">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="flex flex-col gap-2 text-center mb-6">
+            <Badge variant="secondary" className="mx-auto">Assinatura imediata</Badge>
+            <h2 id="planos-topo-titulo" className="text-2xl md:text-3xl font-bold">Escolha seu plano e assine agora</h2>
+            <p className="text-sm text-muted-foreground">Pagamento seguro e ativação automática após a confirmação.</p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {SALES_PLANS.map((plan) => (
+              <div key={plan.priceId} className={`flex items-center justify-between gap-4 rounded-lg border p-4 ${plan.highlight ? "border-primary ring-1 ring-primary/20" : "border-border"}`}>
+                <div className="min-w-0">
+                  <p className="font-semibold truncate">{plan.name}</p>
+                  <p><span className="text-2xl font-bold">{plan.price}</span><span className="text-sm text-muted-foreground">/mês</span></p>
+                </div>
+                <Button onClick={() => handleSubscribe(plan.priceId, plan.name)}>
+                  <CreditCard className="h-4 w-4 mr-2" /> Assinar
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -332,40 +370,9 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <PlanCard
-              name="Estudante"
-              price="R$ 25"
-              tag="para quem está começando"
-              features={[
-                "Todos os módulos clínicos",
-                "Agenda e financeiro",
-                "Receituário e atestados",
-                "Funciona offline",
-              ]}
-            />
-            <PlanCard
-              name="Profissional"
-              price="R$ 49,90"
-              tag="o mais popular"
-              highlight
-              features={[
-                "Tudo do Estudante",
-                "Suporte prioritário",
-                "Backup automático",
-                "Múltiplos dispositivos",
-              ]}
-            />
-            <PlanCard
-              name="Enterprise + IA"
-              price="R$ 199"
-              tag="com IA Roma"
-              features={[
-                "Tudo do Profissional",
-                "IA Roma completa",
-                "Análise de exames por IA",
-                "Transcrição de consultas",
-              ]}
-            />
+            {SALES_PLANS.map((plan) => (
+              <PlanCard key={plan.priceId} {...plan} onSubscribe={handleSubscribe} />
+            ))}
           </div>
         </div>
       </section>
@@ -447,12 +454,16 @@ function PlanCard({
   tag,
   features,
   highlight,
+  priceId,
+  onSubscribe,
 }: {
   name: string;
   price: string;
   tag: string;
   features: string[];
   highlight?: boolean;
+  priceId: string;
+  onSubscribe: (priceId: string, planName: string) => void;
 }) {
   return (
     <Card className={`p-6 relative ${highlight ? "border-primary shadow-lg scale-[1.02]" : ""}`}>
@@ -472,8 +483,8 @@ function PlanCard({
           </li>
         ))}
       </ul>
-      <Button className="w-full mt-6" variant={highlight ? "default" : "outline"} asChild>
-        <Link to="/">Começar teste grátis</Link>
+      <Button className="w-full mt-6" variant={highlight ? "default" : "outline"} onClick={() => onSubscribe(priceId, name)}>
+        <CreditCard className="h-4 w-4 mr-2" /> Assinar agora
       </Button>
     </Card>
   );
