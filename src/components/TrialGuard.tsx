@@ -9,6 +9,7 @@ import { PlanCheckoutDialog } from "@/components/PlanCheckoutDialog";
 
 interface TrialInfo {
   trialEndsAt: string | null;
+  planExpiresAt: string | null;
   plan: string;
   daysLeft: number;
   isExpired: boolean;
@@ -37,20 +38,23 @@ export function TrialGuard({ children }: { children: ReactNode }) {
 
       const { data } = await supabase
         .from("clinics")
-        .select("trial_ends_at, plan")
+        .select("trial_ends_at, plan, plan_expires_at")
         .eq("id", clinicId)
         .single();
 
       if (data) {
         const trialEnd = data.trial_ends_at ? new Date(data.trial_ends_at) : null;
+        const planEnd = data.plan_expires_at ? new Date(data.plan_expires_at) : null;
         const now = new Date();
         const daysLeft = trialEnd
           ? Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
           : 0;
-        const isPaid = data.plan !== "free" && data.plan !== null;
+        const isPaidPlan = data.plan !== "free" && data.plan !== null;
+        const isPaid = isPaidPlan && (!planEnd || now <= planEnd);
 
         setTrialInfo({
           trialEndsAt: data.trial_ends_at,
+          planExpiresAt: data.plan_expires_at,
           plan: data.plan,
           daysLeft,
           isExpired: !isPaid && trialEnd !== null && now > trialEnd,
@@ -72,7 +76,7 @@ export function TrialGuard({ children }: { children: ReactNode }) {
   }
 
   if (isPlatformAdmin) return <>{children}</>;
-  if (trialInfo && trialInfo.plan !== "free") return <>{children}</>;
+  if (trialInfo?.isActive && trialInfo.plan !== "free") return <>{children}</>;
   if (trialInfo?.isExpired) return <TrialExpiredScreen onSubscribe={(priceId, name) => setCheckout({ priceId, name })} checkout={checkout} onClose={() => setCheckout(null)} />;
 
   return (
