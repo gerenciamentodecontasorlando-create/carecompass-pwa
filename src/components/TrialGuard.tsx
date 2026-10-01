@@ -51,14 +51,15 @@ export function TrialGuard({ children }: { children: ReactNode }) {
           : 0;
         const isPaidPlan = data.plan !== "free" && data.plan !== null;
         const isPaid = isPaidPlan && (!planEnd || now <= planEnd);
+        const isTrialActive = !isPaidPlan && trialEnd !== null && now <= trialEnd;
 
         setTrialInfo({
           trialEndsAt: data.trial_ends_at,
           planExpiresAt: data.plan_expires_at,
           plan: data.plan,
           daysLeft,
-          isExpired: !isPaid && trialEnd !== null && now > trialEnd,
-          isActive: isPaid || (trialEnd !== null && now <= trialEnd),
+          isExpired: isPaidPlan ? !isPaid : trialEnd !== null && now > trialEnd,
+          isActive: isPaid || isTrialActive,
         });
       }
       setLoading(false);

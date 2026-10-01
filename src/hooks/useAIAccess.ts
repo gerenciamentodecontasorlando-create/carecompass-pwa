@@ -14,6 +14,7 @@ export function useAIAccess() {
   const [aiUsedMonth, setAiUsedMonth] = useState<number>(0);
   const [customAiEnabled, setCustomAiEnabled] = useState(false);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
+  const [planIsActive, setPlanIsActive] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function useAIAccess() {
         setAiUsedMonth(Number(usage?.count) || 0);
         setCustomAiEnabled(Boolean(clinic?.custom_ai_enabled));
         setIsPlatformAdmin(adminCheck === true);
+        setPlanIsActive(!clinic?.plan_expires_at || new Date(clinic.plan_expires_at).getTime() >= Date.now());
         setLoading(false);
       }
     })();
@@ -59,7 +61,7 @@ export function useAIAccess() {
     };
   }, [user]);
 
-  const hasAIAccess = isPlatformAdmin || plan === "enterprise" || customAiEnabled;
+  const hasAIAccess = isPlatformAdmin || (planIsActive && (plan === "enterprise" || customAiEnabled));
   const hasReachedLimit = !isPlatformAdmin && aiMonthlyLimit > 0 && aiUsedMonth >= aiMonthlyLimit;
 
   return { hasAIAccess, plan, loading, aiMonthlyLimit, aiUsedMonth, hasReachedLimit };

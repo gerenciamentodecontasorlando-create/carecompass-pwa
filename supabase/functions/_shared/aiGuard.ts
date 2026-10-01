@@ -95,8 +95,10 @@ export async function checkAiAccess(req: Request): Promise<{ ok: true; clinicId:
     };
   }
 
-  // Increment counter (best-effort)
-  await admin.rpc("increment_ai_usage", { _clinic_id: clinicId });
+  // Administradores da plataforma têm acesso vitalício e ilimitado.
+  if (!isPlatformAdmin) {
+    await admin.rpc("increment_ai_usage", { _clinic_id: clinicId });
+  }
 
   return { ok: true, clinicId };
 }
