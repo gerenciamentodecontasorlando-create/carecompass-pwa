@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import {
-  Shield, Users, Building2, TrendingUp, Database,
+  Shield, Users, Building2, TrendingUp, Database, Save,
   AlertTriangle, Crown, Sparkles, BarChart3, GraduationCap, Stethoscope, Brain,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +25,21 @@ interface ClinicInfo {
   appointment_count: number;
   ai_monthly_limit: number;
   ai_used_month: number;
+  max_patients: number;
+  max_storage_mb: number;
+  plan_display_name: string | null;
+  plan_expires_at: string | null;
+  custom_ai_enabled: boolean;
+  is_platform_admin_clinic: boolean;
+}
+
+interface PlanDraft {
+  name: string;
+  patients: string;
+  storageMb: string;
+  aiLimit: string;
+  expiresAt: string;
+  aiEnabled: boolean;
 }
 
 interface PlatformStats {
@@ -52,6 +69,8 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Record<string, string>>({});
+  const [planDrafts, setPlanDrafts] = useState<Record<string, PlanDraft>>({});
+  const [savingClinic, setSavingClinic] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -92,6 +111,9 @@ const AdminPanel = () => {
       _max_patients: limits.max_patients,
       _max_storage_mb: limits.max_storage_mb,
       _ai_monthly_limit: limits.ai_monthly_limit,
+      _plan_display_name: null,
+      _plan_expires_at: null,
+      _custom_ai_enabled: newPlan === "enterprise",
     });
     if (error) {
       console.error("Plan update error:", error);
@@ -105,6 +127,52 @@ const AdminPanel = () => {
     }
     toast.success("Plano atualizado!");
     loadStats();
+  };
+
+  const getPlanDraft = (clinic: ClinicInfo): PlanDraft => planDrafts[clinic.id] ?? {
+    name: clinic.plan_display_name || "Plano personalizado",
+    patients: String(clinic.max_patients),
+    storageMb: String(clinic.max_storage_mb),
+    aiLimit: String(clinic.ai_monthly_limit),
+    expiresAt: clinic.plan_expires_at?.slice(0, 10) || "",
+    aiEnabled: clinic.custom_ai_enabled || clinic.plan === "enterprise",
+  };
+
+  const updatePlanDraft = (clinic: ClinicInfo, values: Partial<PlanDraft>) => {
+    setPlanDrafts((current) => ({
+      ...current,
+      [clinic.id]: { ...getPlanDraft(clinic), ...values },
+    }));
+  };
+
+  const handleCustomPlanSave = async (clinic: ClinicInfo) => {
+    const draft = getPlanDraft(clinic);
+    const patients = Number.parseInt(draft.patients, 10);
+    const storageMb = Number.parseInt(draft.storageMb, 10);
+    const aiLimit = Number.parseInt(draft.aiLimit, 10);
+    if (!draft.name.trim() || [patients, storageMb, aiLimit].some((value) => !Number.isFinite(value) || value < 0)) {
+      toast.error("Preencha o nome e todos os limites com valores válidos.");
+      return;
+    }
+
+    setSavingClinic(clinic.id);
+    const { error } = await supabase.rpc("admin_update_clinic_plan", {
+      _clinic_id: clinic.id,
+      _plan: "custom",
+      _max_patients: patients,
+      _max_storage_mb: storageMb,
+      _ai_monthly_limit: aiLimit,
+      _plan_display_name: draft.name.trim(),
+      _plan_expires_at: draft.expiresAt ? `${draft.expiresAt}T23:59:59-03:00` : null,
+      _custom_ai_enabled: draft.aiEnabled,
+    });
+    setSavingClinic(null);
+    if (error) {
+      toast.error("Erro ao salvar plano: " + error.message);
+      return;
+    }
+    toast.success("Plano personalizado liberado para a clínica.");
+    await loadStats();
   };
 
   const handleLimitChange = async (clinicId: string) => {
@@ -206,7 +274,7 @@ const AdminPanel = () => {
           <CardContent>
             <div className="flex flex-wrap gap-3">
               {stats.plan_distribution.map((p) => {
-                const cfg = PLAN_CONFIG[p.plan] || PLAN_CONFIG.free;
+                const cfg = PLAN_CONFIG[p.plan] || { ...PLAN_CONFIG.free, label: "Personalizado" };
                 return (
                   <div key={p.plan} className="flex items-center gap-2 p-3 rounded-lg border min-w-[140px]">
                     <cfg.icon className="h-5 w-5 text-muted-foreground" />
@@ -228,18 +296,23 @@ const AdminPanel = () => {
           {stats?.clinics && stats.clinics.length > 0 ? (
             <div className="space-y-3 max-h-[600px] overflow-y-auto">
               {stats.clinics.map((clinic) => {
-                const cfg = PLAN_CONFIG[clinic.plan] || PLAN_CONFIG.free;
+                const cfg = PLAN_CONFIG[clinic.plan] || { ...PLAN_CONFIG.free, label: clinic.plan_display_name || "Personalizado" };
                 const aiLimit = clinic.ai_monthly_limit || 0;
                 const aiUsed = clinic.ai_used_month || 0;
                 const aiPercent = aiLimit > 0 ? Math.min((aiUsed / aiLimit) * 100, 100) : 0;
+                const draft = getPlanDraft(clinic);
                 return (
                   <div key={clinic.id} className="flex flex-col gap-2 p-3 rounded-lg border">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{clinic.name}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium text-sm truncate">{clinic.name}</div>
+                          {clinic.is_platform_admin_clinic && <Badge variant="secondary"><Crown className="h-3 w-3 mr-1" />Vitalício</Badge>}
+                        </div>
                         <div className="text-[10px] text-muted-foreground">
                           Desde {(() => { try { return format(new Date(clinic.created_at), "dd/MM/yyyy"); } catch { return clinic.created_at; } })()}
                           {" • "}{clinic.patient_count} pacientes • {clinic.appointment_count} agendamentos
+                          {clinic.plan_expires_at ? ` • vence em ${format(new Date(clinic.plan_expires_at), "dd/MM/yyyy")}` : " • sem vencimento"}
                         </div>
                       </div>
                       <Select value={clinic.plan} onValueChange={(val) => handlePlanChange(clinic.id, val)}>
@@ -250,8 +323,40 @@ const AdminPanel = () => {
                           <SelectItem value="professional">Profissional (R$ 49,90)</SelectItem>
                           <SelectItem value="enterprise">Enterprise + IA (R$ 199)</SelectItem>
                           <SelectItem value="basic">Básico (legado)</SelectItem>
+                          {clinic.plan === "custom" && <SelectItem value="custom">{clinic.plan_display_name || "Personalizado"}</SelectItem>}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="grid gap-3 rounded-md border bg-muted/20 p-3 md:grid-cols-2 lg:grid-cols-3">
+                      <div className="space-y-1.5 md:col-span-2 lg:col-span-1">
+                        <Label htmlFor={`plan-name-${clinic.id}`}>Nome do plano personalizado</Label>
+                        <Input id={`plan-name-${clinic.id}`} value={draft.name} maxLength={80} onChange={(e) => updatePlanDraft(clinic, { name: e.target.value })} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor={`patients-${clinic.id}`}>Limite de pacientes</Label>
+                        <Input id={`patients-${clinic.id}`} type="number" min="0" value={draft.patients} onChange={(e) => updatePlanDraft(clinic, { patients: e.target.value })} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor={`storage-${clinic.id}`}>Armazenamento (MB)</Label>
+                        <Input id={`storage-${clinic.id}`} type="number" min="0" value={draft.storageMb} onChange={(e) => updatePlanDraft(clinic, { storageMb: e.target.value })} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor={`ai-limit-${clinic.id}`}>Limite mensal de IA (0 = ilimitado)</Label>
+                        <Input id={`ai-limit-${clinic.id}`} type="number" min="0" value={draft.aiLimit} onChange={(e) => updatePlanDraft(clinic, { aiLimit: e.target.value })} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor={`expires-${clinic.id}`}>Validade (vazio = vitalício)</Label>
+                        <Input id={`expires-${clinic.id}`} type="date" value={draft.expiresAt} onChange={(e) => updatePlanDraft(clinic, { expiresAt: e.target.value })} />
+                      </div>
+                      <div className="flex items-end justify-between gap-3">
+                        <div className="flex items-center gap-2 pb-2">
+                          <Switch id={`ai-enabled-${clinic.id}`} checked={draft.aiEnabled} onCheckedChange={(checked) => updatePlanDraft(clinic, { aiEnabled: checked })} />
+                          <Label htmlFor={`ai-enabled-${clinic.id}`}>Liberar IA</Label>
+                        </div>
+                        <Button size="sm" onClick={() => handleCustomPlanSave(clinic)} disabled={savingClinic === clinic.id}>
+                          <Save className="h-4 w-4 mr-2" />{savingClinic === clinic.id ? "Salvando..." : "Salvar plano"}
+                        </Button>
+                      </div>
                     </div>
                     {/* Controle de IA */}
                     <div className="flex items-center gap-2 flex-wrap text-xs bg-muted/40 p-2 rounded-md">
