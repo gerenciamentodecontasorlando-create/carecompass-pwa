@@ -2,9 +2,10 @@ import { useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Clock, Crown, MessageCircle } from "lucide-react";
+import { Shield, Clock, Crown, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlanCheckoutDialog } from "@/components/PlanCheckoutDialog";
 
 interface TrialInfo {
   trialEndsAt: string | null;
@@ -15,14 +16,13 @@ interface TrialInfo {
 }
 
 const TRIAL_DAYS = 14;
-const WHATSAPP_NUMBER = "5591999873835";
-
 export function TrialGuard({ children }: { children: ReactNode }) {
   const { clinicId, user } = useAuth();
   const { t } = useTranslation();
   const [trialInfo, setTrialInfo] = useState<TrialInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
+  const [checkout, setCheckout] = useState<{ priceId: string; name: string } | null>(null);
 
   useEffect(() => {
     if (!clinicId || !user) return;
@@ -73,17 +73,18 @@ export function TrialGuard({ children }: { children: ReactNode }) {
 
   if (isPlatformAdmin) return <>{children}</>;
   if (trialInfo && trialInfo.plan !== "free") return <>{children}</>;
-  if (trialInfo?.isExpired) return <TrialExpiredScreen />;
+  if (trialInfo?.isExpired) return <TrialExpiredScreen onSubscribe={(priceId, name) => setCheckout({ priceId, name })} checkout={checkout} onClose={() => setCheckout(null)} />;
 
   return (
     <>
-      {trialInfo && <TrialBadge daysLeft={trialInfo.daysLeft} />}
+      {trialInfo && <TrialBadge daysLeft={trialInfo.daysLeft} onSubscribe={() => setCheckout({ priceId: "professional_monthly", name: "Profissional" })} />}
       {children}
+      <PlanCheckoutDialog priceId={checkout?.priceId ?? null} planName={checkout?.name} onClose={() => setCheckout(null)} />
     </>
   );
 }
 
-function TrialBadge({ daysLeft }: { daysLeft: number }) {
+function TrialBadge({ daysLeft, onSubscribe }: { daysLeft: number; onSubscribe: () => void }) {
   const { t } = useTranslation();
   const urgent = daysLeft <= 3;
 
@@ -98,12 +99,7 @@ function TrialBadge({ daysLeft }: { daysLeft: number }) {
           ? "bg-destructive text-destructive-foreground animate-pulse"
           : "bg-primary text-primary-foreground"
       }`}
-      onClick={() =>
-        window.open(
-          `https://wa.me/${WHATSAPP_NUMBER}?text=Quero%20assinar%20o%20Btx%20CliniCos`,
-          "_blank"
-        )
-      }
+      onClick={onSubscribe}
     >
       <Clock className="h-3.5 w-3.5" />
       <span>{label}</span>
@@ -111,7 +107,7 @@ function TrialBadge({ daysLeft }: { daysLeft: number }) {
   );
 }
 
-function TrialExpiredScreen() {
+function TrialExpiredScreen({ onSubscribe, checkout, onClose }: { onSubscribe: (priceId: string, name: string) => void; checkout: { priceId: string; name: string } | null; onClose: () => void }) {
   const { t } = useTranslation();
 
   const plans = [
@@ -121,6 +117,7 @@ function TrialExpiredScreen() {
       period: "/mês",
       features: ["Até 200 pacientes", "500 MB de armazenamento", "Todos os módulos clínicos", "Sem IA"],
       highlight: false,
+      priceId: "student_monthly",
     },
     {
       name: "Profissional",
@@ -128,6 +125,7 @@ function TrialExpiredScreen() {
       period: "/mês",
       features: ["Pacientes ilimitados (5.000)", "2 GB de armazenamento", "Todos os módulos", "Sem IA"],
       highlight: true,
+      priceId: "professional_monthly",
     },
     {
       name: "Enterprise + IA",
@@ -135,6 +133,7 @@ function TrialExpiredScreen() {
       period: "/mês",
       features: ["Tudo do Profissional", "Assistente Roma (IA)", "Análise de exames por IA", "Suporte prioritário"],
       highlight: false,
+      priceId: "enterprise_ai_monthly",
     },
   ];
 
@@ -180,22 +179,16 @@ function TrialExpiredScreen() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=Quero%20assinar%20o%20plano%20${plan.name}%20do%20Btx%20CliniCos`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full block"
-                >
-                  <Button className="w-full" variant={plan.highlight ? "default" : "outline"}>
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    {t("trial.hireWhatsApp")}
-                  </Button>
-                </a>
+                <Button className="w-full" variant={plan.highlight ? "default" : "outline"} onClick={() => onSubscribe(plan.priceId, plan.name)}>
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Assinar agora
+                </Button>
               </CardContent>
             </Card>
           ))}
         </div>
       </div>
+      <PlanCheckoutDialog priceId={checkout?.priceId ?? null} planName={checkout?.name} onClose={onClose} />
     </div>
   );
 }
