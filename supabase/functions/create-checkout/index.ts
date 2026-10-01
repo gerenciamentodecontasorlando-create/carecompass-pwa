@@ -3,6 +3,32 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.25.76";
 import { createStripeClient, type StripeEnv } from "../_shared/stripe.ts";
 
+async function resolveOrCreateCustomer(
+  stripe: ReturnType<typeof createStripeClient>,
+  options: { email?: string; userId?: string },
+): Promise<string> {
+  if (options.userId && !/^[a-zA-Z0-9_-]+$/.test(options.userId)) throw new Error("Invalid userId");
+  if (options.userId) {
+    const found = await stripe.customers.search({ query: `metadata['userId']:'${options.userId}'`, limit: 1 });
+    if (found.data.length) return found.data[0].id;
+  }
+  if (options.email) {
+    const existing = await stripe.customers.list({ email: options.email, limit: 1 });
+    if (existing.data.length) {
+      const customer = existing.data[0];
+      if (options.userId && customer.metadata?.userId !== options.userId) {
+        await stripe.customers.update(customer.id, { metadata: { ...customer.metadata, userId: options.userId } });
+      }
+      return customer.id;
+    }
+  }
+  const created = await stripe.customers.create({
+    ...(options.email && { email: options.email }),
+    ...(options.userId && { metadata: { userId: options.userId } }),
+  });
+  return created.id;
+}
+
 const schema = z.object({
   priceId: z.enum(["student_monthly", "professional_monthly", "enterprise_ai_monthly"]),
   quantity: z.literal(1),
@@ -27,16 +53,13 @@ Deno.serve(async (req) => {
     const prices = await stripe.prices.list({ lookup_keys: [input.priceId] });
     const price = prices.data[0];
     if (!price) throw new Error("Plano não encontrado");
-    const customers = await stripe.customers.search({ query: `metadata['userId']:'${user.id}'`, limit: 1 });
-    let customerId = customers.data[0]?.id;
-    if (!customerId) customerId = (await stripe.customers.create({ email: input.customerEmail, metadata: { userId: user.id } })).id;
+    const customerId = await resolveOrCreateCustomer(stripe, { email: input.customerEmail, userId: user.id });
     const session = await stripe.checkout.sessions.create({
       line_items: [{ price: price.id, quantity: 1 }],
       mode: "subscription",
       ui_mode: "embedded_page",
       return_url: input.returnUrl,
       customer: customerId,
-      automatic_tax: { enabled: true },
       metadata: { userId: user.id, managed_payments: "false" },
       subscription_data: { metadata: { userId: user.id } },
     });
