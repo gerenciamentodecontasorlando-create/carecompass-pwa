@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ClipboardList, Plus, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { Printer } from "lucide-react";
+import { useClinicData } from "@/hooks/useClinicData";
 
 export interface DentalProcedure {
   id: string;
@@ -50,11 +52,14 @@ export const emptyDentalChart = (): DentalChart => ({
 interface DentalChartFormProps {
   value: DentalChart;
   onSave: (chart: DentalChart) => Promise<void> | void;
+  patientName: string;
 }
 
-export function DentalChartForm({ value, onSave }: DentalChartFormProps) {
+export function DentalChartForm({ value, onSave, patientName }: DentalChartFormProps) {
   const [chart, setChart] = useState<DentalChart>(value);
   const [saving, setSaving] = useState(false);
+  const { data: clinicSettings } = useClinicData("clinic_settings");
+  const settings = clinicSettings[0] || {};
 
   useEffect(() => { setChart(value); }, [value]);
 
@@ -227,11 +232,51 @@ export function DentalChartForm({ value, onSave }: DentalChartFormProps) {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2 no-print">
+        <Button variant="outline" onClick={() => window.print()}>
+          <Printer className="h-4 w-4 mr-2" /> Imprimir prontuário
+        </Button>
         <Button onClick={handleSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" /> Salvar prontuário odontológico
         </Button>
       </div>
+      <section className="print-only print-area text-foreground p-6 space-y-6">
+        <header className="border-b-2 border-primary pb-4">
+          <h1 className="text-xl font-bold">{String(settings.clinic_name || "Clínica")}</h1>
+          {settings.print_header && <p className="whitespace-pre-wrap text-sm">{String(settings.print_header)}</p>}
+          <h2 className="text-lg font-semibold mt-4">Prontuário odontológico</h2>
+          <p className="text-sm"><strong>Paciente:</strong> {patientName}</p>
+          <p className="text-sm"><strong>Data de emissão:</strong> {new Date().toLocaleDateString("pt-BR")}</p>
+        </header>
+        <div className="space-y-3 text-sm">
+          <p><strong>Negativas informadas:</strong> {chart.negatives.length ? chart.negatives.join(", ") : "Nenhuma registrada"}</p>
+          {chart.customNegative && <p className="whitespace-pre-wrap"><strong>Outras negativas:</strong> {chart.customNegative}</p>}
+          <p className="whitespace-pre-wrap"><strong>Queixa principal:</strong> {chart.complaint || "Não informada"}</p>
+          <p className="whitespace-pre-wrap"><strong>Observações:</strong> {chart.observations || "Não informadas"}</p>
+        </div>
+        <div>
+          <h3 className="font-semibold mb-2">Procedimentos registrados</h3>
+          {chart.procedures.length ? (
+            <table className="w-full border-collapse text-xs">
+              <thead><tr className="border-b border-foreground"><th className="text-left p-2">Data</th><th className="text-left p-2">Dente</th><th className="text-left p-2">Procedimento</th><th className="text-left p-2">Observação</th><th className="text-right p-2">Valor</th></tr></thead>
+              <tbody>{chart.procedures.map((p) => (
+                <tr key={p.id} className="border-b border-border">
+                  <td className="p-2">{p.date ? p.date.split("-").reverse().join("/") : "—"}</td>
+                  <td className="p-2">{p.tooth || "—"}</td>
+                  <td className="p-2 break-words">{p.procedure || "—"}</td>
+                  <td className="p-2 break-words whitespace-pre-wrap">{p.notes || "—"}</td>
+                  <td className="p-2 text-right">{p.value || "—"}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          ) : <p className="text-sm">Nenhum procedimento registrado.</p>}
+        </div>
+        <footer className="pt-12 text-center text-sm break-inside-avoid">
+          <div className="border-t border-foreground w-56 mx-auto pt-2">{String(settings.professional_name || "Profissional responsável")}</div>
+          {settings.registration_number && <p>{String(settings.registration_number)}</p>}
+          {settings.print_footer && <p className="whitespace-pre-wrap mt-6">{String(settings.print_footer)}</p>}
+        </footer>
+      </section>
     </div>
   );
 }
