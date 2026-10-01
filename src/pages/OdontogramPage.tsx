@@ -136,7 +136,7 @@ const OdontogramPage = () => {
 
       {selectedPatientId && (
         <Tabs defaultValue="odontogram" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl no-print">
             <TabsTrigger value="odontogram" className="gap-2">
               <Smile className="h-4 w-4" /> Odontograma
             </TabsTrigger>
@@ -266,7 +266,7 @@ const OdontogramPage = () => {
           </TabsContent>
 
           <TabsContent value="chart" className="mt-4">
-            <DentalChartForm value={dentalChart} onSave={saveDentalChart} />
+            <DentalChartForm value={dentalChart} onSave={saveDentalChart} patientName={String(patients.find(p => String(p.id) === selectedPatientId)?.name || "")} />
           </TabsContent>
         </Tabs>
       )}
