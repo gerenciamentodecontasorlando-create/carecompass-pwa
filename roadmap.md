@@ -5,4 +5,4 @@
 - [x] Garantir acesso vitalício aos administradores e permitir planos personalizados por clínica.
 - [x] Destacar os planos no topo da apresentação e ligar os botões ao pagamento automático.
 - [ ] Liberar cobranças reais — aguarda reivindicação da conta de pagamentos e regularização da assinatura Pro.
-- [ ] Remover o aviso persistente de ambiente de teste da área principal, mantendo-o somente no pagamento.
+- [x] Remover o aviso persistente de ambiente de teste da área principal, mantendo-o somente no pagamento.
